@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '../_shared/confirm-dialog';
-import { SecretOnce } from '../_shared/copy';
+import { SetupLink } from '../_shared/setup-link';
 import { usePrincipal } from '@/components/principal-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,13 +23,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ApiError, apiSend } from '@/lib/api/client';
-import { atLeast, ROLES, type ConsoleUser, type Role } from '@/lib/api/types';
-import { dateTime } from '@/lib/format';
-
-interface SetupToken {
-  setupToken: string;
-  setupTokenExpiresAt: string;
-}
+import {
+  atLeast,
+  ROLES,
+  type ConsoleUser,
+  type IssuedSetupToken,
+  type Role,
+} from '@/lib/api/types';
 
 /**
  * Turns the API's refusals into the reason behind them.
@@ -53,7 +53,7 @@ function explain(error: unknown): string {
 export function UserActions({ user }: { user: ConsoleUser }) {
   const principal = usePrincipal();
   const queryClient = useQueryClient();
-  const [token, setToken] = useState<SetupToken | null>(null);
+  const [token, setToken] = useState<IssuedSetupToken | null>(null);
 
   const isSelf = principal.kind === 'user' && principal.userId === user.id;
   // An admin is only allowed to act on people below the admin rung; an owner
@@ -72,7 +72,8 @@ export function UserActions({ user }: { user: ConsoleUser }) {
   });
 
   const newToken = useMutation({
-    mutationFn: () => apiSend<SetupToken>('POST', `/users/${user.id}/setup-token`),
+    mutationFn: () =>
+      apiSend<IssuedSetupToken>('POST', `/users/${user.id}/setup-token`),
     onSuccess: (result) => setToken(result),
     onError: (error: Error) => toast.error(explain(error)),
   });
@@ -173,18 +174,19 @@ export function UserActions({ user }: { user: ConsoleUser }) {
       <Dialog open={token !== null} onOpenChange={(open) => !open && setToken(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Setup token for {user.email}</DialogTitle>
+            <DialogTitle>New password for {user.email}</DialogTitle>
             <DialogDescription>
-              This is how they set a password. There is no self-service reset
-              and no email is sent yet, so send this to them yourself, over
-              something you trust.
+              They choose it themselves from the link. Any earlier link stops
+              working.
             </DialogDescription>
           </DialogHeader>
           {token ? (
-            <SecretOnce
-              title="Setup token"
-              value={token.setupToken}
-              note={<>It stops working {dateTime(token.setupTokenExpiresAt)}.</>}
+            <SetupLink
+              kind="reset"
+              email={user.email}
+              setupToken={token.setupToken}
+              expiresAt={token.setupTokenExpiresAt}
+              emailQueued={token.emailQueued}
             />
           ) : null}
           <DialogFooter showCloseButton />

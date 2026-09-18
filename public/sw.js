@@ -11,11 +11,21 @@
  *   - a navigation that cannot reach the network falls back to /offline, which
  *     says so plainly rather than showing a stale board.
  *
- * A `push` handler will arrive with the driver phase, where the VAPID keys and
- * the subscription endpoints are built.
+ * It also shows web pushes (doc 6 §22.2): an alert raised while the console is
+ * closed, or while this tab is in the background.
  */
 
-const VERSION = 'v1';
+// Bumped with the push handler: a new version string is what makes a browser
+// install this file over the old one and drop the old caches with it.
+const VERSION = 'v2';
+
+// Registered as `/sw.js?mode=push-only` in development, when someone turns on
+// alerts for this device (see `components/service-worker.tsx`). Push needs a
+// worker; the asset cache is what makes a worker dangerous in development,
+// where chunk names do not change when their contents do. So that mode shows
+// pushes and leaves every request alone.
+const PUSH_ONLY =
+  new URL(self.location.href).searchParams.get('mode') === 'push-only';
 const SHELL = `shell-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -45,6 +55,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (PUSH_ONLY) return;
   const request = event.request;
   if (request.method !== 'GET') return;
 
@@ -68,6 +79,76 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+/*
+ * A push from the API's worker. The payload is what the `notification.raised`
+ * and `test.message` templates render: `{title, body, path, tag}`.
+ *
+ * Every push must show a notification. Browsers require it
+ * (`userVisibleOnly: true` is the only kind Chrome allows) and revoke the
+ * permission of a site that receives pushes silently, so even a payload this
+ * code cannot read is shown as something rather than dropped.
+ */
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+
+  const title = typeof data.title === 'string' ? data.title : 'ChargeVeta';
+  const options = {
+    body: typeof data.body === 'string' ? data.body : '',
+    icon: '/icons/192',
+    badge: '/icons/192',
+    // A path only, resolved against this worker's own origin — the console
+    // that installed it — so a payload cannot send a click somewhere else.
+    data: { path: safePath(data.path) },
+  };
+  if (typeof data.tag === 'string') {
+    options.tag = data.tag;
+    // The same tag again is the same alert updated; tell the person again
+    // rather than changing the text under them silently.
+    options.renotify = true;
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+/*
+ * A click goes to the console: to a tab that already has it open if there is
+ * one, since the person is most likely to want the board they left, and to a
+ * new one otherwise.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(
+    event.notification.data?.path ?? '/notifications',
+    self.location.origin,
+  );
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windows) => {
+        for (const client of windows) {
+          if (new URL(client.url).origin === self.location.origin) {
+            return client.focus().then((focused) => focused.navigate(target.href));
+          }
+        }
+        return self.clients.openWindow(target.href);
+      }),
+  );
+});
+
+/** Only a same-origin path is accepted; anything else goes to the alerts. */
+function safePath(path) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) {
+    return '/notifications';
+  }
+  return path;
+}
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);

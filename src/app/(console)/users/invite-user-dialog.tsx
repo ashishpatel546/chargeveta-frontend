@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { SecretOnce } from '../_shared/copy';
+import { SetupLink } from '../_shared/setup-link';
 import { usePrincipal } from '@/components/principal-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,14 +26,14 @@ import {
 } from '@/components/ui/select';
 import { apiSend } from '@/lib/api/client';
 import { atLeast, ROLES, type CreatedUser, type Role } from '@/lib/api/types';
-import { dateTime } from '@/lib/format';
 
 /**
  * Adds somebody to the console.
  *
- * Leaving the password blank is what makes it an invitation: the API answers
- * with a setup token instead, which is the only way they can set a password.
- * Nothing sends it for us yet, so the token is put on screen to be handed over.
+ * Leaving the password blank is what makes it an invitation: the API emails
+ * them a setup link when this installation sends mail, and hands the link back
+ * here either way, so it can be passed on by hand if the email goes astray or
+ * there is no mail server at all (doc 6 §22.2).
  */
 export function InviteUserDialog() {
   const [open, setOpen] = useState(false);
@@ -85,18 +85,15 @@ export function InviteUserDialog() {
             <DialogHeader>
               <DialogTitle>{created.email} has been added</DialogTitle>
               <DialogDescription>
-                No email goes out yet, so send this token to them yourself. They
-                set their own password with it.
+                They choose their own password from the link.
               </DialogDescription>
             </DialogHeader>
-            <SecretOnce
-              title="Setup token"
-              value={created.setupToken}
-              note={
-                created.setupTokenExpiresAt ? (
-                  <>It stops working {dateTime(created.setupTokenExpiresAt)}.</>
-                ) : null
-              }
+            <SetupLink
+              kind="invitation"
+              email={created.email}
+              setupToken={created.setupToken}
+              expiresAt={created.setupTokenExpiresAt}
+              emailQueued={created.emailQueued}
             />
             <DialogFooter>
               <Button onClick={close}>Done</Button>
@@ -107,8 +104,8 @@ export function InviteUserDialog() {
             <DialogHeader>
               <DialogTitle>Add a person</DialogTitle>
               <DialogDescription>
-                Leave the password blank to invite them: you get a setup token
-                to pass on, and they choose the password themselves.
+                Leave the password blank to invite them: they are sent a link
+                and choose the password themselves.
               </DialogDescription>
             </DialogHeader>
 

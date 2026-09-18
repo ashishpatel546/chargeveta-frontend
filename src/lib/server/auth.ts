@@ -65,6 +65,77 @@ export async function signIn(
   redirect('/stations');
 }
 
+const setup = z
+  .object({
+    setupToken: z.string().trim().min(1, 'This link is missing its token'),
+    // The API's own limits (12 to 256), repeated so a short password is
+    // caught before a round trip — the API still has the final word.
+    password: z
+      .string()
+      .min(12, 'Use at least 12 characters')
+      .max(256, 'Use at most 256 characters'),
+    confirm: z.string(),
+  })
+  .refine((value) => value.password === value.confirm, {
+    message: 'The two passwords do not match',
+    path: ['confirm'],
+  });
+
+/**
+ * Redeems a setup token — from an invitation or a password reset email — and
+ * signs the person in with the password they just chose (doc 6 §19.2, §22.2).
+ *
+ * The API ends every other session the user had, so a reset really is one.
+ */
+export async function redeemSetupToken(
+  _previous: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = setup.safeParse({
+    setupToken: form.get('setupToken'),
+    password: form.get('password'),
+    confirm: form.get('confirm'),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Check the form' };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.apiBaseUrl}/auth/setup`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        setupToken: parsed.data.setupToken,
+        password: parsed.data.password,
+      }),
+      cache: 'no-store',
+    });
+  } catch {
+    return {
+      error: `The API at ${config.apiBaseUrl} did not answer. Is it running?`,
+    };
+  }
+
+  if (!response.ok) {
+    // One answer for every way a token can be wrong, as the API gives: used,
+    // expired, replaced by a newer one, or for an account that was since
+    // deactivated all look the same from outside, and should.
+    return {
+      error:
+        response.status === 401
+          ? 'This link has expired or has already been used. Ask your administrator for a new one.'
+          : await readMessage(response),
+    };
+  }
+
+  // A person arriving from an email may still be signed in as somebody else
+  // in this browser — a shared machine, an admin testing an invitation. The
+  // new pair replaces the old one, so they land as who the link was for.
+  await writeSession((await response.json()) as TokenPair);
+  redirect('/stations');
+}
+
 /** Ends the session on the API as well as here. */
 export async function signOut(): Promise<void> {
   if (await readSession()) {

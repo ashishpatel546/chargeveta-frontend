@@ -102,7 +102,24 @@ src/lib/server/        session cookies, server-side API calls, sign-in actions
 Next does not support Turbopack, which is Next 16's default bundler. It caches
 the hashed build assets and an offline page, and it never caches an API
 response — a cached answer to "is this charger live?" is worse than no answer.
-The `push` handler arrives with the driver phase, along with the VAPID keys.
+
+It also shows **web pushes** (charveta doc 6 §22.2): warning and critical alerts,
+delivered while the console is closed. Anyone turns them on for a browser under
+Settings → *Alerts on this device*; the API needs its VAPID keys set
+(`npm run vapid:keys` in charveta) or the card says push is unavailable. The
+worker registers only in production, so in development turning push on
+registers `/sw.js?mode=push-only`, which shows pushes and leaves every request
+alone — the asset cache is what makes a worker a nuisance while developing.
+
+## Invitations and email
+
+An invited person, or one whose password an admin resets, gets an email with a
+link to **`/setup?token=…`**, where they choose a password and are signed in.
+The page is public (the middleware lets it through) and does not check the
+token before submit, because a validity check would be an oracle for guessing
+tokens. The invite and reset dialogs say whether an email actually went
+(`emailQueued` from the API) and show the same link to pass on by hand. Admins
+see every email, SMS and push, and why any was not sent, under **Messages**.
 
 The icons are drawn at request time by `src/app/icons/[size]/route.tsx` rather
 than stored, so there is one drawing and no binaries in the repository.

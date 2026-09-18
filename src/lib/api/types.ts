@@ -471,6 +471,42 @@ export interface ConsoleUser {
 export interface CreatedUser extends ConsoleUser {
   setupToken?: string;
   setupTokenExpiresAt?: string;
+  /** With a setup token: whether an email carrying it will be sent. */
+  emailQueued?: boolean;
+}
+
+/** One of the signed-in person's own devices registered for push. */
+export interface PushSubscriptionRow {
+  id: string;
+  endpoint: string;
+  userAgent: string | null;
+  createdAt: string;
+  lastPushedAt: string | null;
+}
+
+export type MessageChannel = 'email' | 'sms' | 'push';
+export type MessageStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+
+/** A row of the outbox. The API never returns a message's body. */
+export interface OutboxMessage {
+  id: string;
+  channel: MessageChannel;
+  template: string;
+  toAddress: string;
+  status: MessageStatus;
+  attempts: number;
+  lastError: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  redactedAt: string | null;
+}
+
+/** A new setup token for an existing user — a password reset. */
+export interface IssuedSetupToken {
+  setupToken: string;
+  setupTokenExpiresAt: string;
+  /** Whether an email carrying it will be sent. */
+  emailQueued: boolean;
 }
 
 export interface ApiKey {

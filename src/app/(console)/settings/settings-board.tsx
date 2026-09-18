@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { apiGet, apiSend } from '@/lib/api/client';
 import type { TenantSettings } from '@/lib/api/types';
+import { PushDeviceCard } from './push-device-card';
 
 /** As the API validates it: state code, PAN, entity digit, Z, checksum. */
 const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -44,6 +45,7 @@ export function SettingsBoard() {
       />
 
       <WhoIsSignedIn />
+      <PushDeviceCard />
 
       {settings.isPending ? <Loading rows={4} /> : null}
       {settings.isError ? <Failed error={settings.error} /> : null}

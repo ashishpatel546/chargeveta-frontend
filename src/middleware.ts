@@ -20,10 +20,11 @@ export const config = {
   matcher: [
     /*
      * Everything except: the API routes (which answer 401 themselves), Next's
-     * own assets, the sign-in page, the offline page the service worker
-     * shows, and the files a browser fetches to install the app — those last
-     * are requested without cookies and must not redirect.
+     * own assets, the sign-in page, the setup page an invitation links to
+     * (whose visitor by definition has no session yet), the offline page the
+     * service worker shows, and the files a browser fetches to install the
+     * app — those last are requested without cookies and must not redirect.
      */
-    '/((?!api|_next/static|_next/image|sign-in|offline|icons|manifest.webmanifest|sw.js|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|sign-in|setup|offline|icons|manifest.webmanifest|sw.js|favicon.ico).*)',
   ],
 };

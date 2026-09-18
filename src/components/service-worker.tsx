@@ -17,6 +17,22 @@ import { useEffect } from 'react';
  * development is a very effective way to spend an hour debugging a change that
  * did in fact save.
  */
+/**
+ * The worker that will receive pushes, registering one if need be.
+ *
+ * In production that is the worker `ServiceWorker` below already registered.
+ * In development nothing registered one, so this registers the same file in
+ * push-only mode, which leaves every request alone — see the comment at the
+ * top of `public/sw.js`. Called only when somebody asks for alerts on this
+ * device, so development without push behaves exactly as before.
+ */
+export async function pushWorker(): Promise<ServiceWorkerRegistration> {
+  if (process.env.NODE_ENV !== 'production') {
+    await navigator.serviceWorker.register('/sw.js?mode=push-only');
+  }
+  return navigator.serviceWorker.ready;
+}
+
 export function ServiceWorker() {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') return;
