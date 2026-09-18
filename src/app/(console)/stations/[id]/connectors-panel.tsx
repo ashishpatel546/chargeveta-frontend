@@ -17,11 +17,16 @@ import { since } from '@/lib/format';
 /**
  * What a charger's connectors are doing.
  *
- * A charger reports its status against an EVSE and connector number, and this
- * system keeps that status only against connectors somebody has added here.
- * Until they exist, a charger's reports are recorded as history but there is no
- * current state to show, which is why the empty case below says so rather than
- * looking like nothing is happening.
+ * Since phase Q this list mostly fills itself: a charger reports its status
+ * against an EVSE and connector number, and the platform creates whatever it
+ * names. An OCPP 2.x charger goes further and is asked for its device model
+ * after every boot, which is where connector types come from — no other message
+ * carries one.
+ *
+ * So the things left for a person are the ones a charger cannot know: what the
+ * socket is called on site, what plug a 1.6 charger has, and whether a socket is
+ * still there. Adding one by hand still works, for a charger that has not
+ * connected yet.
  */
 export function ConnectorsPanel({ station }: { station: Station }) {
   const canAdmin = useCan('admin');
@@ -38,8 +43,9 @@ export function ConnectorsPanel({ station }: { station: Station }) {
     <div className="space-y-4">
       {evses.data.length === 0 ? (
         <Empty>
-          No connectors have been added for this charger yet, so the console has
-          nowhere to record what it reports. Add an EVSE, then its connectors.
+          Nothing here yet. Connectors appear on their own the first time this
+          charger reports one, so this usually means it has not connected since
+          it was added. You can add them by hand in the meantime.
           {station.ocppVersion === '1.6'
             ? ' On OCPP 1.6 every connector belongs to EVSE 1.'
             : null}
@@ -89,24 +95,13 @@ function EvseCard({
         ) : null}
 
         {(connectors.data ?? []).map((connector) => (
-          <div
+          <ConnectorRow
             key={connector.id}
-            className="flex flex-wrap items-center gap-3 border-b pb-3 last:border-0 last:pb-0"
-          >
-            <span className="font-medium">
-              Connector {connector.connectorNumber}
-            </span>
-            <ConnectorBadge status={connector.status} />
-            <span className="text-muted-foreground text-sm">
-              {connector.connectorType ?? 'type not set'}
-              {connector.maxAmperage ? ` · ${connector.maxAmperage} A` : ''}
-            </span>
-            <span className="text-muted-foreground ml-auto text-xs">
-              {connector.statusUpdatedAt
-                ? `changed ${since(connector.statusUpdatedAt)}`
-                : 'never reported'}
-            </span>
-          </div>
+            connector={connector}
+            evseId={evse.id}
+            stationId={stationId}
+            canAdmin={canAdmin}
+          />
         ))}
 
         {canAdmin ? (
@@ -114,6 +109,154 @@ function EvseCard({
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * One connector, and the two things an operator can still say about it.
+ *
+ * Editing is behind a toggle rather than always on screen: most of the time this
+ * is a status list being read, and a row of inputs per socket would bury the
+ * thing people come here for.
+ */
+function ConnectorRow({
+  connector,
+  evseId,
+  stationId,
+  canAdmin,
+}: {
+  connector: Connector;
+  evseId: string;
+  stationId: string;
+  canAdmin: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState(connector.label ?? '');
+  const [connectorType, setConnectorType] = useState(
+    connector.connectorType ?? '',
+  );
+  const queryClient = useQueryClient();
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({
+      queryKey: ['evse', evseId, 'connectors'],
+    });
+    void queryClient.invalidateQueries({ queryKey: ['station', stationId] });
+  };
+
+  const save = useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiSend<Connector>('PATCH', `/connectors/${connector.id}`, body),
+    onSuccess: (updated) => {
+      refresh();
+      setEditing(false);
+      toast.success(
+        updated.isRetired !== connector.isRetired
+          ? updated.isRetired
+            ? 'Connector retired'
+            : 'Connector back in service'
+          : 'Connector saved',
+      );
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <div className="space-y-2 border-b pb-3 last:border-0 last:pb-0">
+      <div className="flex flex-wrap items-center gap-3">
+        <span
+          className={
+            connector.isRetired ? 'text-muted-foreground font-medium' : 'font-medium'
+          }
+        >
+          Connector {connector.connectorNumber}
+        </span>
+        {connector.label ? (
+          <span className="text-sm">{connector.label}</span>
+        ) : null}
+        <ConnectorBadge status={connector.status} />
+        {connector.isRetired ? (
+          <span className="text-muted-foreground rounded border px-1.5 py-0.5 text-xs">
+            retired
+          </span>
+        ) : null}
+        <span className="text-muted-foreground text-sm">
+          {connector.connectorType ?? 'type not set'}
+          {connector.maxAmperage ? ` · ${connector.maxAmperage} A` : ''}
+        </span>
+        <span className="text-muted-foreground ml-auto text-xs">
+          {connector.source === 'reported'
+            ? 'reported by the charger'
+            : 'added here'}
+          {' · '}
+          {connector.statusUpdatedAt
+            ? `changed ${since(connector.statusUpdatedAt)}`
+            : 'never reported'}
+        </span>
+        {canAdmin ? (
+          <Button
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={() => setEditing((open) => !open)}
+          >
+            {editing ? 'Close' : 'Edit'}
+          </Button>
+        ) : null}
+      </div>
+
+      {editing ? (
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            save.mutate({ label: label.trim(), connectorType: connectorType.trim() });
+          }}
+        >
+          <div className="space-y-1">
+            <Label htmlFor={`label-${connector.id}`} className="text-xs">
+              Name
+            </Label>
+            <Input
+              id={`label-${connector.id}`}
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              placeholder="The one by the wall"
+              maxLength={60}
+              className="w-56"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={`type-edit-${connector.id}`} className="text-xs">
+              Type
+            </Label>
+            <Input
+              id={`type-edit-${connector.id}`}
+              value={connectorType}
+              onChange={(event) => setConnectorType(event.target.value)}
+              placeholder="cType2"
+              maxLength={40}
+              className="w-36"
+            />
+          </div>
+          <Button type="submit" variant="outline" disabled={save.isPending}>
+            Save
+          </Button>
+          <Button
+            type="button"
+            variant={connector.isRetired ? 'outline' : 'destructive'}
+            disabled={save.isPending}
+            onClick={() => save.mutate({ isRetired: !connector.isRetired })}
+          >
+            {connector.isRetired ? 'Put back in service' : 'Retire'}
+          </Button>
+          <p className="text-muted-foreground w-full text-xs">
+            {connector.isRetired
+              ? 'A retired connector stops following what the charger reports. Putting it back lets its status move again.'
+              : 'Retiring keeps the row and its history, stops its status following the charger, and stops the charger re-creating it. There is no delete: the next report would simply add it back.'}
+          </p>
+        </form>
+      ) : null}
+    </div>
   );
 }
 

@@ -68,11 +68,19 @@ export interface Station {
   hasCredential: boolean;
 }
 
+/**
+ * How a connector or EVSE came to exist: somebody added it, or a charger
+ * reported it and the platform created it.
+ */
+export type ProvisioningSource = 'operator' | 'reported';
+
 export interface Evse {
   id: string;
   tenantId: string;
   stationId: string;
   evseNumber: number;
+  source: ProvisioningSource;
+  firstReportedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -82,10 +90,21 @@ export interface Connector {
   tenantId: string;
   evseId: string;
   connectorNumber: number;
+  /** What the people on site call it. Display only. */
+  label: string | null;
   connectorType: string | null;
   maxAmperage: number | null;
   status: ConnectorStatus;
   statusUpdatedAt: string | null;
+  source: ProvisioningSource;
+  /** Null means no charger has ever mentioned this connector. */
+  firstReportedAt: string | null;
+  /**
+   * Taken out of service. Its status stops following what the charger reports,
+   * and nothing re-creates it however often the charger mentions it.
+   */
+  isRetired: boolean;
+  retiredAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
