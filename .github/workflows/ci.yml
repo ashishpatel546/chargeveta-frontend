@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      # The build also regenerates the route types, so a page whose params do
+      # not match its folder fails here even when `tsc` alone passed.
+      - run: npm run build
+        env:
+          # Placeholders. Nothing is called at build time, but the typed config
+          # refuses to load without a valid address, which would fail the build
+          # on a missing variable rather than on anything real.
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:3000/api/v1
+          NEXT_PUBLIC_REALTIME_URL: http://localhost:3000
