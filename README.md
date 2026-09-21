@@ -13,27 +13,50 @@ You need the API running first. In `charveta`:
 
 ```
 docker compose -f docker-compose.dev.yml up -d   # Postgres and Redis
-npm run start:dev                                 # the API, on :3000
+npm run start:dev                                 # the API, on :9010
 npm run start:worker:dev                          # the event worker
 ```
 
 Then here:
 
 ```
-cp .env.example .env.local     # and edit if your API is not on :3000
+cp .env.example .env.local     # and edit if your API is not on :9010
 npm install
-npm run dev                    # http://localhost:4200
+npm run dev                    # http://localhost:9014
 ```
 
 Sign in with the account the API was seeded with (`SEED_ADMIN_EMAIL` and
 `SEED_ADMIN_PASSWORD` in the API's `.env`). In a shared installation you also
 need the operator's short name — `SEED_TENANT_SLUG`.
 
+### In Docker
+
+`Dockerfile` builds a small standalone image (`output: 'standalone'`, set only by
+the Dockerfile, so `npm run dev` and `npm run start` are unchanged). Two kinds of
+setting, and they behave differently:
+
+- **`API_BASE_URL`** is read when the server starts. It is where the console's own
+  proxy forwards to — inside Docker a service name, `http://api:9010/api/v1` — and
+  it wins over `NEXT_PUBLIC_API_BASE_URL` on the server.
+- **`NEXT_PUBLIC_*`** is inlined into the browser bundle by `next build`, so it is
+  a build argument, not something a running container can change. The one that
+  matters is `NEXT_PUBLIC_REALTIME_URL`, which the *browser* dials: build with
+  `--build-arg NEXT_PUBLIC_REALTIME_URL=…` if you publish the API somewhere other
+  than `http://localhost:9010`. Without it the console works and says "not live".
+
+```
+docker build -t chargeveta/console .
+docker run -p 9014:9014 -e API_BASE_URL=http://host.docker.internal:9010/api/v1 chargeveta/console
+```
+
+The whole platform, this image included, runs from
+`charveta/deploy/docker/docker-compose-full.yml`.
+
 | Script | What it does |
 |---|---|
-| `npm run dev` | Development server on 4200 |
+| `npm run dev` | Development server on 9014 |
 | `npm run build` | Production build |
-| `npm run start` | Serves the build on 4200 |
+| `npm run start` | Serves the build on 9014 |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
 

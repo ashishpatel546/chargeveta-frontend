@@ -19,8 +19,15 @@ const schema = z.object({
 export type Config = z.infer<typeof schema>;
 
 const parsed = schema.safeParse({
+  // `API_BASE_URL` is not public, so Next leaves it alone at build time and the
+  // server reads it when it starts. That is what lets one image serve wherever
+  // it is run: inside Docker the API is `http://api:9010/api/v1`, not the
+  // address a browser would use. The browser never reads this value (it goes
+  // through `/api/cv`), so it falls back to the build-time one there.
   apiBaseUrl:
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api/v1',
+    process.env.API_BASE_URL ??
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    'http://localhost:9010/api/v1',
   realtimeUrl: process.env.NEXT_PUBLIC_REALTIME_URL ?? '',
   realtimePath: process.env.NEXT_PUBLIC_REALTIME_PATH ?? '/realtime',
   appName: process.env.NEXT_PUBLIC_APP_NAME ?? 'ChargeVeta',

@@ -1,0 +1,13 @@
+# An allowlist, not a denylist. Everything is excluded and only what the build
+# reads is let back in, so a file nobody thought about — `.env.local` above all,
+# but also `node_modules` from another platform or a stale `.next` — cannot reach
+# the build context, let alone a layer of a pushed image.
+*
+
+!package.json
+!package-lock.json
+!tsconfig.json
+!next.config.ts
+!postcss.config.mjs
+!public/
+!src/
