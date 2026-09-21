@@ -29,5 +29,5 @@ jobs:
           # Placeholders. Nothing is called at build time, but the typed config
           # refuses to load without a valid address, which would fail the build
           # on a missing variable rather than on anything real.
-          NEXT_PUBLIC_API_BASE_URL: http://localhost:3000/api/v1
-          NEXT_PUBLIC_REALTIME_URL: http://localhost:3000
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:9010/api/v1
+          NEXT_PUBLIC_REALTIME_URL: http://localhost:9010
