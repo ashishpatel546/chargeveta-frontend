@@ -1,9 +1,9 @@
 name: CI
 
+# Manual only (Actions tab > Run workflow). Automatic runs on push and PR are
+# off to save Actions minutes on the free plan until a deploy target is chosen.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   check:
