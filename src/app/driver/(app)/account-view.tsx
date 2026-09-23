@@ -20,8 +20,9 @@ import { driverSignOut } from '@/lib/server/driver-auth';
 
 /**
  * A signed-in driver's own account (`charveta` doc 6 §22.3): who they are,
- * their name, and their password. Cards, sessions, receipts and the wallet
- * are their own Phase P increments — see `progress-tracer.md`.
+ * their name, and their password. Cards, sessions, receipts and nearby
+ * stations are their own screens under the bottom nav (`driver-shell.tsx`);
+ * the wallet is the next Phase P increment — see `progress-tracer.md`.
  */
 export function AccountView() {
   const driver = useDriver();

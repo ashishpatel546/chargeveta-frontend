@@ -2,7 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { UserIcon } from 'lucide-react';
+import {
+  CreditCardIcon,
+  MapPinIcon,
+  ReceiptIcon,
+  UserIcon,
+  ZapIcon,
+} from 'lucide-react';
 import { DriverProvider, useDriver } from '@/components/driver-context';
 import type { DriverDto } from '@/lib/api/driver-types';
 import { config } from '@/lib/config';
@@ -15,11 +21,15 @@ interface DriverNavItem {
 }
 
 /**
- * One tab today. Each later Phase P increment (cards, sessions, receipts,
- * wallet) adds its own entry here rather than its own shell — see
- * `charveta/docs/progress-tracer.md`'s Phase P plan.
+ * Cards, sessions, receipts and nearby stations, this increment's four. The
+ * wallet is the next one — see `charveta/docs/progress-tracer.md`'s Phase P
+ * plan — and adds its own entry here rather than its own shell.
  */
 const NAV_ITEMS: DriverNavItem[] = [
+  { href: '/driver/stations', label: 'Nearby', icon: MapPinIcon },
+  { href: '/driver/sessions', label: 'Sessions', icon: ZapIcon },
+  { href: '/driver/cards', label: 'Cards', icon: CreditCardIcon },
+  { href: '/driver/receipts', label: 'Receipts', icon: ReceiptIcon },
   { href: '/driver', label: 'Account', icon: UserIcon },
 ];
 
@@ -74,7 +84,10 @@ function BottomNav() {
   return (
     <nav className="bg-background/95 fixed inset-x-0 bottom-0 mx-auto flex w-full max-w-md border-t backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {NAV_ITEMS.map((item) => {
-        const active = pathname === item.href;
+        const active =
+          item.href === '/driver'
+            ? pathname === '/driver'
+            : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}

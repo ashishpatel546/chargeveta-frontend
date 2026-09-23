@@ -1,0 +1,197 @@
+'use client';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Failed, Loading } from '@/components/driver-query-state';
+import { PageHeader } from '@/components/page-header';
+import { ConnectorBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { driverApiGet, driverApiSend } from '@/lib/api/driver-client';
+import type {
+  DriverCardDto,
+  DriverCommandResultDto,
+  DriverConnectorDto,
+  DriverStationDto,
+} from '@/lib/api/driver-types';
+
+/**
+ * A charger by its identity (doc 6 §22.3) — what a QR code on it carries, or
+ * `StationsView`'s "Find" box. Starting sends `evseId` on 2.x, `connectorId`
+ * on 1.6, exactly as `StartChargingDto` splits it.
+ */
+export function StationDetail({ identity }: { identity: string }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const station = useQuery({
+    queryKey: ['driver', 'station', identity],
+    queryFn: () => driverApiGet<DriverStationDto>(`/driver/stations/${identity}`),
+  });
+
+  const cards = useQuery({
+    queryKey: ['driver', 'cards'],
+    queryFn: () => driverApiGet<DriverCardDto[]>('/driver/cards'),
+  });
+
+  const [connectorKey, setConnectorKey] = useState<string | undefined>(undefined);
+  const [cardId, setCardId] = useState<string | undefined>(undefined);
+
+  const start = useMutation({
+    mutationFn: () => {
+      const data = station.data!;
+      const connector = data.connectors.find(
+        (c) => connectorOf(c) === (connectorKey ?? connectorOf(data.connectors[0])),
+      );
+      if (!connector) throw new Error('Choose a connector first.');
+      return driverApiSend<DriverCommandResultDto>('POST', '/driver/charging/start', {
+        stationId: data.id,
+        ...(data.ocppVersion === '1.6'
+          ? { connectorId: connector.connectorId }
+          : { evseId: connector.evseId }),
+        ...(cardId ? { cardId } : {}),
+      });
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ['driver', 'sessions'] });
+      if (result.outcome === 'answered' && result.status === 'Accepted') {
+        toast.success('Charging started.');
+        router.push('/driver/sessions');
+      } else if (result.outcome === 'answered') {
+        toast.error(`The charger said ${result.status}.`);
+      } else {
+        toast.error(
+          `The charger did not confirm (${result.outcome.replace(/_/g, ' ')}).`,
+        );
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  if (station.isPending) return <Loading />;
+  if (station.isError) return <Failed error={station.error} />;
+
+  const doc = station.data;
+  const selectedKey = connectorKey ?? (doc.connectors[0] ? connectorOf(doc.connectors[0]) : undefined);
+  const appCard = cards.data?.find((c) => c.isAppCard);
+
+  return (
+    <>
+      <PageHeader
+        title={doc.siteName ?? doc.identity}
+        description={[doc.address, doc.city].filter(Boolean).join(', ') || doc.identity}
+      />
+
+      <div className="space-y-4">
+        <Card size="sm">
+          <CardContent className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Status</span>
+            <Badge
+              variant="outline"
+              className={
+                doc.online
+                  ? 'border-emerald-600/30 bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400'
+                  : 'text-muted-foreground'
+              }
+            >
+              {doc.online ? 'online' : 'offline'}
+            </Badge>
+          </CardContent>
+        </Card>
+
+        {doc.connectors.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            This charger has not reported any connectors yet.
+          </p>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Connector</p>
+              <Select
+                value={selectedKey}
+                onValueChange={(value) => setConnectorKey(value ?? undefined)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a connector" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doc.connectors.map((connector) => (
+                    <SelectItem
+                      key={connectorOf(connector)}
+                      value={connectorOf(connector)}
+                    >
+                      {connector.label ?? connectorLabel(connector)} ·{' '}
+                      {connector.status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-1">
+                {doc.connectors.map((connector) => (
+                  <ConnectorBadge
+                    key={connectorOf(connector)}
+                    status={connector.status}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {cards.data && cards.data.length > 1 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Card</p>
+                <Select
+                  value={cardId ?? appCard?.id}
+                  onValueChange={(value) => setCardId(value ?? undefined)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Your app card" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cards.data.map((card) => (
+                      <SelectItem key={card.id} value={card.id}>
+                        {card.label ?? (card.isAppCard ? 'App card' : card.token)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+
+            <Button
+              className="w-full"
+              disabled={!doc.online || start.isPending || !selectedKey}
+              onClick={() => start.mutate()}
+            >
+              {start.isPending ? 'Starting…' : 'Start charging'}
+            </Button>
+            {!doc.online ? (
+              <p className="text-muted-foreground text-center text-xs">
+                This charger is offline right now.
+              </p>
+            ) : null}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+function connectorOf(connector: DriverConnectorDto): string {
+  return `${connector.evseId}-${connector.connectorId}`;
+}
+
+function connectorLabel(connector: DriverConnectorDto): string {
+  return connector.connectorType
+    ? `${connector.connectorType} (connector ${connector.connectorId})`
+    : `Connector ${connector.connectorId}`;
+}
