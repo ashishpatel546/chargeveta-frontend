@@ -17,12 +17,12 @@ import { Label } from '@/components/ui/label';
 import { driverApiSend } from '@/lib/api/driver-client';
 import type { DriverDto } from '@/lib/api/driver-types';
 import { driverSignOut } from '@/lib/server/driver-auth';
+import { NotificationsCard } from './notifications-card';
 
 /**
  * A signed-in driver's own account (`charveta` doc 6 §22.3): who they are,
  * their name, and their password. Cards, sessions, receipts and nearby
- * stations are their own screens under the bottom nav (`driver-shell.tsx`);
- * the wallet is the next Phase P increment — see `progress-tracer.md`.
+ * stations are their own screens under the bottom nav (`driver-shell.tsx`).
  */
 export function AccountView() {
   const driver = useDriver();
@@ -33,6 +33,7 @@ export function AccountView() {
       <IdentityCard driver={driver} />
       <NameCard driver={driver} onSaved={setDriver} />
       <PasswordCard driver={driver} />
+      <NotificationsCard />
       <SignOutCard />
     </div>
   );

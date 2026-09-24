@@ -175,3 +175,12 @@ export interface HoldConfirmedDto {
   /** Absent if this confirmation had already been made. */
   command?: DriverCommandResultDto;
 }
+
+/** `GET /driver/push-subscriptions` — one of this driver's own devices. */
+export interface DriverPushSubscriptionDto {
+  id: string;
+  endpoint: string;
+  userAgent: string | null;
+  createdAt: string;
+  lastPushedAt: string | null;
+}
