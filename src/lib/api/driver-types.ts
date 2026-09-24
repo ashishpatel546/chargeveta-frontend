@@ -92,3 +92,86 @@ export interface DriverStationDto {
   distanceMeters?: number;
   connectors: DriverConnectorDto[];
 }
+
+/** `GET /driver/wallet` — doc 6 §22.4. `razorpayKeyId` is null while `enabled` is false. */
+export interface WalletDto {
+  enabled: boolean;
+  currency: string;
+  balanceMinor: string;
+  minStartMinor: string;
+  topUpMinMinor: string;
+  topUpMaxMinor: string;
+  holdDefaultMinor: string;
+  holdMinMinor: string;
+  holdMaxMinor: string;
+  razorpayKeyId: string | null;
+}
+
+export interface WalletEntryDto {
+  id: string;
+  /** top_up, charge, or adjustment. */
+  kind: string;
+  /** Signed — negative for a charge. */
+  amountMinor: string;
+  balanceAfterMinor: string;
+  currency: string;
+  transactionId: string | null;
+  paymentId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface WalletEntryPage {
+  items: WalletEntryDto[];
+  nextCursor: string | null;
+}
+
+/** A top-up or a hold, at any point in its Razorpay lifecycle. */
+export interface PaymentDto {
+  id: string;
+  purpose: string;
+  status: string;
+  currency: string;
+  amountMinor: string;
+  capturedMinor: string;
+  refundedMinor: string;
+  /** Hold only: what the card should end up paying. */
+  cardTargetMinor: string | null;
+  method: string | null;
+  razorpayOrderId: string;
+  razorpayPaymentId: string | null;
+  stationId: string | null;
+  transactionId: string | null;
+  authorizedAt: string | null;
+  expiresAt: string | null;
+  capturedAt: string | null;
+  createdAt: string;
+}
+
+export interface PaymentPage {
+  items: PaymentDto[];
+  nextCursor: string | null;
+}
+
+/**
+ * What creating a top-up or a hold answers with — everything Razorpay
+ * Checkout's options object needs, plus the `PaymentDto` row it was opened
+ * for.
+ */
+export interface CheckoutDto {
+  payment: PaymentDto;
+  keyId: string;
+  orderId: string;
+  amountMinor: string;
+  currency: string;
+  name: string;
+  description: string;
+  email?: string;
+  contact?: string;
+}
+
+export interface HoldConfirmedDto {
+  payment: PaymentDto;
+  /** Absent if this confirmation had already been made. */
+  command?: DriverCommandResultDto;
+}

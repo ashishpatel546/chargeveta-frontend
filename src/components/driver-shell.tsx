@@ -7,6 +7,7 @@ import {
   MapPinIcon,
   ReceiptIcon,
   UserIcon,
+  WalletIcon,
   ZapIcon,
 } from 'lucide-react';
 import { DriverProvider, useDriver } from '@/components/driver-context';
@@ -20,14 +21,11 @@ interface DriverNavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-/**
- * Cards, sessions, receipts and nearby stations, this increment's four. The
- * wallet is the next one — see `charveta/docs/progress-tracer.md`'s Phase P
- * plan — and adds its own entry here rather than its own shell.
- */
+/** Doc 6 §22.3/§22.4: everything a signed-in driver's bottom tab bar reaches. */
 const NAV_ITEMS: DriverNavItem[] = [
   { href: '/driver/stations', label: 'Nearby', icon: MapPinIcon },
   { href: '/driver/sessions', label: 'Sessions', icon: ZapIcon },
+  { href: '/driver/wallet', label: 'Wallet', icon: WalletIcon },
   { href: '/driver/cards', label: 'Cards', icon: CreditCardIcon },
   { href: '/driver/receipts', label: 'Receipts', icon: ReceiptIcon },
   { href: '/driver', label: 'Account', icon: UserIcon },
