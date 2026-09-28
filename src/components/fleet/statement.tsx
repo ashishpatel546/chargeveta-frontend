@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { DownloadIcon, PrinterIcon } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { DownloadIcon, MailIcon, PrinterIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Failed, Loading } from '@/components/query-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,11 +50,16 @@ export function StatementView({
   queryKey,
   fetchStatement,
   csvHref,
+  sendStatement,
 }: {
   queryKey: readonly unknown[];
   fetchStatement: (month: string) => Promise<FleetStatement>;
   /** Where the CSV download is, through this surface's own proxy. */
   csvHref: (month: string) => string;
+  /** Staff only: email the month's statement to the fleet now. */
+  sendStatement?: (
+    month: string,
+  ) => Promise<{ recipients: string[]; emailEnabled: boolean }>;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -63,6 +69,24 @@ export function StatementView({
   const statement = useQuery({
     queryKey: [...queryKey, month],
     queryFn: () => fetchStatement(month),
+  });
+
+  const send = useMutation({
+    mutationFn: () => sendStatement!(month),
+    onSuccess: ({ recipients, emailEnabled }) => {
+      if (recipients.length === 0) {
+        toast.info(
+          'Nothing was sent: the month has no settled session, or the fleet has no billing email or active manager.',
+        );
+      } else if (!emailEnabled) {
+        toast.warning(
+          `Queued for ${recipients.join(', ')}, but this installation does not send email.`,
+        );
+      } else {
+        toast.success(`Sent to ${recipients.join(', ')}.`);
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   return (
@@ -93,6 +117,16 @@ export function StatementView({
             <DownloadIcon className="size-4" />
             Download CSV
           </Button>
+          {sendStatement ? (
+            <Button
+              variant="outline"
+              disabled={send.isPending}
+              onClick={() => send.mutate()}
+            >
+              <MailIcon className="size-4" />
+              {send.isPending ? 'Sending…' : 'Email to the fleet'}
+            </Button>
+          ) : null}
           <Button onClick={() => window.print()}>
             <PrinterIcon className="size-4" />
             Print or save as PDF
