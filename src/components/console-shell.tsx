@@ -15,6 +15,7 @@ import {
   PlugZapIcon,
   ReceiptIndianRupeeIcon,
   SettingsIcon,
+  TruckIcon,
   UsersIcon,
   WebhookIcon,
 } from 'lucide-react';
@@ -24,7 +25,7 @@ import { NotificationBell } from '@/components/notification-bell';
 import { PrincipalMenu } from '@/components/principal-menu';
 import { PrincipalProvider } from '@/components/principal-context';
 import { RealtimeProvider } from '@/components/realtime-provider';
-import { atLeast, type Principal, type Role } from '@/lib/api/types';
+import { atLeast, hasModule, type Principal, type Role } from '@/lib/api/types';
 import { config } from '@/lib/config';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   /** The weakest role the API will let through. */
   needs: Role;
+  /** An optional module (`charveta` doc 4 §3.4) the operator must have on. */
+  module?: string;
 }
 
 const OPERATIONS: NavItem[] = [
@@ -41,6 +44,13 @@ const OPERATIONS: NavItem[] = [
   { href: '/sessions', label: 'Sessions', icon: GaugeIcon, needs: 'viewer' },
   { href: '/cards', label: 'Cards', icon: CreditCardIcon, needs: 'viewer' },
   { href: '/sites', label: 'Sites', icon: MapPinIcon, needs: 'viewer' },
+  {
+    href: '/fleets',
+    label: 'Fleets',
+    icon: TruckIcon,
+    needs: 'viewer',
+    module: 'fleet',
+  },
 ];
 
 const MONEY: NavItem[] = [
@@ -92,13 +102,13 @@ export function ConsoleShell({
     <PrincipalProvider principal={principal}>
     <RealtimeProvider>
       <div className="flex min-h-full flex-1">
-        <aside className="bg-sidebar hidden w-60 shrink-0 flex-col border-r md:flex">
+        <aside className="bg-sidebar hidden w-60 shrink-0 flex-col border-r md:flex print:hidden">
           <Brand />
-          <Nav role={principal.role} />
+          <Nav principal={principal} />
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 print:hidden">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger
                 render={
@@ -112,7 +122,7 @@ export function ConsoleShell({
                 <SheetTitle className="sr-only">Menu</SheetTitle>
                 <Brand />
                 <Nav
-                  role={principal.role}
+                  principal={principal}
                   onNavigate={() => setMenuOpen(false)}
                 />
               </SheetContent>
@@ -123,7 +133,7 @@ export function ConsoleShell({
             <PrincipalMenu principal={principal} />
           </header>
 
-          <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
+          <main className="min-w-0 flex-1 p-4 md:p-6 print:p-0">{children}</main>
         </div>
       </div>
     </RealtimeProvider>
@@ -143,10 +153,10 @@ function Brand() {
 }
 
 function Nav({
-  role,
+  principal,
   onNavigate,
 }: {
-  role: Role;
+  principal: Principal;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -154,7 +164,11 @@ function Nav({
   return (
     <nav className="flex-1 space-y-4 overflow-y-auto p-3">
       {SECTIONS.map((section) => {
-        const items = section.items.filter((item) => atLeast(role, item.needs));
+        const items = section.items.filter(
+          (item) =>
+            atLeast(principal.role, item.needs) &&
+            (!item.module || hasModule(principal, item.module)),
+        );
         if (items.length === 0) return null;
         return (
           <div key={section.title} className="space-y-1">

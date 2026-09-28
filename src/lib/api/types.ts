@@ -18,7 +18,7 @@ export function atLeast(role: Role, needed: Role): boolean {
   return ROLES.indexOf(role) >= ROLES.indexOf(needed);
 }
 
-export type Principal =
+export type Principal = (
   | {
       kind: 'user';
       userId: string;
@@ -33,7 +33,20 @@ export type Principal =
       name: string;
       role: Role;
       tenantId: string;
-    };
+    }
+) & {
+  /**
+   * The optional modules switched on for this operator (`charveta` doc 4
+   * §3.4) — `fleet` so far. The console offers only what the API will serve;
+   * the API answers 404 for the rest regardless.
+   */
+  enabledModules?: string[];
+};
+
+/** Whether an optional module is on for the signed-in operator. */
+export function hasModule(principal: Principal, module: string): boolean {
+  return principal.enabledModules?.includes(module) ?? false;
+}
 
 export type OcppVersion = '1.6' | '2.0.1' | '2.1';
 

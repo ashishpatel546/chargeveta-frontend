@@ -21,14 +21,17 @@ export function SetupLink({
   expiresAt,
   emailQueued,
   kind,
+  path = '/setup',
 }: {
+  /** The page the link opens: staff's `/setup`, or the fleet portal's. */
+  path?: string;
   email: string;
   setupToken: string;
   expiresAt?: string;
   emailQueued?: boolean;
   kind: 'invitation' | 'reset';
 }) {
-  const link = `${window.location.origin}/setup?token=${encodeURIComponent(setupToken)}`;
+  const link = `${window.location.origin}${path}?token=${encodeURIComponent(setupToken)}`;
   const what = kind === 'invitation' ? 'an invitation' : 'a password reset link';
 
   return (

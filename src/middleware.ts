@@ -11,6 +11,15 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 export function middleware(request: NextRequest) {
   if (request.cookies.has('cv_rt')) return NextResponse.next();
+  // The fleet portal carries its own cookie pair (`cvf_at`/`cvf_rt`) and is
+  // checked by `fleet/(app)/layout.tsx`'s `requireFleetManager()`, as
+  // `/driver` is by its layout. Tested here rather than in the matcher
+  // below, because the matcher's prefix test would also let staff's
+  // `/fleets` pages through unchecked.
+  const { pathname } = request.nextUrl;
+  if (pathname === '/fleet' || pathname.startsWith('/fleet/')) {
+    return NextResponse.next();
+  }
 
   const signIn = new URL('/sign-in', request.url);
   return NextResponse.redirect(signIn);
