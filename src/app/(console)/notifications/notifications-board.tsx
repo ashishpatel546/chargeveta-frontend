@@ -198,12 +198,7 @@ export function NotificationsBoard() {
                         Escalated {dateTime(alert.escalatedAt)}
                       </p>
                     ) : null}
-                    {alert.escalatedAgainAt ? (
-                      <p className="text-destructive text-xs font-medium">
-                        {escalatedAgainLabel(alert.detail)}{' '}
-                        {dateTime(alert.escalatedAgainAt)}
-                      </p>
-                    ) : null}
+                    <LaterEscalation alert={alert} />
                   </TableCell>
                   {canAcknowledge ? (
                     <TableCell>
@@ -281,10 +276,23 @@ function NotificationDetail({ detail }: { detail: Record<string, unknown> }) {
 }
 
 /**
- * "Escalated again — SMS sent to 2", from what the API recorded of the
- * second step (doc 6 §22.4): a count, never who.
+ * The latest escalation from the second step on (doc 6 §22.4): "Escalated
+ * (step 3) — SMS sent to 2", from what the API recorded of it — a count,
+ * never who. An API from before the ladder sends no step; its second step
+ * is the only one there is.
  */
-function escalatedAgainLabel(detail: unknown): string {
+function LaterEscalation({ alert }: { alert: AppNotification }) {
+  const step = alert.escalationStep ?? (alert.escalatedAgainAt ? 2 : 0);
+  const at = alert.escalatedLastAt ?? alert.escalatedAgainAt;
+  if (step < 2 || !at) return null;
+  return (
+    <p className="text-destructive text-xs font-medium">
+      {escalationLabel(step, alert.detail)} {dateTime(at)}
+    </p>
+  );
+}
+
+function escalationLabel(step: number, detail: unknown): string {
   const again =
     detail && typeof detail === 'object'
       ? (detail as { escalationAgain?: unknown }).escalationAgain
@@ -293,10 +301,11 @@ function escalatedAgainLabel(detail: unknown): string {
     again && typeof again === 'object'
       ? (again as { action?: unknown; texted?: unknown })
       : {};
-  if (record.action === 'stopped') return 'Escalated again — stop accepted';
-  if (record.action === 'closed') return 'Escalated again — session ended';
+  const label = `Escalated (step ${step})`;
+  if (record.action === 'stopped') return `${label} — stop accepted`;
+  if (record.action === 'closed') return `${label} — session ended`;
   const texted = typeof record.texted === 'number' ? record.texted : 0;
   return texted > 0
-    ? `Escalated again — SMS sent to ${texted}`
-    : 'Escalated again — no phone to text';
+    ? `${label} — SMS sent to ${texted}`
+    : `${label} — no phone to text`;
 }

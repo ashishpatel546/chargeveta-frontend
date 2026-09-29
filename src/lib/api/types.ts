@@ -351,6 +351,13 @@ export interface AppNotification {
    * `detail.escalationAgain.texted` says to how many numbers.
    */
   escalatedAgainAt?: string | null;
+  /**
+   * How many steps of the escalation ladder it has climbed (0 never), and
+   * when the latest was; `detail.escalationAgain` records the latest step
+   * from the second on.
+   */
+  escalationStep?: number;
+  escalatedLastAt?: string | null;
 }
 
 export interface TaxLine {
