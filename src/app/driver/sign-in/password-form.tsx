@@ -5,6 +5,7 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM } from '@/lib/forms';
 import { driverLoginAction } from '@/lib/server/driver-auth';
@@ -30,10 +31,9 @@ export function PasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
         />

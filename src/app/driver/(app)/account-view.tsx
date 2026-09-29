@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { driverApiSend } from '@/lib/api/driver-client';
 import type { DriverDto } from '@/lib/api/driver-types';
@@ -180,9 +181,8 @@ function PasswordCard({ driver }: { driver: DriverDto }) {
           {driver.hasPassword ? (
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Current password</Label>
-              <Input
+              <PasswordInput
                 id="currentPassword"
-                type="password"
                 autoComplete="current-password"
                 value={currentPassword}
                 onChange={(event) => setCurrentPassword(event.target.value)}
@@ -192,9 +192,8 @@ function PasswordCard({ driver }: { driver: DriverDto }) {
           ) : null}
           <div className="space-y-2">
             <Label htmlFor="newPassword">New password</Label>
-            <Input
+            <PasswordInput
               id="newPassword"
-              type="password"
               autoComplete="new-password"
               minLength={12}
               maxLength={256}
@@ -205,9 +204,8 @@ function PasswordCard({ driver }: { driver: DriverDto }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Type it again</Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               autoComplete="new-password"
               value={confirm}
               onChange={(event) => setConfirm(event.target.value)}

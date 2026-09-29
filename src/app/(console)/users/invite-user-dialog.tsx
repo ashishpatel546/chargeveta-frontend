@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -149,9 +150,8 @@ export function InviteUserDialog() {
 
               <div className="space-y-2">
                 <Label htmlFor="user-password">Password (optional)</Label>
-                <Input
+                <PasswordInput
                   id="user-password"
-                  type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="new-password"

@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM, type FormState } from '@/lib/forms';
 
@@ -24,10 +24,9 @@ export function ChangePasswordForm({
     <form action={action} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="currentPassword">Current password</Label>
-        <Input
+        <PasswordInput
           id="currentPassword"
           name="currentPassword"
-          type="password"
           autoComplete="current-password"
           required
         />
@@ -35,10 +34,9 @@ export function ChangePasswordForm({
 
       <div className="space-y-2">
         <Label htmlFor="newPassword">New password</Label>
-        <Input
+        <PasswordInput
           id="newPassword"
           name="newPassword"
-          type="password"
           autoComplete="new-password"
           minLength={12}
           maxLength={256}
@@ -53,10 +51,9 @@ export function ChangePasswordForm({
 
       <div className="space-y-2">
         <Label htmlFor="confirm">Type the new one again</Label>
-        <Input
+        <PasswordInput
           id="confirm"
           name="confirm"
-          type="password"
           autoComplete="new-password"
           required
         />
