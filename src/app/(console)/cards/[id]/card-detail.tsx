@@ -39,6 +39,7 @@ import {
   UnblockCardButton,
 } from '../card-actions';
 import { toDayInput, toExpiryIso } from '../expiry';
+import { FreeChargingCard } from '../free-charging';
 
 export function CardDetail({ id }: { id: string }) {
   const canAdmin = useCan('admin');
@@ -95,6 +96,8 @@ export function CardDetail({ id }: { id: string }) {
             <CardForm key={card.data.id} card={card.data} editable={canAdmin} />
           </CardContent>
         </Card>
+
+        <FreeChargingCard card={card.data} />
 
         <History id={id} />
       </div>

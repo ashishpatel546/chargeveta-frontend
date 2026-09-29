@@ -34,6 +34,8 @@ const DECISION_TONE: Record<string, string> = {
     'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
   Blocked: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
   Expired: 'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-500',
+  NoCredit:
+    'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-500',
   Unknown: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400',
   undecided:
     'border-violet-600/30 bg-violet-600/10 text-violet-700 dark:text-violet-400',
@@ -46,6 +48,18 @@ export function DecisionBadge({ status }: { status: string }) {
       className={cn('font-medium', DECISION_TONE[status] ?? '')}
     >
       {status}
+    </Badge>
+  );
+}
+
+/** A card whose sessions a sponsor pays for (doc 6 §22.4). */
+export function FreeChargingBadge({ company }: { company: boolean }) {
+  return (
+    <Badge
+      variant="outline"
+      className="border-sky-600/30 bg-sky-600/10 font-medium text-sky-700 dark:text-sky-400"
+    >
+      {company ? 'Free · company' : 'Free'}
     </Badge>
   );
 }

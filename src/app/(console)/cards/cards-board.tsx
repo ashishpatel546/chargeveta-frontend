@@ -20,7 +20,7 @@ import { apiGet } from '@/lib/api/client';
 import type { IdToken } from '@/lib/api/types';
 import { date } from '@/lib/format';
 import { AddCardDialog } from './add-card-dialog';
-import { CardStatusBadge } from './badges';
+import { CardStatusBadge, FreeChargingBadge } from './badges';
 import { BlockCardDialog, DeleteCardDialog, UnblockCardButton } from './card-actions';
 
 /** What the API returns at most, after which the list is silently truncated. */
@@ -113,8 +113,13 @@ export function CardsBoard() {
                     <TableCell className="text-muted-foreground text-sm">
                       {card.tokenType ?? '—'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="space-x-1 whitespace-nowrap">
                       <CardStatusBadge status={card.status} />
+                      {card.freeCharging?.active ? (
+                        <FreeChargingBadge
+                          company={card.freeCharging.companySponsored}
+                        />
+                      ) : null}
                     </TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">
                       {card.groupId ?? '—'}

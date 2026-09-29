@@ -71,6 +71,9 @@ export function ReceiptDetail({ id }: { id: string }) {
                 />
               </>
             ) : null}
+            {doc.sponsoredBy ? (
+              <Row label="Paid by" value="The operator (free charging)" />
+            ) : null}
           </CardContent>
         </Card>
 

@@ -366,6 +366,11 @@ export interface Receipt {
   creditedNetMinor: string;
   remainingNetMinor: string;
   creditNotes?: CreditNote[];
+  /**
+   * Set when the session was free charging: its full price was paid by a
+   * sponsor — the staff member who granted it, or the company — not the driver.
+   */
+  sponsoredBy?: 'grantor' | 'company' | null;
   issuedBy: string;
   issuedAt: string;
 }
@@ -381,8 +386,61 @@ export interface IdToken {
   expiresAt: string | null;
   groupId: string | null;
   chargingPriority: number | null;
+  /** The card's free-charging grant, if it has one not revoked. */
+  freeCharging?: FreeChargingGrant | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface StaffRef {
+  userId: string;
+  email: string | null;
+}
+
+/**
+ * Free charging on a card (`charveta` doc 6 §22.4, "Card taps and free
+ * charging"): its sessions cost the driver nothing and are paid for by the
+ * staff member who granted it, until an owner makes the company pay.
+ */
+export interface FreeChargingGrant {
+  id: string;
+  idTokenId: string;
+  reason: string;
+  expiresAt: string | null;
+  grantedBy: StaffRef;
+  grantedAt: string;
+  companySponsored: boolean;
+  companySponsoredBy: StaffRef | null;
+  companySponsoredAt: string | null;
+  revokedBy: StaffRef | null;
+  revokedAt: string | null;
+  active: boolean;
+  payer: 'grantor' | 'company';
+}
+
+export interface FreeChargingReport {
+  month: string;
+  totals: {
+    payerKind: 'grantor' | 'company';
+    payer: StaffRef | null;
+    currency: string;
+    sessions: number;
+    amountMinor: string;
+  }[];
+  sessions: {
+    transactionId: string;
+    startedAt: string;
+    stationIdentity: string;
+    siteName: string | null;
+    card: string;
+    cardLabel: string | null;
+    grantId: string;
+    reason: string;
+    payerKind: 'grantor' | 'company';
+    payer: StaffRef | null;
+    currency: string;
+    amountMinor: string;
+  }[];
 }
 
 export interface AuthorizationRecord {

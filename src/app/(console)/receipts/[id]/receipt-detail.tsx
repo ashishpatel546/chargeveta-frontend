@@ -106,6 +106,16 @@ export function ReceiptDetail({ id }: { id: string }) {
                 label="Remaining"
                 value={money(doc.remainingNetMinor, doc.currency)}
               />
+              {doc.sponsoredBy ? (
+                <Row
+                  label="Paid by"
+                  value={
+                    doc.sponsoredBy === 'company'
+                      ? 'The company (free charging)'
+                      : 'The staff member who granted free charging'
+                  }
+                />
+              ) : null}
             </dl>
           </CardContent>
         </Card>

@@ -43,10 +43,14 @@ export interface AuthorizationFilters {
 export const DECISION_FILTERS: { value: string; label: string }[] = [
   { value: 'all', label: 'Any result' },
   { value: 'Accepted', label: 'Accepted' },
-  { value: 'Blocked,Expired,Unknown', label: 'Turned away' },
+  {
+    value: 'Blocked,Expired,Unknown,ConcurrentTx,NoCredit',
+    label: 'Turned away',
+  },
   { value: 'Blocked', label: 'Blocked' },
   { value: 'Expired', label: 'Expired' },
   { value: 'Unknown', label: 'Unknown card' },
+  { value: 'NoCredit', label: 'Wallet too low' },
   { value: 'undecided', label: 'No decision reached' },
 ];
 
