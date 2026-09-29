@@ -46,3 +46,29 @@ export const config: Config = parsed.data;
 
 /** Whether this build was given a realtime endpoint to connect to. */
 export const realtimeEnabled = config.realtimeUrl !== '';
+
+const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Where the browser opens the realtime socket, given the page it is on.
+ *
+ * The configured URL is used as it is, except when it names a loopback host
+ * and the page itself is not on one. That is the console opened from another
+ * device — a phone through the dev tunnel, https://charveta.appme.in — where
+ * `localhost:9010` would be the phone itself. There the socket goes to the
+ * page's own origin instead, at the same path, and the tunnel routes that path
+ * to the API. Same origin, so there is nothing for CORS to refuse, and the
+ * connection is wss whenever the page is https. On localhost nothing changes.
+ */
+export function realtimeUrlFor(page: { hostname: string; origin: string }): string {
+  let configured: URL;
+  try {
+    configured = new URL(config.realtimeUrl);
+  } catch {
+    return config.realtimeUrl;
+  }
+  if (LOOPBACK.has(configured.hostname) && !LOOPBACK.has(page.hostname)) {
+    return page.origin;
+  }
+  return config.realtimeUrl;
+}
