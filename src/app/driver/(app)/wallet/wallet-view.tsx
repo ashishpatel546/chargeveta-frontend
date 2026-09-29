@@ -110,7 +110,12 @@ function BalanceCard({ wallet }: { wallet: WalletDto }) {
         <div>
           <p className="text-muted-foreground text-xs">Balance</p>
           <p className="text-2xl font-semibold">{money(wallet.balanceMinor, wallet.currency)}</p>
-          {wallet.enabled && wallet.withdrawableMinor !== wallet.balanceMinor ? (
+          {wallet.enabled && wallet.debtMinor !== '0' ? (
+            <p className="text-destructive text-xs">
+              You owe {money(wallet.debtMinor, wallet.currency)} from an earlier session. A top-up
+              pays it first, or your next card hold does.
+            </p>
+          ) : wallet.enabled && wallet.withdrawableMinor !== wallet.balanceMinor ? (
             <p className="text-muted-foreground text-xs">
               {money(wallet.withdrawableMinor, wallet.currency)} can go back to your bank
             </p>
@@ -222,6 +227,7 @@ const ENTRY_LABEL: Record<string, string> = {
   adjustment: 'Adjustment',
   withdrawal: 'Withdrawal to bank',
   withdrawal_reversal: 'Withdrawal returned',
+  debt_repayment: 'Owed amount paid by card',
 };
 
 function EntryRow({ entry }: { entry: WalletEntryDto }) {

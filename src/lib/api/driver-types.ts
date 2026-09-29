@@ -164,6 +164,11 @@ export interface WalletDto {
    * refund of the driver's own top-ups. Never negative.
    */
   withdrawableMinor: string;
+  /**
+   * What the wallet owes from a session it could not cover (a charger that
+   * went offline, say), else "0". A card hold pays it off first.
+   */
+  debtMinor: string;
   minStartMinor: string;
   topUpMinMinor: string;
   topUpMaxMinor: string;
@@ -175,7 +180,7 @@ export interface WalletDto {
 
 export interface WalletEntryDto {
   id: string;
-  /** top_up, charge, adjustment, withdrawal or withdrawal_reversal. */
+  /** top_up, charge, adjustment, withdrawal, withdrawal_reversal or debt_repayment. */
   kind: string;
   /** Signed — negative for a charge. */
   amountMinor: string;

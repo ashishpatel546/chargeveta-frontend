@@ -252,6 +252,13 @@ export function StationDetail({ identity }: { identity: string }) {
                 {payByCard.isPending ? 'Opening Checkout…' : 'Pay by card instead'}
               </Button>
             ) : null}
+            {wallet.data?.enabled && wallet.data.debtMinor !== '0' ? (
+              <p className="text-muted-foreground text-center text-xs">
+                Your wallet owes {money(wallet.data.debtMinor, wallet.data.currency)} from an earlier
+                session. Paying by card takes it from the hold first, and the hold is made larger to
+                cover it.
+              </p>
+            ) : null}
             {!doc.online ? (
               <p className="text-muted-foreground text-center text-xs">
                 This charger is offline right now.
