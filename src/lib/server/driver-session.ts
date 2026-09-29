@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 import { config } from '../config';
+import { clientHeaders } from './client-address';
 
 /**
  * Where a driver's tokens live — the same idea as `session.ts`, in cookies of
@@ -80,7 +81,10 @@ export async function refreshDriverTokens(
 ): Promise<DriverTokenPair | null> {
   const response = await fetch(`${config.apiBaseUrl}/driver/auth/refresh`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
     body: JSON.stringify({ refreshToken }),
     cache: 'no-store',
   });

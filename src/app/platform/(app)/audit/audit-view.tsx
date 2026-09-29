@@ -4,14 +4,8 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Empty, Failed, Loading } from '@/components/query-state';
+import { ALL, describeDetails, FilterSelect } from '@/components/audit-log';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -29,8 +23,6 @@ import {
   type PlatformTenantListItem,
 } from '@/lib/api/platform-types';
 import { dateTime } from '@/lib/format';
-
-const ALL = 'all';
 
 const ACTION_LABELS: Record<string, string> = {
   'tenant.create': 'Tenant created',
@@ -147,7 +139,7 @@ export function PlatformAuditView() {
                       {row.tenantId ? (row.tenantName ?? 'Removed tenant') : '—'}
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-80 text-xs whitespace-normal">
-                      {describe(row.detail)}
+                      {describeDetails(row.detail)}
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.ipAddress ?? '—'}</TableCell>
                   </TableRow>
@@ -171,49 +163,9 @@ export function PlatformAuditView() {
   );
 }
 
-function FilterSelect({
-  value,
-  onChange,
-  items,
-  label,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  items: { value: string; label: string }[];
-  label: string;
-}) {
-  return (
-    <Select value={value} onValueChange={(next) => onChange(next ?? ALL)} items={items}>
-      <SelectTrigger className="w-56" aria-label={label}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
 function who(row: PlatformAuditEntry): string {
   if (row.actor === 'platform') return 'Platform secret (a script)';
   if (row.actor.startsWith('script:')) return `Server script (${row.actor.slice(7)})`;
   if (row.actor === 'anonymous') return row.actorEmail ? `Someone as ${row.actorEmail}` : 'Someone';
   return row.actorEmail ?? row.actor;
-}
-
-/** The detail as short "key: value" pairs. Nothing secret is ever in it. */
-function describe(detail: Record<string, unknown>): string {
-  const parts = Object.entries(detail).map(([key, value]) => {
-    const shown = Array.isArray(value)
-      ? value.length > 0
-        ? value.join(', ')
-        : 'none'
-      : String(value);
-    return `${key}: ${shown}`;
-  });
-  return parts.length > 0 ? parts.join(' · ') : '—';
 }

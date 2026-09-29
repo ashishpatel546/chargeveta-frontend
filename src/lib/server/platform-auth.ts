@@ -11,6 +11,7 @@ import {
   writePlatformSession,
 } from './platform-session';
 import type { PlatformTokenPair } from './platform-session';
+import { clientHeaders } from './client-address';
 
 /**
  * How a platform administrator signs in: an email and a password, and no
@@ -38,7 +39,10 @@ export async function platformSignInAction(
   try {
     response = await fetch(`${config.apiBaseUrl}/platform/auth/sign-in`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
       body: JSON.stringify(parsed.data),
       cache: 'no-store',
     });
@@ -158,7 +162,10 @@ export async function platformRedeemSetupAction(
   try {
     response = await fetch(`${config.apiBaseUrl}/platform/auth/setup`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
       body: JSON.stringify({
         setupToken: parsed.data.setupToken,
         password: parsed.data.password,

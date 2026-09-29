@@ -8,6 +8,7 @@ import {
   CreditCardIcon,
   FileTextIcon,
   GaugeIcon,
+  HistoryIcon,
   KeyIcon,
   MailIcon,
   MapPinIcon,
@@ -75,6 +76,7 @@ const ADMIN: NavItem[] = [
   },
   { href: '/users', label: 'People', icon: UsersIcon, needs: 'admin' },
   { href: '/api-keys', label: 'API keys', icon: KeyIcon, needs: 'admin' },
+  { href: '/audit', label: 'Audit log', icon: HistoryIcon, needs: 'admin' },
   { href: '/messages', label: 'Messages', icon: MailIcon, needs: 'admin' },
   { href: '/webhooks', label: 'Webhooks', icon: WebhookIcon, needs: 'admin' },
   {

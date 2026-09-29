@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 import { config } from '../config';
+import { clientHeaders } from './client-address';
 
 /**
  * Where a fleet manager's tokens live — `driver-session.ts` again, in a third
@@ -71,7 +72,10 @@ export async function refreshFleetTokens(
 ): Promise<FleetTokenPair | null> {
   const response = await fetch(`${config.apiBaseUrl}/fleet-manager/auth/refresh`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
     body: JSON.stringify({ refreshToken }),
     cache: 'no-store',
   });

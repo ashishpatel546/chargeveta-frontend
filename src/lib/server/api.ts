@@ -7,6 +7,7 @@ import {
   refreshTokens,
   writeSession,
 } from './session';
+import { clientHeaders } from './client-address';
 
 /**
  * Calls the API as the signed-in user, refreshing once if the access token has
@@ -49,12 +50,13 @@ export async function apiFetch(
   return { ok: true, response };
 }
 
-function send(
+async function send(
   url: string,
   request: ApiRequest,
   accessToken: string,
 ): Promise<Response> {
-  const headers = new Headers();
+  // The browser's address and user agent, as far as we can vouch for them.
+  const headers = new Headers(await clientHeaders());
   headers.set('authorization', `Bearer ${accessToken}`);
   if (request.contentType) headers.set('content-type', request.contentType);
   if (request.accept) headers.set('accept', request.accept);

@@ -7,6 +7,7 @@ import {
   refreshDriverTokens,
   writeDriverSession,
 } from './driver-session';
+import { clientHeaders } from './client-address';
 
 /**
  * Calls the API as the signed-in driver, refreshing once if the access token
@@ -47,12 +48,13 @@ export async function driverApiFetch(
   return { ok: true, response };
 }
 
-function send(
+async function send(
   url: string,
   request: DriverApiRequest,
   accessToken: string,
 ): Promise<Response> {
-  const headers = new Headers();
+  // The browser's address and user agent, as far as we can vouch for them.
+  const headers = new Headers(await clientHeaders());
   headers.set('authorization', `Bearer ${accessToken}`);
   if (request.contentType) headers.set('content-type', request.contentType);
   if (request.accept) headers.set('accept', request.accept);
