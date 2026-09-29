@@ -193,6 +193,11 @@ export function NotificationsBoard() {
                     ) : (
                       'waiting'
                     )}
+                    {alert.escalatedAt ? (
+                      <p className="text-destructive text-xs">
+                        Escalated {dateTime(alert.escalatedAt)}
+                      </p>
+                    ) : null}
                   </TableCell>
                   {canAcknowledge ? (
                     <TableCell>
