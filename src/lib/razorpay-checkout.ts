@@ -16,6 +16,13 @@ export interface RazorpayCheckoutOptions {
   description: string;
   email?: string;
   contact?: string;
+  /**
+   * Called the moment Razorpay reports an attempt failed, with a message fit
+   * to show the driver. Checkout stays open so they can try again; nothing
+   * is reported to the API from here — a failure is only ever recorded by the
+   * API asking Razorpay itself.
+   */
+  onPaymentFailed?: (message: string) => void;
 }
 
 /** What Checkout's `handler` receives, and exactly what `…/confirm` wants (`ConfirmPaymentDto`). */
@@ -26,6 +33,21 @@ export interface RazorpayCheckoutResult {
 
 interface RazorpayInstance {
   open: () => void;
+  on: (event: 'payment.failed', handler: (response: RazorpayFailure) => void) => void;
+}
+
+/** What Checkout's `payment.failed` event carries. */
+interface RazorpayFailure {
+  error?: { code?: string; description?: string; reason?: string };
+}
+
+/** Turns Checkout's failure into words for the driver. */
+export function checkoutFailureMessage(response: RazorpayFailure): string {
+  const why = response.error?.description?.trim();
+  return (
+    `Payment failed${why ? `: ${why.replace(/\.$/, '')}` : ''}. ` +
+    'If your bank took the money, it goes back to you automatically.'
+  );
 }
 
 interface RazorpayConstructor {
@@ -55,6 +77,8 @@ function loadScript(): Promise<void> {
  * Resolves with the payment id + signature once the driver pays, or rejects
  * if they dismiss the sheet first — there is no successful outcome to
  * report then, so the caller's mutation should just surface the rejection.
+ * A failed attempt is passed to `onPaymentFailed` at once; closing the sheet
+ * after one rejects with that failure rather than "closed before paying".
  */
 export async function openRazorpayCheckout(
   options: RazorpayCheckoutOptions,
@@ -66,6 +90,7 @@ export async function openRazorpayCheckout(
   const Razorpay = (window as unknown as { Razorpay: RazorpayConstructor })
     .Razorpay;
   return new Promise((resolve, reject) => {
+    let failure: string | undefined;
     const checkout = new Razorpay({
       key: options.keyId,
       order_id: options.orderId,
@@ -87,8 +112,13 @@ export async function openRazorpayCheckout(
         });
       },
       modal: {
-        ondismiss: () => reject(new Error('Checkout was closed before paying.')),
+        ondismiss: () =>
+          reject(new Error(failure ?? 'Checkout was closed before paying.')),
       },
+    });
+    checkout.on('payment.failed', (response) => {
+      failure = checkoutFailureMessage(response);
+      options.onPaymentFailed?.(failure);
     });
     checkout.open();
   });

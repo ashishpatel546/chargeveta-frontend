@@ -159,6 +159,11 @@ export interface WalletDto {
   enabled: boolean;
   currency: string;
   balanceMinor: string;
+  /**
+   * What can go back to the bank now: the balance, up to what is left to
+   * refund of the driver's own top-ups. Never negative.
+   */
+  withdrawableMinor: string;
   minStartMinor: string;
   topUpMinMinor: string;
   topUpMaxMinor: string;
@@ -170,7 +175,7 @@ export interface WalletDto {
 
 export interface WalletEntryDto {
   id: string;
-  /** top_up, charge, or adjustment. */
+  /** top_up, charge, adjustment, withdrawal or withdrawal_reversal. */
   kind: string;
   /** Signed — negative for a charge. */
   amountMinor: string;
@@ -207,6 +212,34 @@ export interface PaymentDto {
   expiresAt: string | null;
   capturedAt: string | null;
   createdAt: string;
+}
+
+/** One part of a withdrawal: a refund of one earlier top-up. */
+export interface WithdrawalPartDto {
+  amountMinor: string;
+  /** pending, processed, or failed (given up: back in the wallet). */
+  status: string;
+  /** How that top-up was paid — card, upi, netbanking… */
+  method: string | null;
+  paidAt: string;
+}
+
+export interface WithdrawalDto {
+  id: string;
+  currency: string;
+  amountMinor: string;
+  /** processing, completed, partially_returned or returned. */
+  status: string;
+  sentMinor: string;
+  returnedMinor: string;
+  parts: WithdrawalPartDto[];
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface WithdrawalPage {
+  items: WithdrawalDto[];
+  nextCursor: string | null;
 }
 
 export interface PaymentPage {

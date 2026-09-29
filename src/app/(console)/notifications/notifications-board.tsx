@@ -39,6 +39,7 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   'station.quarantined': 'Charger quarantined',
   'station.offline': 'Charger offline',
   'security.event': 'Security event',
+  'payment.attention': 'Driver payment stuck',
 };
 
 export function NotificationsBoard() {
@@ -151,6 +152,14 @@ export function NotificationsBoard() {
                     <p className="font-medium">{alert.title}</p>
                     <p className="text-muted-foreground text-xs">
                       {KIND_LABEL[alert.kind] ?? alert.kind}
+                      {alert.kind === 'payment.attention' ? (
+                        <>
+                          {' · '}
+                          <Link href="/payments" className="hover:underline">
+                            Payments needing attention
+                          </Link>
+                        </>
+                      ) : null}
                     </p>
                     <NotificationDetail detail={alert.detail} />
                   </TableCell>

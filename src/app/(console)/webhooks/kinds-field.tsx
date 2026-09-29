@@ -8,6 +8,7 @@ export const NOTIFICATION_KINDS: NotificationKind[] = [
   'station.quarantined',
   'station.offline',
   'security.event',
+  'payment.attention',
 ];
 
 export const KIND_LABEL: Record<NotificationKind, string> = {
@@ -15,6 +16,7 @@ export const KIND_LABEL: Record<NotificationKind, string> = {
   'station.quarantined': 'Charger quarantined',
   'station.offline': 'Charger offline',
   'security.event': 'Security event',
+  'payment.attention': 'Driver payment stuck',
 };
 
 /**

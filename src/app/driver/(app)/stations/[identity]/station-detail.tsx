@@ -126,6 +126,8 @@ export function StationDetail({ identity }: { identity: string }) {
         description: checkout.description,
         email: checkout.email ?? driver.email ?? undefined,
         contact: checkout.contact ?? driver.phone ?? undefined,
+        // Straight away, while Checkout is still open to try another way.
+        onPaymentFailed: (message) => toast.error(message),
       });
       return driverApiSend<HoldConfirmedDto>(
         'POST',
