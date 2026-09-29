@@ -56,7 +56,7 @@ export function WalletView() {
 
   return (
     <>
-      <PageHeader title="Wallet" description="Doc 6 §22.4: a prepaid balance for starting a session." />
+      <PageHeader title="Wallet" description="Money you have added, used to pay for charging." />
 
       {wallet.isPending ? <Loading rows={1} /> : null}
       {wallet.isError ? <Failed error={wallet.error} /> : null}
