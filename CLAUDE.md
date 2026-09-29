@@ -13,7 +13,7 @@ npm run dev         # http://localhost:9014 (https://charveta.appme.in) — need
 npm run build
 npm run start        # serves the production build on :9014
 npm run lint
-npm run typecheck    # tsc --noEmit — there is no test script/suite in this repo
+npm run typecheck    # next typegen + tsc --noEmit — there is no test script/suite in this repo
 ```
 
 Sign in with the account the API was seeded with (`SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` in the API's own `.env`); a shared installation also needs the operator's short name (`SEED_TENANT_SLUG`).
