@@ -2,14 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BuildingIcon, KeyRoundIcon, LogOutIcon } from 'lucide-react';
+import {
+  BuildingIcon,
+  KeyRoundIcon,
+  LogOutIcon,
+  ScrollTextIcon,
+  UsersIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PlatformAdminMe } from '@/lib/api/platform-types';
 import { config } from '@/lib/config';
 import { platformSignOut } from '@/lib/server/platform-auth';
 import { cn } from '@/lib/utils';
 
-const NAV_ITEMS = [{ href: '/platform/tenants', label: 'Tenants', icon: BuildingIcon }];
+const NAV_ITEMS = [
+  { href: '/platform/tenants', label: 'Tenants', icon: BuildingIcon },
+  { href: '/platform/admins', label: 'Admins', icon: UsersIcon },
+  { href: '/platform/audit', label: 'Audit log', icon: ScrollTextIcon },
+];
 
 /**
  * The platform console's chrome — `FleetShell`'s top bar and tabs. Everything

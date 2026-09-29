@@ -14,18 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ApiError } from '@/lib/api/client';
 import { platformApiSend } from '@/lib/api/platform-client';
 import type {
   ChargerDisconnects,
   OwnerSetupLink,
-  PlatformTenant,
+  PlatformTenantListItem,
   UpdatedTenant,
 } from '@/lib/api/platform-types';
 
-export function TenantActions({ tenant }: { tenant: PlatformTenant }) {
+export function TenantActions({ tenant }: { tenant: PlatformTenantListItem }) {
   const queryClient = useQueryClient();
   const [disconnects, setDisconnects] = useState<ChargerDisconnects | null>(null);
 
@@ -119,92 +117,55 @@ function DisconnectCounts({ counts }: { counts: ChargerDisconnects }) {
 }
 
 /**
- * A new setup link for one of the tenant's owners — for an owner who lost
- * the first one, or let it expire. The platform does not list a tenant's
- * people, so the admin says which owner it is for; the API answers 404 when
- * that address is not an owner of this tenant.
+ * A new setup link for the tenant's owner — for one who lost the first, or
+ * let it expire. One click: the API finds the owner itself (the first active
+ * one, the one the list shows), so nothing is typed. The old link stops
+ * working, which is why the dialog says so.
  */
-function ResendOwnerLink({ tenant }: { tenant: PlatformTenant }) {
-  const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [issued, setIssued] = useState<{ email: string; link: OwnerSetupLink } | null>(
-    null,
-  );
+function ResendOwnerLink({ tenant }: { tenant: PlatformTenantListItem }) {
+  const [issued, setIssued] = useState<OwnerSetupLink | null>(null);
+  const queryClient = useQueryClient();
+  const email = tenant.owner?.email ?? '';
 
   const issue = useMutation({
     mutationFn: () =>
-      platformApiSend<OwnerSetupLink>('POST', `/tenants/${tenant.id}/owner-setup-token`, {
-        email: email.trim(),
-      }),
+      platformApiSend<OwnerSetupLink>('POST', `/tenants/${tenant.id}/owner-setup-token`),
     onSuccess: (link) => {
-      setIssued({ email: email.trim(), link });
-      setEmail('');
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'tenants'] });
+      setIssued(link);
     },
     onError: (error: Error) =>
       toast.error(
         error instanceof ApiError && error.status === 404
-          ? `${email.trim()} is not an owner of ${tenant.name}.`
+          ? `${tenant.name} has no active owner to send a link to.`
           : error.message,
       ),
   });
 
-  function close() {
-    setOpen(false);
-    setIssued(null);
-    setEmail('');
-  }
-
+  const hasOwner = tenant.owner !== null && tenant.activeOwners > 0;
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Resend owner link
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => issue.mutate()}
+        disabled={!hasOwner || issue.isPending}
+        title={hasOwner ? `A new link for ${email}` : 'This tenant has no active owner'}
+      >
+        {issue.isPending ? 'Issuing…' : 'Resend owner link'}
       </Button>
-      <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
+      <Dialog open={issued !== null} onOpenChange={(open) => !open && setIssued(null)}>
         <DialogContent>
-          {issued ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>New link for {issued.email}</DialogTitle>
-                <DialogDescription>
-                  Any earlier link for this owner stops working.
-                </DialogDescription>
-              </DialogHeader>
-              <OwnerLink email={issued.email} link={issued.link} kind="reset" />
-              <DialogFooter>
-                <Button onClick={close}>Done</Button>
-              </DialogFooter>
-            </>
-          ) : (
-            <>
-              <DialogHeader>
-                <DialogTitle>Resend an owner link for {tenant.name}</DialogTitle>
-                <DialogDescription>
-                  Which owner is it for? They get a new link to choose their
-                  password from.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-2">
-                <Label htmlFor={`owner-email-${tenant.id}`}>Owner email</Label>
-                <Input
-                  id={`owner-email-${tenant.id}`}
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="owner@example.com"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </div>
-              <DialogFooter>
-                <Button
-                  onClick={() => issue.mutate()}
-                  disabled={email.trim().length === 0 || issue.isPending}
-                >
-                  {issue.isPending ? 'Issuing…' : 'Issue new link'}
-                </Button>
-              </DialogFooter>
-            </>
-          )}
+          <DialogHeader>
+            <DialogTitle>New link for {email}</DialogTitle>
+            <DialogDescription>
+              Any earlier link for this owner stops working.
+            </DialogDescription>
+          </DialogHeader>
+          {issued ? <OwnerLink email={email} link={issued} kind="reset" /> : null}
+          <DialogFooter>
+            <Button onClick={() => setIssued(null)}>Done</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
