@@ -331,6 +331,11 @@ export interface AppNotification {
   createdAt: string;
   acknowledgedAt: string | null;
   acknowledgedBy: string | null;
+  /**
+   * When an alert nobody answered was escalated to the owners and admins by
+   * email (`session.stop_failed` only); `detail.escalation` says how it went.
+   */
+  escalatedAt?: string | null;
 }
 
 export interface TaxLine {
