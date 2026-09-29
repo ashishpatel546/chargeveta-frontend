@@ -31,6 +31,7 @@ const ACTION_LABELS: Record<string, string> = {
   'staff.sign-in': 'Signed in',
   'staff.sign-in-failed': 'Sign-in refused',
   'staff.setup-redeemed': 'Set password from link',
+  'staff.password-reset-requested': 'Asked for a password reset',
   'staff.password-change': 'Changed own password',
   'user.add': 'Person added',
   'user.role-change': 'Role changed',

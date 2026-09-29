@@ -1,17 +1,27 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM } from '@/lib/forms';
-import { signIn } from '@/lib/server/auth';
+import { requestPasswordReset } from '@/lib/server/auth';
 
-export function SignInForm() {
-  const [state, action] = useActionState(signIn, EMPTY_FORM);
+export function ForgotForm() {
+  const [state, action] = useActionState(requestPasswordReset, EMPTY_FORM);
+
+  if (state.message) {
+    return (
+      <p
+        role="status"
+        className="border-l-2 border-emerald-600 pl-3 text-sm text-emerald-700 dark:text-emerald-500"
+      >
+        {state.message} It can take a minute to arrive; check your spam folder
+        too. The link works once.
+      </p>
+    );
+  }
 
   return (
     <form action={action} className="space-y-4">
@@ -25,7 +35,7 @@ export function SignInForm() {
           spellCheck={false}
         />
         <p className="text-muted-foreground text-xs">
-          The short name of your operator account. Leave it empty if this
+          The same short name you sign in with. Leave it empty if this
           installation serves only one.
         </p>
       </div>
@@ -37,24 +47,6 @@ export function SignInForm() {
           name="email"
           type="email"
           autoComplete="username"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-baseline justify-between">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/sign-in/forgot"
-            className="text-muted-foreground text-xs underline underline-offset-4"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <PasswordInput
-          id="password"
-          name="password"
-          autoComplete="current-password"
           required
         />
       </div>
@@ -71,11 +63,10 @@ export function SignInForm() {
 }
 
 function Submit() {
-  // `useFormStatus` reads the enclosing form, so it has to be its own component.
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Signing in…' : 'Sign in'}
+      {pending ? 'Sending…' : 'Email me a reset link'}
     </Button>
   );
 }

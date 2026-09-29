@@ -25,9 +25,11 @@ npm install
 npm run dev                    # http://localhost:9014 (https://charveta.appme.in)
 ```
 
-Sign in with the account the API was seeded with (`SEED_ADMIN_EMAIL` and
-`SEED_ADMIN_PASSWORD` in the API's `.env`). In a shared installation you also
-need the operator's short name — `SEED_TENANT_SLUG`.
+A platform admin creates each tenant and its owner at `/platform/tenants`
+(the first platform admin comes from `PLATFORM_ADMIN_EMAIL` and
+`PLATFORM_ADMIN_INITIAL_PASSWORD` in the API's `.env`). Staff then sign in at
+`/sign-in` with the tenant's short name, their email and password; a forgotten
+password is reset from **Forgot password?** there (`/sign-in/forgot`).
 
 ### From another device
 

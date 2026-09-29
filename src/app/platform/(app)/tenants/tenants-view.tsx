@@ -90,7 +90,7 @@ export function PlatformTenantsView() {
 
 /**
  * Who the tenant's owner is, and whether they have got in yet: never signed
- * in means the setup link was not used, which is what "Resend owner link" is
+ * in means the setup link was not used, which is what "Reset owner password" is
  * for.
  */
 function OwnerCell({ tenant }: { tenant: PlatformTenantListItem }) {

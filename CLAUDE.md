@@ -16,7 +16,7 @@ npm run lint
 npm run typecheck    # next typegen + tsc --noEmit — there is no test script/suite in this repo
 ```
 
-Sign in with the account the API was seeded with (`SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` in the API's own `.env`); a shared installation also needs the operator's short name (`SEED_TENANT_SLUG`).
+Tenants and their owners are created by a platform admin at `/platform/tenants` (the first platform admin comes from `PLATFORM_ADMIN_EMAIL`/`PLATFORM_ADMIN_INITIAL_PASSWORD` in the API's `.env`); staff sign in at `/sign-in` with the tenant's slug, email and password, and a forgotten password is reset from `/sign-in/forgot`.
 
 ## Architecture
 

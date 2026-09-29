@@ -69,6 +69,55 @@ export async function signIn(
   redirect('/stations');
 }
 
+const resetRequest = z.object({
+  tenantSlug: z.string().trim().max(100).optional(),
+  email: z.email('That does not look like an email address'),
+});
+
+/**
+ * "Forgot password?" — asks the API to email a reset link (doc 6 §19.2).
+ *
+ * The API answers the same whether or not the account exists, and so does
+ * this: the message is the API's own, and a failure is only ever about the
+ * API being unreachable or throttling, never about the account.
+ */
+export async function requestPasswordReset(
+  _previous: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = resetRequest.safeParse({
+    tenantSlug: (form.get('tenantSlug') as string | null) || undefined,
+    email: form.get('email'),
+  });
+  if (!parsed.success) {
+    return { error: z.prettifyError(parsed.error) };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.apiBaseUrl}/auth/password-reset`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
+      body: JSON.stringify(parsed.data),
+      cache: 'no-store',
+    });
+  } catch {
+    return {
+      error: `The API at ${config.apiBaseUrl} did not answer. Is it running?`,
+    };
+  }
+
+  if (response.status === 429) {
+    return { error: 'Too many requests. Wait a minute and try again.' };
+  }
+  if (!response.ok) return { error: await readMessage(response) };
+  const { message } = (await response.json()) as { message: string };
+  return { message };
+}
+
 const setup = z
   .object({
     setupToken: z.string().trim().min(1, 'This link is missing its token'),
@@ -131,7 +180,7 @@ export async function redeemSetupToken(
     return {
       error:
         response.status === 401
-          ? 'This link has expired or has already been used. Ask your administrator for a new one.'
+          ? 'This link has expired or has already been used. Ask for a new one from "Forgot password?" on the sign-in page, or from your administrator.'
           : await readMessage(response),
     };
   }

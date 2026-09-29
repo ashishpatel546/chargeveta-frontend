@@ -638,6 +638,7 @@ export const TENANT_AUDIT_ACTIONS = [
   'staff.sign-in',
   'staff.sign-in-failed',
   'staff.setup-redeemed',
+  'staff.password-reset-requested',
   'staff.password-change',
   'user.add',
   'user.role-change',

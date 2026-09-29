@@ -150,9 +150,9 @@ function ResendOwnerLink({ tenant }: { tenant: PlatformTenantListItem }) {
         size="sm"
         onClick={() => issue.mutate()}
         disabled={!hasOwner || issue.isPending}
-        title={hasOwner ? `A new link for ${email}` : 'This tenant has no active owner'}
+        title={hasOwner ? `Email ${email} a link to choose a new password` : 'This tenant has no active owner'}
       >
-        {issue.isPending ? 'Issuing…' : 'Resend owner link'}
+        {issue.isPending ? 'Issuing…' : 'Reset owner password'}
       </Button>
       <Dialog open={issued !== null} onOpenChange={(open) => !open && setIssued(null)}>
         <DialogContent>
