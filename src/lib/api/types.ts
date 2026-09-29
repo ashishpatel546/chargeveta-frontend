@@ -26,6 +26,12 @@ export type Principal = (
       role: Role;
       tenantId: string;
       sessionId: string;
+      /**
+       * Set while the user still has to replace a temporary password. The
+       * console sends them to `/change-password` before anything else; the
+       * API refuses every other route with `PASSWORD_CHANGE_REQUIRED` anyway.
+       */
+      mustChangePassword?: boolean;
     }
   | {
       kind: 'api-key';

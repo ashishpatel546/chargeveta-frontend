@@ -136,6 +136,63 @@ export async function redeemSetupToken(
   redirect('/stations');
 }
 
+const change = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: z
+      .string()
+      .min(12, 'Use at least 12 characters')
+      .max(256, 'Use at most 256 characters'),
+    confirm: z.string(),
+  })
+  .refine((value) => value.newPassword === value.confirm, {
+    message: 'The two new passwords do not match',
+    path: ['confirm'],
+  })
+  .refine((value) => value.newPassword !== value.currentPassword, {
+    message: 'The new password has to be different from the current one',
+    path: ['newPassword'],
+  });
+
+/**
+ * Changes the signed-in user's own password — forced after an owner or the
+ * platform gave them a temporary one, or chosen from the account menu. The
+ * API ends every other session they have and keeps this one, so the cookies
+ * stay as they are.
+ */
+export async function changePassword(
+  _previous: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = change.safeParse({
+    currentPassword: form.get('currentPassword'),
+    newPassword: form.get('newPassword'),
+    confirm: form.get('confirm'),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Check the form' };
+  }
+
+  let call: Awaited<ReturnType<typeof apiFetch>>;
+  try {
+    call = await apiFetch('/auth/password', {
+      method: 'PUT',
+      contentType: 'application/json',
+      body: JSON.stringify({
+        currentPassword: parsed.data.currentPassword,
+        newPassword: parsed.data.newPassword,
+      }),
+    });
+  } catch {
+    return {
+      error: `The API at ${config.apiBaseUrl} did not answer. Is it running?`,
+    };
+  }
+  if (!call.ok) redirect('/sign-in?expired=1');
+  if (!call.response.ok) return { error: await readMessage(call.response) };
+  redirect('/stations');
+}
+
 /** Ends the session on the API as well as here. */
 export async function signOut(): Promise<void> {
   if (await readSession()) {

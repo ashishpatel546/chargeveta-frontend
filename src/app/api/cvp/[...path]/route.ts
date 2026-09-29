@@ -1,41 +1,30 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { apiFetch } from '@/lib/server/api';
+import { platformApiFetch } from '@/lib/server/platform-api';
 
 /**
- * The console's only door to the API.
+ * The platform console's only door to the API — `api/cvf/[...path]/route.ts`,
+ * mirrored onto the platform administrator's session pair.
  *
- * Everything the browser asks for arrives here as `/api/cv/<api path>`, is
- * given the signed-in user's access token from the `httpOnly` cookie by
- * `apiFetch`, and is forwarded to the monolith. The browser never holds a
- * token, and nothing has to be relaxed on the API for a cross-origin caller —
- * which matters, because the API sends no CORS headers at all.
+ * Everything the browser asks for arrives as `/api/cvp/<path>` and is
+ * forwarded to the API's `/platform/<path>`, so the platform console can
+ * reach nothing outside `/platform` even by accident. `auth` is refused
+ * here: signing in, changing the password and signing out are server actions
+ * (`lib/server/platform-auth.ts`), which set and clear the cookies themselves.
  */
-
-/** Never proxied, whatever a page asks for. */
-const FORBIDDEN_PREFIXES = [
-  // The OCPP engine's private routes. They take a shared secret, not a user,
-  // and one of them starts a charging session.
-  'internal',
-  // Platform administration has its own sign-in, cookie pair and proxy
-  // (`/api/cvp`); a staff session must never be able to ask for it.
-  'platform',
-];
-
-/** Response headers worth passing back; everything else is ours to set. */
 const PASSED_THROUGH = ['content-type', 'content-disposition'];
 
 async function proxy(request: NextRequest, path: string[]): Promise<Response> {
-  if (FORBIDDEN_PREFIXES.includes(path[0] ?? '')) {
+  if (path.length === 0 || path[0] === 'auth') {
     return NextResponse.json(
-      { message: 'That part of the API is not reachable from the console' },
+      { message: 'That part of the API is not reachable from here' },
       { status: 403 },
     );
   }
 
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
-  const call = await apiFetch(
-    `/${path.join('/')}${request.nextUrl.search}`,
+  const call = await platformApiFetch(
+    `/platform/${path.join('/')}${request.nextUrl.search}`,
     {
       method: request.method,
       body: hasBody ? await request.text() : undefined,
@@ -54,7 +43,6 @@ async function proxy(request: NextRequest, path: string[]): Promise<Response> {
 }
 
 async function relay(upstream: Response): Promise<Response> {
-  // 204 and 304 must not carry a body, and constructing one with a body throws.
   if (upstream.status === 204 || upstream.status === 304) {
     return new NextResponse(null, { status: upstream.status });
   }
@@ -69,7 +57,7 @@ async function relay(upstream: Response): Promise<Response> {
   });
 }
 
-type Context = RouteContext<'/api/cv/[...path]'>;
+type Context = RouteContext<'/api/cvp/[...path]'>;
 
 export async function GET(request: NextRequest, ctx: Context) {
   return proxy(request, (await ctx.params).path);
@@ -81,8 +69,5 @@ export async function PUT(request: NextRequest, ctx: Context) {
   return proxy(request, (await ctx.params).path);
 }
 export async function PATCH(request: NextRequest, ctx: Context) {
-  return proxy(request, (await ctx.params).path);
-}
-export async function DELETE(request: NextRequest, ctx: Context) {
   return proxy(request, (await ctx.params).path);
 }

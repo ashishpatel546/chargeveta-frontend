@@ -9,10 +9,40 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** The API's machine-readable reason, when it gives one. */
+    readonly code?: string,
   ) {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+/**
+ * The `code` the API puts on a 403 while the signed-in person still has to
+ * change a temporary password. Staff and platform admins both get it; every
+ * route but "who am I", "change password" and "sign out" answers with it.
+ */
+export const PASSWORD_CHANGE_REQUIRED = 'PASSWORD_CHANGE_REQUIRED';
+
+/**
+ * Reads a refusal's body once: its message (or a plain description of the
+ * status) and its `code`, if any. Shared by the console, fleet and platform
+ * clients so they read the API's refusals the same way.
+ */
+export async function readRefusal(
+  response: Response,
+): Promise<{ message: string; code?: string }> {
+  let message = `The API answered ${response.status}`;
+  let code: string | undefined;
+  try {
+    const body = (await response.json()) as { message?: unknown; code?: unknown };
+    if (typeof body.message === 'string') message = body.message;
+    else if (Array.isArray(body.message)) message = body.message.join('; ');
+    if (typeof body.code === 'string') code = body.code;
+  } catch {
+    // Not JSON; the status will have to do.
+  }
+  return { message, code };
 }
 
 function url(path: string, params?: Record<string, string | undefined>): string {
@@ -32,15 +62,20 @@ async function refuse(response: Response): Promise<never> {
     // a client-side navigation would keep.
     window.location.replace('/sign-in?expired=1');
   }
-  let message = `The API answered ${response.status}`;
-  try {
-    const body = (await response.json()) as { message?: unknown };
-    if (typeof body.message === 'string') message = body.message;
-    else if (Array.isArray(body.message)) message = body.message.join('; ');
-  } catch {
-    // Not JSON; the status will have to do.
+  const { message, code } = await readRefusal(response);
+  if (
+    response.status === 403 &&
+    code === PASSWORD_CHANGE_REQUIRED &&
+    typeof window !== 'undefined'
+  ) {
+    // Written here, once, so no screen has to: whatever a page was asking
+    // for, the API will refuse it until the password is changed, so there is
+    // nowhere to go but the change-password page. The console layout makes
+    // the same check up front; this catches a flag set mid-session (an owner
+    // resetting it while this tab was open).
+    window.location.replace('/change-password');
   }
-  throw new ApiError(response.status, message);
+  throw new ApiError(response.status, message, code);
 }
 
 export async function apiGet<T>(
