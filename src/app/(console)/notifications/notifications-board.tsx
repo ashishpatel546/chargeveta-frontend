@@ -198,6 +198,12 @@ export function NotificationsBoard() {
                         Escalated {dateTime(alert.escalatedAt)}
                       </p>
                     ) : null}
+                    {alert.escalatedAgainAt ? (
+                      <p className="text-destructive text-xs font-medium">
+                        {escalatedAgainLabel(alert.detail)}{' '}
+                        {dateTime(alert.escalatedAgainAt)}
+                      </p>
+                    ) : null}
                   </TableCell>
                   {canAcknowledge ? (
                     <TableCell>
@@ -272,4 +278,25 @@ function NotificationDetail({ detail }: { detail: Record<string, unknown> }) {
       </pre>
     </details>
   );
+}
+
+/**
+ * "Escalated again — SMS sent to 2", from what the API recorded of the
+ * second step (doc 6 §22.4): a count, never who.
+ */
+function escalatedAgainLabel(detail: unknown): string {
+  const again =
+    detail && typeof detail === 'object'
+      ? (detail as { escalationAgain?: unknown }).escalationAgain
+      : undefined;
+  const record =
+    again && typeof again === 'object'
+      ? (again as { action?: unknown; texted?: unknown })
+      : {};
+  if (record.action === 'stopped') return 'Escalated again — stop accepted';
+  if (record.action === 'closed') return 'Escalated again — session ended';
+  const texted = typeof record.texted === 'number' ? record.texted : 0;
+  return texted > 0
+    ? `Escalated again — SMS sent to ${texted}`
+    : 'Escalated again — no phone to text';
 }

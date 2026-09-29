@@ -32,6 +32,8 @@ export type Principal = (
        * API refuses every other route with `PASSWORD_CHANGE_REQUIRED` anyway.
        */
       mustChangePassword?: boolean;
+      /** E.164; where an unanswered stop alert is texted (doc 6 §22.4). */
+      phone?: string | null;
     }
   | {
       kind: 'api-key';
@@ -336,6 +338,11 @@ export interface AppNotification {
    * email (`session.stop_failed` only); `detail.escalation` says how it went.
    */
   escalatedAt?: string | null;
+  /**
+   * When it was escalated a second time — texted, emailed again and pushed;
+   * `detail.escalationAgain.texted` says to how many numbers.
+   */
+  escalatedAgainAt?: string | null;
 }
 
 export interface TaxLine {
@@ -549,6 +556,8 @@ export interface ConsoleUser {
   email: string;
   role: Role;
   isActive: boolean;
+  /** E.164, or null; owners and admins with one are texted escalations. */
+  phone: string | null;
   createdAt: string;
 }
 

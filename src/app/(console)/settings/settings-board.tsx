@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { apiGet, apiSend } from '@/lib/api/client';
 import type { TenantSettings } from '@/lib/api/types';
+import { MyPhoneCard } from './my-phone-card';
 import { PushDeviceCard } from './push-device-card';
 
 /** As the API validates it: state code, PAN, entity digit, Z, checksum. */
@@ -45,6 +46,7 @@ export function SettingsBoard() {
       />
 
       <WhoIsSignedIn />
+      <MyPhoneCard />
       <PushDeviceCard />
 
       {settings.isPending ? <Loading rows={4} /> : null}
