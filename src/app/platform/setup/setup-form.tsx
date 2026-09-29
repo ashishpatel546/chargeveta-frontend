@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM } from '@/lib/forms';
 import { platformRedeemSetupAction } from '@/lib/server/platform-auth';
@@ -19,10 +19,9 @@ export function PlatformSetupForm({ setupToken }: { setupToken: string }) {
 
       <div className="space-y-2">
         <Label htmlFor="password">New password</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           minLength={12}
           maxLength={256}
@@ -36,10 +35,9 @@ export function PlatformSetupForm({ setupToken }: { setupToken: string }) {
 
       <div className="space-y-2">
         <Label htmlFor="confirm">Type it again</Label>
-        <Input
+        <PasswordInput
           id="confirm"
           name="confirm"
-          type="password"
           autoComplete="new-password"
           required
         />
