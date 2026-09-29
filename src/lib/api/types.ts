@@ -348,7 +348,8 @@ export interface AppNotification {
   escalatedAt?: string | null;
   /**
    * When it was escalated a second time — texted, emailed again and pushed;
-   * `detail.escalationAgain.texted` says to how many numbers.
+   * `detail.escalationAgain.texted` says to how many numbers, and
+   * `.whatsapped` to how many on WhatsApp (absent from an older API).
    */
   escalatedAgainAt?: string | null;
   /**
@@ -592,7 +593,7 @@ export interface PushSubscriptionRow {
   lastPushedAt: string | null;
 }
 
-export type MessageChannel = 'email' | 'sms' | 'push';
+export type MessageChannel = 'email' | 'sms' | 'whatsapp' | 'push';
 export type MessageStatus = 'pending' | 'sent' | 'failed' | 'skipped';
 
 /** A row of the outbox. The API never returns a message's body. */

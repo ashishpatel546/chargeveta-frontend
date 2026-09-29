@@ -277,8 +277,8 @@ function NotificationDetail({ detail }: { detail: Record<string, unknown> }) {
 
 /**
  * The latest escalation from the second step on (doc 6 §22.4): "Escalated
- * (step 3) — SMS sent to 2", from what the API recorded of it — a count,
- * never who. An API from before the ladder sends no step; its second step
+ * (step 3) — SMS sent to 2, WhatsApp to 2", from what the API recorded of
+ * it — a count, never who. An API from before the ladder sends no step; its second step
  * is the only one there is.
  */
 function LaterEscalation({ alert }: { alert: AppNotification }) {
@@ -299,13 +299,16 @@ function escalationLabel(step: number, detail: unknown): string {
       : undefined;
   const record =
     again && typeof again === 'object'
-      ? (again as { action?: unknown; texted?: unknown })
+      ? (again as { action?: unknown; texted?: unknown; whatsapped?: unknown })
       : {};
   const label = `Escalated (step ${step})`;
   if (record.action === 'stopped') return `${label} — stop accepted`;
   if (record.action === 'closed') return `${label} — session ended`;
   const texted = typeof record.texted === 'number' ? record.texted : 0;
-  return texted > 0
-    ? `${label} — SMS sent to ${texted}`
-    : `${label} — no phone to text`;
+  const whatsapped =
+    typeof record.whatsapped === 'number' ? record.whatsapped : 0;
+  if (texted === 0) return `${label} — no phone to text`;
+  return whatsapped > 0
+    ? `${label} — SMS sent to ${texted}, WhatsApp to ${whatsapped}`
+    : `${label} — SMS sent to ${texted}`;
 }

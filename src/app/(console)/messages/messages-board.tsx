@@ -33,8 +33,8 @@ import { dateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 /**
- * The outbox (doc 6 §22.2): every email, SMS and push this operator has sent,
- * or tried to, and what happened to it.
+ * The outbox (doc 6 §22.2): every email, SMS, WhatsApp message and push this
+ * operator has sent, or tried to, and what happened to it.
  *
  * What it is for is the question "did they get it?" — the invitation someone
  * says never arrived, the alert nobody's phone showed. So it shows who, when,
@@ -66,7 +66,7 @@ export function MessagesBoard() {
     <>
       <PageHeader
         title="Messages"
-        description="Invitations, password resets and alerts sent by email, SMS and push — and whether each one went."
+        description="Invitations, password resets and alerts sent by email, SMS, WhatsApp and push — and whether each one went."
       />
 
       <TestSend />
@@ -85,6 +85,7 @@ export function MessagesBoard() {
             <SelectItem value="all">All channels</SelectItem>
             <SelectItem value="email">Email</SelectItem>
             <SelectItem value="sms">SMS</SelectItem>
+            <SelectItem value="whatsapp">WhatsApp</SelectItem>
             <SelectItem value="push">Push</SelectItem>
           </SelectContent>
         </Select>
@@ -203,7 +204,7 @@ function TestSend() {
         inputMode="tel"
         value={phone}
         onChange={(event) => setPhone(event.target.value)}
-        aria-label="Phone number for a test SMS"
+        aria-label="Phone number for a test SMS or WhatsApp message"
       />
       <Button
         variant="outline"
@@ -212,6 +213,14 @@ function TestSend() {
         onClick={() => send.mutate({ channel: 'sms', to: phone.trim() })}
       >
         Text it
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={send.isPending || phone.trim().length === 0}
+        onClick={() => send.mutate({ channel: 'whatsapp', to: phone.trim() })}
+      >
+        WhatsApp it
       </Button>
     </div>
   );
@@ -227,13 +236,14 @@ const TEMPLATE_LABEL: Record<string, string> = {
 const CHANNEL_LABEL: Record<MessageChannel, string> = {
   email: 'Email',
   sms: 'SMS',
+  whatsapp: 'WhatsApp',
   push: 'Push',
 };
 
 /**
  * `skipped` is shown as "Not sent" because that is what it means to the
  * reader: nothing left the server — mail is switched off, there is no SMS
- * provider, or the device has gone. The reason is printed underneath.
+ * or WhatsApp provider, or the device has gone. The reason is printed underneath.
  */
 const STATUS: Record<MessageStatus, { label: string; tone: string }> = {
   pending: {
