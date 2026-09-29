@@ -7,6 +7,7 @@ import type { FormState } from '../forms';
 import { fleetApiFetch, readFleetMessage } from './fleet-api';
 import { clearFleetSession, readFleetSession, writeFleetSession } from './fleet-session';
 import type { FleetTokenPair } from './fleet-session';
+import { clientHeaders } from './client-address';
 
 /**
  * How a fleet manager signs in (`charveta` doc 6 §23): an email and password
@@ -25,7 +26,10 @@ async function post(
   try {
     response = await fetch(`${config.apiBaseUrl}${path}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
       body: JSON.stringify(body),
       cache: 'no-store',
     });

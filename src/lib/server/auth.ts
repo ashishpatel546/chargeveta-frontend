@@ -7,6 +7,7 @@ import type { FormState } from '../forms';
 import { apiFetch, readMessage } from './api';
 import { clearSession, readSession, writeSession } from './session';
 import type { TokenPair } from './session';
+import { clientHeaders } from './client-address';
 
 const credentials = z.object({
   tenantSlug: z.string().trim().max(100).optional(),
@@ -38,7 +39,10 @@ export async function signIn(
   try {
     response = await fetch(`${config.apiBaseUrl}/auth/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
       body: JSON.stringify(parsed.data),
       cache: 'no-store',
     });
@@ -104,7 +108,10 @@ export async function redeemSetupToken(
   try {
     response = await fetch(`${config.apiBaseUrl}/auth/setup`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
       body: JSON.stringify({
         setupToken: parsed.data.setupToken,
         password: parsed.data.password,

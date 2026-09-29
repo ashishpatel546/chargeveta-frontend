@@ -603,6 +603,96 @@ export interface CreatedApiKey extends ApiKey {
   key: string;
 }
 
+/** What the tenant audit log records (charveta doc 6 §18.4). */
+export const TENANT_AUDIT_ACTIONS = [
+  'staff.sign-in',
+  'staff.sign-in-failed',
+  'staff.setup-redeemed',
+  'staff.password-change',
+  'user.add',
+  'user.role-change',
+  'user.deactivate',
+  'user.reactivate',
+  'user.reset-link',
+  'user.sessions-revoke',
+  'api-key.create',
+  'api-key.revoke',
+  'card.create',
+  'card.update',
+  'card.delete',
+  'driver.deactivate',
+  'driver.reactivate',
+  'fleet-manager.add',
+  'fleet-manager.deactivate',
+  'fleet-manager.reactivate',
+  'fleet-manager.reset-link',
+  'station.credential-set',
+  'station.client-certificate-set',
+  'station.client-certificate-remove',
+  'free-charging.grant',
+  'free-charging.revoke',
+  'free-charging.sponsor',
+  'free-charging.unsponsor',
+  'payment.retry',
+  'wallet.adjust',
+  'receipt.credit-note',
+  'settings.update',
+  'tariff.create',
+  'tariff.rename',
+  'tariff.version-add',
+  'tariff.assign',
+  'fleet.create',
+  'fleet.update',
+  'fleet.member-add',
+  'fleet.member-remove',
+  'station.reset',
+  'station.unlock-connector',
+  'station.remote-start',
+  'station.remote-stop',
+] as const;
+
+export type TenantAuditAction = (typeof TENANT_AUDIT_ACTIONS)[number];
+
+export const TENANT_AUDIT_TARGET_TYPES = [
+  'user',
+  'api-key',
+  'id-token',
+  'driver',
+  'fleet',
+  'fleet-manager',
+  'payment',
+  'receipt',
+  'tariff',
+  'tenant',
+  'station',
+  'location',
+  'transaction',
+] as const;
+
+/** One row of the tenant audit log. Never holds a token or password. */
+export interface TenantAuditEntry {
+  id: string;
+  occurredAt: string;
+  /** `user:<id>`, `api-key:<id>` or `anonymous` (a refused sign-in). */
+  actor: string;
+  actorKind: 'user' | 'api-key' | 'anonymous';
+  actorId: string | null;
+  actorEmail: string | null;
+  actorName: string | null;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  details: Record<string, unknown>;
+  /** The browser's address, as far as the API could vouch for it. */
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+export interface TenantAuditPage {
+  items: TenantAuditEntry[];
+  nextCursor: string | null;
+}
+
 export interface WebhookEndpoint {
   id: string;
   url: string;

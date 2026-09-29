@@ -7,6 +7,7 @@ import type { FormState, OtpRequestState } from '../forms';
 import { driverApiFetch, readDriverMessage } from './driver-api';
 import { clearDriverSession, readDriverSession, writeDriverSession } from './driver-session';
 import type { DriverTokenPair } from './driver-session';
+import { clientHeaders } from './client-address';
 
 /**
  * How a driver signs in (`charveta` doc 6 §22.3): a phone OTP, an emailed
@@ -33,7 +34,10 @@ async function post<T>(path: string, body: unknown): Promise<
   try {
     response = await fetch(`${config.apiBaseUrl}${path}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(await clientHeaders()),
+      },
       body: JSON.stringify(body),
       cache: 'no-store',
     });
