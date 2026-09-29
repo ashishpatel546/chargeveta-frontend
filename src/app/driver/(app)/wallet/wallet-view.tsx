@@ -36,6 +36,7 @@ import type {
 } from '@/lib/api/driver-types';
 import { dateTime, money } from '@/lib/format';
 import { openRazorpayCheckout } from '@/lib/razorpay-checkout';
+import { WithdrawDialog, WithdrawalsSection } from './withdrawals';
 
 /** Doc 6 §22.4: the driver's own balance, a way to top it up, and its ledger. */
 export function WalletView() {
@@ -62,6 +63,8 @@ export function WalletView() {
       {wallet.isError ? <Failed error={wallet.error} /> : null}
 
       {wallet.isSuccess ? <BalanceCard wallet={wallet.data} /> : null}
+
+      <WithdrawalsSection />
 
       <div className="mt-4 flex items-center justify-between">
         <h2 className="text-sm font-medium">Recent activity</h2>
@@ -107,9 +110,17 @@ function BalanceCard({ wallet }: { wallet: WalletDto }) {
         <div>
           <p className="text-muted-foreground text-xs">Balance</p>
           <p className="text-2xl font-semibold">{money(wallet.balanceMinor, wallet.currency)}</p>
+          {wallet.enabled && wallet.withdrawableMinor !== wallet.balanceMinor ? (
+            <p className="text-muted-foreground text-xs">
+              {money(wallet.withdrawableMinor, wallet.currency)} can go back to your bank
+            </p>
+          ) : null}
         </div>
         {wallet.enabled ? (
-          <TopUpDialog wallet={wallet} />
+          <div className="space-y-2">
+            <TopUpDialog wallet={wallet} />
+            <WithdrawDialog wallet={wallet} />
+          </div>
         ) : (
           <Alert>
             <AlertTitle>Top-ups are off</AlertTitle>
@@ -150,6 +161,8 @@ function TopUpDialog({ wallet }: { wallet: WalletDto }) {
         description: checkout.description,
         email: checkout.email ?? driver.email ?? undefined,
         contact: checkout.contact ?? driver.phone ?? undefined,
+        // Straight away, while Checkout is still open to try another way.
+        onPaymentFailed: (message) => toast.error(message),
       });
       return driverApiSend<PaymentDto>(
         'POST',
@@ -207,6 +220,8 @@ const ENTRY_LABEL: Record<string, string> = {
   top_up: 'Top-up',
   charge: 'Charging',
   adjustment: 'Adjustment',
+  withdrawal: 'Withdrawal to bank',
+  withdrawal_reversal: 'Withdrawal returned',
 };
 
 function EntryRow({ entry }: { entry: WalletEntryDto }) {

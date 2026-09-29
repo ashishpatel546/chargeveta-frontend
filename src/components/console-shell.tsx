@@ -17,6 +17,7 @@ import {
   SettingsIcon,
   TruckIcon,
   UsersIcon,
+  WalletIcon,
   WebhookIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,7 @@ const MONEY: NavItem[] = [
     needs: 'viewer',
   },
   { href: '/receipts', label: 'Receipts', icon: FileTextIcon, needs: 'viewer' },
+  { href: '/payments', label: 'Payments', icon: WalletIcon, needs: 'viewer' },
   { href: '/reports', label: 'Reports', icon: FileTextIcon, needs: 'viewer' },
 ];
 

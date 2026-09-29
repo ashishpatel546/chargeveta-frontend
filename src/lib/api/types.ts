@@ -311,7 +311,8 @@ export type NotificationKind =
   | 'connector.faulted'
   | 'station.quarantined'
   | 'station.offline'
-  | 'security.event';
+  | 'security.event'
+  | 'payment.attention';
 
 export interface AppNotification {
   id: string;
@@ -590,4 +591,47 @@ export interface Reservation {
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;
+}
+
+/** One refund asked of Razorpay (`charveta` doc 6 §22.4). */
+export interface PaymentRefund {
+  /** Also the refund's receipt at Razorpay. */
+  id: string;
+  paymentId: string;
+  amountMinor: string;
+  status: 'pending' | 'processed' | 'failed';
+  /** 1 for the first request; each retry is one more. */
+  attempt: number;
+  razorpayRefundId: string | null;
+  withdrawalId: string | null;
+  failureReason: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  failedAt: string | null;
+}
+
+/** `GET /payments/attention` — a driver payment the worker could not finish. */
+export interface AttentionPayment {
+  id: string;
+  driverId: string;
+  purpose: 'top_up' | 'hold';
+  status: string;
+  currency: string;
+  amountMinor: string;
+  capturedMinor: string;
+  refundedMinor: string;
+  method: string | null;
+  razorpayOrderId: string;
+  razorpayPaymentId: string | null;
+  stationId: string | null;
+  transactionId: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  lastError: string | null;
+  syncAttempts: number;
+  nextSyncAt: string | null;
+  needsAttention: boolean;
+  attentionAt: string | null;
+  attentionReason: string | null;
+  refunds: PaymentRefund[];
 }
