@@ -1,6 +1,7 @@
 'use client';
 
 import { UserIcon } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,6 +32,11 @@ export function PrincipalMenu({ principal }: { principal: Principal }) {
           </p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {principal.kind === 'user' ? (
+          <DropdownMenuItem render={<Link href="/change-password" />}>
+            Change password
+          </DropdownMenuItem>
+        ) : null}
         <form action={signOut}>
           <DropdownMenuItem
             render={<button type="submit" className="w-full text-left" />}

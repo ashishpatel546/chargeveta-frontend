@@ -20,6 +20,11 @@ export function middleware(request: NextRequest) {
   if (pathname === '/fleet' || pathname.startsWith('/fleet/')) {
     return NextResponse.next();
   }
+  // The platform console likewise (`cvp_at`/`cvp_rt`, checked by
+  // `platform/(app)/layout.tsx`'s `requirePlatformAdmin()`).
+  if (pathname === '/platform' || pathname.startsWith('/platform/')) {
+    return NextResponse.next();
+  }
 
   const signIn = new URL('/sign-in', request.url);
   return NextResponse.redirect(signIn);
