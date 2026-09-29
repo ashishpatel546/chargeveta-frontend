@@ -12,8 +12,9 @@ import { driverApiGet, driverApiSend } from '@/lib/api/driver-client';
 import type {
   DriverCommandResultDto,
   DriverSessionDto,
+  DriverSessionLimitDto,
 } from '@/lib/api/driver-types';
-import { dateTime, energy, money, span } from '@/lib/format';
+import { dateTime, energy, money, power, span } from '@/lib/format';
 
 /** One of `SessionsView`'s rows, in full — doc 6 §22.3. */
 export function SessionDetail({ id }: { id: string }) {
@@ -22,6 +23,9 @@ export function SessionDetail({ id }: { id: string }) {
   const session = useQuery({
     queryKey: ['driver', 'session', id],
     queryFn: () => driverApiGet<DriverSessionDto>(`/driver/sessions/${id}`),
+    // The running cost moves with every meter reading the charger sends.
+    refetchInterval: (query) =>
+      query.state.data && !query.state.data.stoppedAt ? 10_000 : false,
   });
 
   const stop = useMutation({
@@ -51,6 +55,8 @@ export function SessionDetail({ id }: { id: string }) {
 
   const doc = session.data;
   const running = !doc.stoppedAt;
+  const limit = doc.limit;
+  const usedUp = limit?.stopRequestedAt ? usedUpText(limit.stopReason) : null;
 
   return (
     <>
@@ -66,6 +72,17 @@ export function SessionDetail({ id }: { id: string }) {
       </PageHeader>
 
       <div className="space-y-4">
+        {usedUp ? (
+          <div
+            role="status"
+            className="rounded-lg border border-amber-600/30 bg-amber-600/10 p-3 text-sm text-amber-800 dark:text-amber-300"
+          >
+            {running ? `Stopping: ${usedUp}.` : `Stopped: ${usedUp}.`}
+          </div>
+        ) : null}
+
+        {limit && running ? <LiveCard limit={limit} /> : null}
+
         <Card size="sm">
           <CardContent className="space-y-2 text-sm">
             <Row label="Status">
@@ -109,6 +126,65 @@ export function SessionDetail({ id }: { id: string }) {
         ) : null}
       </div>
     </>
+  );
+}
+
+/** Why the session was stopped for money, in the driver's words. */
+function usedUpText(reason: string | null): string {
+  return reason === 'hold_used_up'
+    ? 'your card hold was used up'
+    : 'your wallet balance was used up';
+}
+
+/**
+ * The session while it runs (doc 6 §22.4 "Session limits"): what it has cost
+ * so far, priced as the receipt will be, and what is left before charging is
+ * stopped. Every figure is the API's; nothing is computed here.
+ */
+function LiveCard({ limit }: { limit: DriverSessionLimitDto }) {
+  const currency = limit.currency ?? 'INR';
+  return (
+    <Card size="sm">
+      <CardContent className="space-y-2 text-sm">
+        <div className="pb-1">
+          <p className="text-muted-foreground text-xs">Cost so far, tax included</p>
+          <p className="text-2xl font-semibold tabular-nums">
+            {money(limit.runningCostMinor, currency)}
+          </p>
+        </div>
+        {limit.source !== 'none' && limit.budgetMinor !== null ? (
+          <>
+            <Row label={limit.source === 'hold' ? 'Hold and wallet' : 'Wallet'}>
+              {money(limit.budgetMinor, currency)}
+            </Row>
+            <Row label="Left">
+              {money(limit.remainingMinor ?? undefined, currency)}
+            </Row>
+          </>
+        ) : null}
+        <Row label="Energy">{energy(limit.energyWh ?? undefined)}</Row>
+        {limit.powerW !== null ? (
+          <Row label="Power">{power(limit.powerW)}</Row>
+        ) : null}
+        {limit.socPercent !== null ? (
+          <Row label="Battery">{`${Number(limit.socPercent).toFixed(0)}%`}</Row>
+        ) : null}
+        {limit.toFullWh !== null ? (
+          <Row label="To full (estimate)">
+            {`about ${energy(limit.toFullWh)}`}
+            {limit.toFullMinor !== null
+              ? `, ${money(limit.toFullMinor, currency)}`
+              : ''}
+          </Row>
+        ) : null}
+        {limit.source !== 'none' ? (
+          <p className="text-muted-foreground pt-1 text-xs">
+            Charging stops by itself a little before the money runs out, so
+            your balance never goes below zero.
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 

@@ -28,7 +28,9 @@ import type {
   HoldConfirmedDto,
   WalletDto,
 } from '@/lib/api/driver-types';
+import { money } from '@/lib/format';
 import { openRazorpayCheckout } from '@/lib/razorpay-checkout';
+import { QuoteCard } from './quote-card';
 
 /**
  * A charger by its identity (doc 6 §22.3) — what a QR code on it carries, or
@@ -70,7 +72,11 @@ export function StationDetail({ identity }: { identity: string }) {
 
   function reportCommand(result: DriverCommandResultDto) {
     if (result.outcome === 'answered' && result.status === 'Accepted') {
-      toast.success('Charging started.');
+      toast.success(
+        result.budgetMinor && wallet.data
+          ? `Charging started. It stops by itself when ${money(result.budgetMinor, wallet.data.currency)} is used.`
+          : 'Charging started.',
+      );
       router.push('/driver/sessions');
     } else if (result.outcome === 'answered') {
       toast.error(`The charger said ${result.status}.`);
@@ -203,6 +209,8 @@ export function StationDetail({ identity }: { identity: string }) {
                 ))}
               </div>
             </div>
+
+            <QuoteCard stationId={doc.id} />
 
             {cards.data && cards.data.length > 1 ? (
               <div className="space-y-2">
