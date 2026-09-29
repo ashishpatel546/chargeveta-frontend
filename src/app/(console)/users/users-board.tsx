@@ -2,9 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { InviteUserDialog } from './invite-user-dialog';
+import { PhoneDialog } from './phone-dialog';
 import { UserActions } from './user-actions';
 import { PageHeader } from '@/components/page-header';
-import { useCan } from '@/components/principal-context';
+import { useCan, usePrincipal } from '@/components/principal-context';
 import { Empty, Failed, Loading } from '@/components/query-state';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,11 +17,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiGet } from '@/lib/api/client';
-import type { ConsoleUser } from '@/lib/api/types';
+import { atLeast, type ConsoleUser, type Principal } from '@/lib/api/types';
 import { dateTime } from '@/lib/format';
 
 export function UsersBoard() {
   const canAdmin = useCan('admin');
+  const principal = usePrincipal();
 
   const users = useQuery({
     queryKey: ['users'],
@@ -44,9 +46,11 @@ export function UsersBoard() {
           <strong>owner</strong> can do everything including managing admins.
         </p>
         <p>
-          Nobody can change their own account, an admin cannot change another
-          admin or an owner, and the last active owner cannot be deactivated.
-          Deactivating somebody ends every session they have open.
+          Nobody can change their own role or deactivate themselves, an admin
+          cannot change another admin or an owner, and the last active owner
+          cannot be deactivated. Deactivating somebody ends every session they
+          have open. Owners and admins with a phone number are texted when a
+          charging session cannot be stopped and nobody answers the alert.
         </p>
       </div>
 
@@ -64,6 +68,7 @@ export function UsersBoard() {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Active</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Added</TableHead>
                 {canAdmin ? <TableHead>Manage</TableHead> : null}
               </TableRow>
@@ -88,6 +93,16 @@ export function UsersBoard() {
                     )}
                   </TableCell>
                   <TableCell className="text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={user.phone ? '' : 'text-muted-foreground'}>
+                        {user.phone ?? '—'}
+                      </span>
+                      {canAdmin && mayEditPhone(principal, user) ? (
+                        <PhoneDialog user={user} />
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
                     {dateTime(user.createdAt)}
                   </TableCell>
                   {canAdmin ? (
@@ -103,4 +118,14 @@ export function UsersBoard() {
       ) : null}
     </>
   );
+}
+
+/**
+ * As the API decides it: your own number is yours; anyone else's only when
+ * you outrank them (an admin is kept off other admins and owners). The API
+ * enforces it; this only hides the button.
+ */
+function mayEditPhone(principal: Principal, user: ConsoleUser): boolean {
+  if (principal.kind === 'user' && principal.userId === user.id) return true;
+  return !(principal.role === 'admin' && atLeast(user.role, 'admin'));
 }

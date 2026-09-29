@@ -112,6 +112,12 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: ['notifications'] });
         toast.info('A new alert arrived');
       });
+
+      // An alert changed — for now, a stop alert nobody answered was
+      // escalated (doc 6 §22.4). The board and the bell refetch it.
+      socket.on('notification.updated', () => {
+        void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      });
     };
 
     void start();
