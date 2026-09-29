@@ -54,7 +54,7 @@ export function StationDetail({ stationId }: { stationId: string }) {
         </div>
       </PageHeader>
 
-      <dl className="mb-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+      <dl className="mb-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3 lg:grid-cols-5">
         <Fact label="OCPP">{station.data.ocppVersion}</Fact>
         <Fact label="Site">
           {site ? (
@@ -71,6 +71,22 @@ export function StationDetail({ stationId }: { stationId: string }) {
           </span>
         </Fact>
         <Fact label="Firmware">{station.data.firmwareVersion ?? '—'}</Fact>
+        <Fact label="Connected from">
+          {/* The station's own address; behind a trusted proxy, the proxy
+              it came through as well (engine TRUSTED_PROXY_CIDRS). */}
+          <span
+            className="font-mono text-xs"
+            title={dateTime(station.data.lastConnectedAt)}
+          >
+            {station.data.lastConnectedAddress ?? '—'}
+            {station.data.lastConnectedVia ? (
+              <span className="text-muted-foreground font-sans">
+                {' '}
+                via {station.data.lastConnectedVia}
+              </span>
+            ) : null}
+          </span>
+        </Fact>
       </dl>
 
       {station.data.quarantinedAt ? (

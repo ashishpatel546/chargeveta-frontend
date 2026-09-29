@@ -82,6 +82,14 @@ export interface Station {
   quarantineReason: string | null;
   localListVersion: number;
   lastSeenAt: string | null;
+  /**
+   * When and from where the station last connected. The address is the
+   * station's own; `lastConnectedVia` is the trusted proxy it came through,
+   * null for a direct connection (doc 6 §17.13).
+   */
+  lastConnectedAt: string | null;
+  lastConnectedAddress: string | null;
+  lastConnectedVia: string | null;
   createdAt: string;
   updatedAt: string;
   hasCredential: boolean;
