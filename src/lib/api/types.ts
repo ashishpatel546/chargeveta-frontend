@@ -318,7 +318,8 @@ export type NotificationKind =
   | 'station.quarantined'
   | 'station.offline'
   | 'security.event'
-  | 'payment.attention';
+  | 'payment.attention'
+  | 'session.stop_failed';
 
 export interface AppNotification {
   id: string;

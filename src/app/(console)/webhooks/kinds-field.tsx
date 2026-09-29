@@ -9,6 +9,7 @@ export const NOTIFICATION_KINDS: NotificationKind[] = [
   'station.offline',
   'security.event',
   'payment.attention',
+  'session.stop_failed',
 ];
 
 export const KIND_LABEL: Record<NotificationKind, string> = {
@@ -17,6 +18,7 @@ export const KIND_LABEL: Record<NotificationKind, string> = {
   'station.offline': 'Charger offline',
   'security.event': 'Security event',
   'payment.attention': 'Driver payment stuck',
+  'session.stop_failed': 'Session could not be stopped',
 };
 
 /**

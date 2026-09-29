@@ -40,6 +40,7 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   'station.offline': 'Charger offline',
   'security.event': 'Security event',
   'payment.attention': 'Driver payment stuck',
+  'session.stop_failed': 'Session could not be stopped',
 };
 
 export function NotificationsBoard() {
@@ -92,7 +93,7 @@ export function NotificationsBoard() {
     <>
       <PageHeader
         title="Alerts"
-        description="What the system noticed on its own: faults, quarantines, chargers that went quiet, and security events."
+        description="What the system noticed on its own: faults, quarantines, chargers that went quiet, security events, and stuck payments or session stops."
       />
 
       <div className="mb-4 flex gap-2">
@@ -160,6 +161,9 @@ export function NotificationsBoard() {
                           </Link>
                         </>
                       ) : null}
+                      {alert.kind === 'session.stop_failed' ? (
+                        <SessionLink detail={alert.detail} />
+                      ) : null}
                     </p>
                     <NotificationDetail detail={alert.detail} />
                   </TableCell>
@@ -224,6 +228,23 @@ export function NotificationsBoard() {
           {alerts.isFetchingNextPage ? 'Loading…' : 'Load more'}
         </Button>
       ) : null}
+    </>
+  );
+}
+
+/**
+ * Where a failed session-limit stop is made by hand: the session's own page,
+ * which has "Stop this session". The API puts the session's id in the detail.
+ */
+function SessionLink({ detail }: { detail: Record<string, unknown> }) {
+  const id = detail?.transactionId;
+  if (typeof id !== 'string') return null;
+  return (
+    <>
+      {' · '}
+      <Link href={`/sessions/${id}`} className="hover:underline">
+        Open the session to stop it
+      </Link>
     </>
   );
 }
