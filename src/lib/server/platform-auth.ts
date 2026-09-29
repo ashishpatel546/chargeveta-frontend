@@ -122,6 +122,75 @@ export async function platformChangePasswordAction(
   redirect('/platform/tenants');
 }
 
+const setup = z
+  .object({
+    setupToken: z.string().min(1, 'This link is missing its token'),
+    password: z
+      .string()
+      .min(12, 'Use at least 12 characters')
+      .max(256, 'Use at most 256 characters'),
+    confirm: z.string(),
+  })
+  .refine((value) => value.password === value.confirm, {
+    message: 'The two passwords do not match',
+    path: ['confirm'],
+  });
+
+/**
+ * Redeems a platform admin's setup or reset link (`/platform/setup`): they
+ * choose their own password and are signed in. There is nothing to change
+ * afterwards — nobody else ever knew it.
+ */
+export async function platformRedeemSetupAction(
+  _previous: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = setup.safeParse({
+    setupToken: form.get('setupToken'),
+    password: form.get('password'),
+    confirm: form.get('confirm'),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Check the form' };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.apiBaseUrl}/platform/auth/setup`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        setupToken: parsed.data.setupToken,
+        password: parsed.data.password,
+      }),
+      cache: 'no-store',
+    });
+  } catch {
+    return {
+      error: `The API at ${config.apiBaseUrl} did not answer. Is it running?`,
+    };
+  }
+
+  if (!response.ok) {
+    // One answer for every way a link can be wrong, as the API gives.
+    if (response.status === 401) {
+      return {
+        error:
+          'This link has expired, has been replaced by a newer one, or has already been used. Ask another platform admin for a new one.',
+      };
+    }
+    if (response.status === 429) {
+      return { error: 'Too many attempts. Wait a minute and try again.' };
+    }
+    return { error: (await readPlatformRefusal(response)).message };
+  }
+
+  // Replaces any platform session already in this browser, so they land as
+  // who the link was for.
+  await writePlatformSession((await response.json()) as PlatformTokenPair);
+  redirect('/platform/tenants');
+}
+
 /** Ends the session on the API as well as here. */
 export async function platformSignOut(): Promise<void> {
   if (await readPlatformSession()) {

@@ -15,13 +15,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { platformApiGet } from '@/lib/api/platform-client';
-import type { PlatformTenant } from '@/lib/api/platform-types';
-import { date } from '@/lib/format';
+import type { PlatformTenantListItem } from '@/lib/api/platform-types';
+import { date, dateTime } from '@/lib/format';
 
 export function PlatformTenantsView() {
   const tenants = useQuery({
     queryKey: ['platform', 'tenants'],
-    queryFn: () => platformApiGet<PlatformTenant[]>('/tenants'),
+    queryFn: () => platformApiGet<PlatformTenantListItem[]>('/tenants'),
   });
 
   return (
@@ -46,6 +46,7 @@ export function PlatformTenantsView() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
+                <TableHead>Owner</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Manage</TableHead>
@@ -56,6 +57,9 @@ export function PlatformTenantsView() {
                 <TableRow key={tenant.id}>
                   <TableCell className="font-medium">{tenant.name}</TableCell>
                   <TableCell className="font-mono text-xs">{tenant.slug}</TableCell>
+                  <TableCell className="whitespace-normal">
+                    <OwnerCell tenant={tenant} />
+                  </TableCell>
                   <TableCell>
                     {tenant.isActive ? (
                       <Badge
@@ -81,5 +85,30 @@ export function PlatformTenantsView() {
         </div>
       ) : null}
     </>
+  );
+}
+
+/**
+ * Who the tenant's owner is, and whether they have got in yet: never signed
+ * in means the setup link was not used, which is what "Resend owner link" is
+ * for.
+ */
+function OwnerCell({ tenant }: { tenant: PlatformTenantListItem }) {
+  const owner = tenant.owner;
+  if (!owner) return <span className="text-muted-foreground text-sm">No owner</span>;
+  return (
+    <div className="space-y-0.5">
+      <div className="text-sm">{owner.email}</div>
+      <div className="text-muted-foreground text-xs">
+        {!owner.isActive
+          ? 'Deactivated'
+          : owner.lastSignInAt
+            ? `Last signed in ${dateTime(owner.lastSignInAt)}`
+            : owner.setupLinkExpiresAt
+              ? `Not signed in yet · link valid until ${dateTime(owner.setupLinkExpiresAt)}`
+              : 'Not signed in yet · link expired'}
+        {tenant.activeOwners > 1 ? ` · ${tenant.activeOwners} owners` : null}
+      </div>
+    </div>
   );
 }
