@@ -38,6 +38,7 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.sign-in': 'Signed in',
   'admin.sign-in-failed': 'Sign-in refused',
   'admin.password-change': 'Changed own password',
+  'audit.prune': 'Old audit rows pruned',
 };
 
 /**
@@ -166,6 +167,7 @@ export function PlatformAuditView() {
 function who(row: PlatformAuditEntry): string {
   if (row.actor === 'platform') return 'Platform secret (a script)';
   if (row.actor.startsWith('script:')) return `Server script (${row.actor.slice(7)})`;
+  if (row.actor.startsWith('system:')) return `The system (${row.actor.slice(7)})`;
   if (row.actor === 'anonymous') return row.actorEmail ? `Someone as ${row.actorEmail}` : 'Someone';
   return row.actorEmail ?? row.actor;
 }

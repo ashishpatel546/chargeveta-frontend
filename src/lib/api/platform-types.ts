@@ -106,6 +106,7 @@ export const PLATFORM_AUDIT_ACTIONS = [
   'admin.sign-in',
   'admin.sign-in-failed',
   'admin.password-change',
+  'audit.prune',
 ] as const;
 
 export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[number];

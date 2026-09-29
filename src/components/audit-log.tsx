@@ -43,7 +43,8 @@ export function FilterSelect({
 }
 
 /**
- * A row's details as short "key: value" pairs; a change as "from → to".
+ * A row's details as short "key: value" pairs; a change as "from → to", a
+ * configuration setting as "key = value".
  * Nothing secret is ever in them — the API refuses to write such a key.
  */
 export function describeDetails(detail: Record<string, unknown>): string {
@@ -62,6 +63,11 @@ function shown(value: unknown): string {
     const record = value as Record<string, unknown>;
     if ('from' in record && 'to' in record) {
       return `${shown(record.from)} → ${shown(record.to)}`;
+    }
+    // A configuration change: `key = value` (a credential's value arrives
+    // already `[redacted]`).
+    if ('key' in record && 'value' in record) {
+      return `${shown(record.key)} = ${shown(record.value)}`;
     }
     return JSON.stringify(value);
   }
