@@ -23,6 +23,19 @@ const nextConfig: NextConfig = {
   // should stay exactly what they were.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   allowedDevOrigins,
+  // The service worker decides which build a phone runs, so it must never be
+  // served from a cache. Next sends `max-age=0` for public files, and a CDN's
+  // browser-cache setting may raise that: through the dev tunnel, Cloudflare
+  // turned both `max-age=0` and `no-cache` into four hours. `no-store` is the
+  // one value it passes through untouched.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
