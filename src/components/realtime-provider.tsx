@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { toast } from 'sonner';
-import { config, realtimeEnabled } from '@/lib/config';
+import { config, realtimeEnabled, realtimeUrlFor } from '@/lib/config';
 
 /**
  * Keeps the console's queries fresh from the API's socket.
@@ -55,7 +55,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       const token = await fetchToken('GET');
       if (!token || cancelled) return;
 
-      socket = io(config.realtimeUrl, {
+      socket = io(realtimeUrlFor(window.location), {
         path: config.realtimePath,
         // The API allows websockets only: long-polling would spread one client
         // over many requests and need sticky sessions across replicas.

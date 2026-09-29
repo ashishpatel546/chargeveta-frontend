@@ -9,7 +9,7 @@ This repo is one of three that make up ChargeVeta (a multi-tenant EV Charging St
 ## Commands
 
 ```bash
-npm run dev         # http://localhost:9014 — needs the charveta API running first (see its own docs)
+npm run dev         # http://localhost:9014 (https://charveta.appme.in) — needs the charveta API running first (see its own docs)
 npm run build
 npm run start        # serves the production build on :9014
 npm run lint

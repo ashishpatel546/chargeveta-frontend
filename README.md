@@ -22,12 +22,25 @@ Then here:
 ```
 cp .env.example .env.local     # and edit if your API is not on :9010
 npm install
-npm run dev                    # http://localhost:9014
+npm run dev                    # http://localhost:9014 (https://charveta.appme.in)
 ```
 
 Sign in with the account the API was seeded with (`SEED_ADMIN_EMAIL` and
 `SEED_ADMIN_PASSWORD` in the API's `.env`). In a shared installation you also
 need the operator's short name — `SEED_TENANT_SLUG`.
+
+### From another device
+
+The dev server can be opened from a phone or another laptop through a tunnel —
+the owner's is `https://charveta.appme.in` → `localhost:9014`, with `/realtime`
+routed to the API (see "Opening the dev stack from another device" in the
+charveta README). Next 16 refuses its own dev resources (`/_next/*`, hot reload)
+to any origin but localhost unless it is listed, so `next.config.ts` allows the
+hostnames in `DEV_ALLOWED_ORIGINS` (comma-separated, default
+`charveta.appme.in`; empty allows localhost only). Server Actions, cookies, the
+manifest and the service worker need nothing: the tunnel keeps the `Host`
+header, the session cookies are `Secure` only in production builds, and web
+push works because the hostname is https.
 
 ### In Docker
 
@@ -81,6 +94,13 @@ straight from the browser, and its handshake wants the token, so
 socket to use. The API must be started with `REALTIME_ENABLED=true` and this
 app's origin in `REALTIME_CORS_ORIGINS`. Without it the console still works; it
 refetches on an interval instead, and the header says "not live".
+
+The browser dials `NEXT_PUBLIC_REALTIME_URL` — except when that names
+localhost and the page is not on localhost, i.e. the console opened from another
+device through a tunnel. There `localhost` would be the phone, so the socket
+goes to the page's own origin at the same path (`realtimeUrlFor` in
+`src/lib/config.ts`), and the tunnel routes that path to the API. Same origin,
+wss under https, no CORS.
 
 The socket's messages are thin on purpose: ids and what changed, never an
 entity. `src/components/realtime-provider.tsx` therefore does not patch the
