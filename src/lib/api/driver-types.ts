@@ -56,6 +56,35 @@ export interface DriverSessionDto {
   /** Before tax, minor units — the full billed amount is on the receipt. */
   netMinor: string | null;
   receiptId: string | null;
+  /** Running cost and what limits it — null when none was recorded. */
+  limit: DriverSessionLimitDto | null;
+}
+
+/**
+ * A session's running cost and money limit (doc 6 §22.4 "Session limits").
+ * Money is minor units, energy Wh, power W — all decimal strings.
+ */
+export interface DriverSessionLimitDto {
+  /** `wallet`, `hold`, or `none` when nothing limits it (a fleet pays). */
+  source: 'wallet' | 'hold' | 'none';
+  currency: string | null;
+  budgetMinor: string | null;
+  /** The session so far, as the receipt will price it, tax included. */
+  runningCostMinor: string;
+  remainingMinor: string | null;
+  /** Kept back so the charger stops in time. */
+  reserveMinor: string;
+  energyWh: string | null;
+  powerW: string | null;
+  socPercent: string | null;
+  /** Estimates, set only once the battery can be judged from the SoC. */
+  toFullWh: string | null;
+  toFullMinor: string | null;
+  lastPricedAt: string | null;
+  stopRequestedAt: string | null;
+  /** `balance_used_up` or `hold_used_up`. */
+  stopReason: string | null;
+  stopSentAt: string | null;
 }
 
 export interface DriverSessionPage {
@@ -69,6 +98,38 @@ export interface DriverCommandResultDto {
   /** The charger's own answer: Accepted, … */
   status?: string;
   detail?: string;
+  /** A wallet start: what the session may spend before it is stopped. */
+  budgetMinor?: string;
+}
+
+/** `GET /driver/stations/:id/quote` — prices before a start (§22.4). */
+export interface DriverQuotePriceDto {
+  energyWh: string;
+  netMinor: string;
+  taxLines: { component: string; ratePercent: string; amountMinor: string }[];
+  taxMinor: string;
+  grossMinor: string;
+}
+
+export interface DriverQuoteBudgetDto {
+  amountMinor: string;
+  /** The amount less the margin kept back for the stop. */
+  spendableMinor: string;
+  buys: DriverQuotePriceDto | null;
+}
+
+export interface DriverQuoteDto {
+  priced: boolean;
+  unpricedReason: string | null;
+  currency: string | null;
+  energyPricePerKwhMinor: string | null;
+  sessionFeeMinor: string | null;
+  taxRatePercent: string;
+  /** Time-based charges not in the estimate: charging_time, idle, occupancy. */
+  notIncluded: string[];
+  requested: DriverQuotePriceDto | null;
+  wallet: DriverQuoteBudgetDto | null;
+  hold: DriverQuoteBudgetDto | null;
 }
 
 export interface DriverConnectorDto {
