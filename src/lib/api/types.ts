@@ -311,6 +311,21 @@ export interface BootEntry {
   producedBy: string;
 }
 
+/**
+ * One connection or disconnection of a charger (doc 6 §17.13). `address` is
+ * the station's own address as the engine resolved it, `via` the trusted
+ * proxy it came through; both null for a disconnect, and once the API's
+ * address retention has cleared them.
+ */
+export interface ConnectionEntry {
+  id: string;
+  kind: 'connected' | 'disconnected';
+  receivedAt: string;
+  address: string | null;
+  via: string | null;
+  producedBy: string;
+}
+
 export interface ConnectorStatusEntry {
   evseNumber: number;
   connectorNumber: number;

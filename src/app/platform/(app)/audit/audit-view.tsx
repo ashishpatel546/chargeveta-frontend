@@ -39,7 +39,8 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.sign-in-failed': 'Sign-in refused',
   'admin.password-change': 'Changed own password',
   'audit.prune': 'Old audit rows pruned',
-  'retention.prune': 'Old command, quarantine and message history pruned',
+  'retention.prune':
+    'Old command, quarantine and message history pruned; old connection addresses cleared',
 };
 
 /**

@@ -22,7 +22,11 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiGet } from '@/lib/api/client';
-import type { BootEntry, ConnectorStatusEntry } from '@/lib/api/types';
+import type {
+  BootEntry,
+  ConnectionEntry,
+  ConnectorStatusEntry,
+} from '@/lib/api/types';
 import { dateTime } from '@/lib/format';
 
 /**
@@ -40,6 +44,7 @@ export function HistoryPanel({ stationId }: { stationId: string }) {
       <TabsList>
         <TabsTrigger value="status">Connector status</TabsTrigger>
         <TabsTrigger value="boots">Boots</TabsTrigger>
+        <TabsTrigger value="connections">Connections</TabsTrigger>
         <TabsTrigger value="reports">Reports</TabsTrigger>
       </TabsList>
 
@@ -48,6 +53,9 @@ export function HistoryPanel({ stationId }: { stationId: string }) {
       </TabsContent>
       <TabsContent value="boots" className="pt-4">
         <Boots stationId={stationId} />
+      </TabsContent>
+      <TabsContent value="connections" className="pt-4">
+        <Connections stationId={stationId} />
       </TabsContent>
       <TabsContent value="reports" className="pt-4">
         <Reports stationId={stationId} />
@@ -175,6 +183,63 @@ function Boots({ stationId }: { stationId: string }) {
               </TableCell>
               <TableCell className="text-right text-sm">
                 {entry.intervalSeconds}s
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+/**
+ * When the charger connected and dropped off, and where each connection came
+ * from (doc 6 §17.13): its own address, and the trusted proxy it came through
+ * if any. Informational only — nothing decides anything from the address —
+ * and cleared by the API after its address retention; the rows stay.
+ */
+function Connections({ stationId }: { stationId: string }) {
+  const connections = useQuery({
+    queryKey: ['station', stationId, 'connections'],
+    queryFn: () =>
+      apiGet<ConnectionEntry[]>(`/stations/${stationId}/connections`),
+  });
+
+  if (connections.isPending) return <Loading rows={4} />;
+  if (connections.isError) return <Failed error={connections.error} />;
+  if (connections.data.length === 0) {
+    return <Empty>This charger has not connected yet.</Empty>;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>When</TableHead>
+            <TableHead>Event</TableHead>
+            <TableHead>From</TableHead>
+            <TableHead>Via</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {connections.data.map((entry) => (
+            <TableRow key={entry.id}>
+              <TableCell className="text-sm whitespace-nowrap">
+                {dateTime(entry.receivedAt)}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={entry.kind === 'connected' ? 'secondary' : 'outline'}
+                >
+                  {entry.kind === 'connected' ? 'Connected' : 'Disconnected'}
+                </Badge>
+              </TableCell>
+              <TableCell className="font-mono text-xs">
+                {entry.kind === 'connected' ? (entry.address ?? '—') : ''}
+              </TableCell>
+              <TableCell className="font-mono text-xs">
+                {entry.via ?? ''}
               </TableCell>
             </TableRow>
           ))}
