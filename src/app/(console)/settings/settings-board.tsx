@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { apiGet, apiSend } from '@/lib/api/client';
 import type { TenantSettings } from '@/lib/api/types';
+import { MyAlertPreferencesCard } from './my-alert-preferences-card';
 import { MyPhoneCard } from './my-phone-card';
 import { PushDeviceCard } from './push-device-card';
 
@@ -47,6 +48,7 @@ export function SettingsBoard() {
 
       <WhoIsSignedIn />
       <MyPhoneCard />
+      <MyAlertPreferencesCard />
       <PushDeviceCard />
 
       {settings.isPending ? <Loading rows={4} /> : null}

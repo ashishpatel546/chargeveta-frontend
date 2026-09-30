@@ -21,7 +21,8 @@ import type { PushSubscriptionRow } from '@/lib/api/types';
  *
  * The console already shows alerts live while it is open. This is for when it
  * is not: a faulted connector or a quarantined charger reaches the phone in a
- * pocket. Warnings and critical alerts only; the API decides that, not this.
+ * pocket. Warnings and critical alerts only; the API decides that, not this,
+ * and within those each person's own choice ("Your alerts", above) does.
  *
  * Everything here is about *this browser*. A person with a laptop and a phone
  * turns it on in each, and turning it off here leaves the others alone.

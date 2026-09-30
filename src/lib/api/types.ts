@@ -616,6 +616,22 @@ export interface CreatedUser extends ConsoleUser {
   emailQueued?: boolean;
 }
 
+/**
+ * The signed-in person's own alert preferences (GET/PUT
+ * /users/me/alert-preferences, doc 6 §22.2, §22.4). Every flag is on until
+ * they change it.
+ */
+export interface AlertPreferences {
+  /** Alerts pushed to their devices at all. */
+  pushAlerts: boolean;
+  /** Warnings as well as critical alerts. */
+  pushWarnings: boolean;
+  /** A stuck session's escalation email (owners and admins). */
+  escalationEmail: boolean;
+  /** Its texts — SMS, and WhatsApp where that is on. */
+  escalationSms: boolean;
+}
+
 /** One of the signed-in person's own devices registered for push. */
 export interface PushSubscriptionRow {
   id: string;
