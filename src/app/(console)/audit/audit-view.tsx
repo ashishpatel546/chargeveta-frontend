@@ -106,6 +106,11 @@ const ACTION_LABELS: Record<string, string> = {
   'station.get-installed-certificates': 'Certificates listed',
   'station.certificate-delete': 'Certificate deleted',
   'station.certificate-signed': 'Signed certificate sent',
+  'station.monitor-set': 'Monitor set',
+  'station.monitor-clear': 'Monitor cleared',
+  'station.get-monitoring-report': 'Monitors listed',
+  'station.monitoring-base-set': 'Monitoring base set',
+  'station.monitoring-level-set': 'Monitoring level set',
   'reservation.create': 'Connector reserved',
   'reservation.cancel': 'Reservation cancelled',
 };

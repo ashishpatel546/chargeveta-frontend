@@ -281,6 +281,97 @@ export interface CommandResult {
   durationMs: number;
 }
 
+/**
+ * Device-model monitoring, OCPP 2.x (`charveta` doc 6 §13.6): a rule the
+ * charger applies to its own device model, reported as a device event when it
+ * fires. `monitorId` is the charger's own number for it.
+ */
+export const MONITOR_TYPES = [
+  'UpperThreshold',
+  'LowerThreshold',
+  'Delta',
+  'Periodic',
+  'PeriodicClockAligned',
+  'TargetDelta',
+  'TargetDeltaRelative',
+] as const;
+export type MonitorType = (typeof MONITOR_TYPES)[number];
+
+export const MONITORING_BASES = [
+  'All',
+  'FactoryDefault',
+  'HardWiredOnly',
+] as const;
+
+export interface StationMonitor {
+  monitorId: number;
+  componentName: string;
+  componentInstance: string | null;
+  evseNumber: number;
+  connectorNumber: number;
+  variableName: string;
+  variableInstance: string | null;
+  type: MonitorType;
+  value: number;
+  severity: number;
+  transaction: boolean;
+  /** `csms` — set here; `charger` — known only from the charger's report. */
+  origin: 'csms' | 'charger';
+  /** OCPP 2.1 only: HardWiredMonitor, PreconfiguredMonitor, CustomMonitor. */
+  notificationType: string | null;
+  setBy: string | null;
+  setAt: string | null;
+  reportedAt: string | null;
+  updatedAt: string;
+}
+
+export interface StationMonitoring {
+  /** False for a 1.6 station, which has no device model to monitor. */
+  supported: boolean;
+  ocppVersion: string;
+  monitors: StationMonitor[];
+  level: { value: number; setAt: string; setBy: string } | null;
+  base: { value: string; setAt: string; setBy: string } | null;
+  lastReportedAt: string | null;
+}
+
+/** A monitoring command's answer, with the charger's verdict on the monitor. */
+export interface MonitorCommandResult extends CommandResult {
+  monitorStatus?: string;
+  monitor?: StationMonitor;
+}
+
+/** One OCPP 2.x `NotifyEvent` entry: the device model reporting itself. */
+export interface ComponentEventEntry {
+  stationEventId: number;
+  cause: number | null;
+  trigger: 'Alerting' | 'Delta' | 'Periodic';
+  notificationType: string;
+  evseNumber: number;
+  connectorNumber: number;
+  componentName: string;
+  componentInstance: string | null;
+  variableName: string;
+  variableInstance: string | null;
+  actualValue: string;
+  techCode: string | null;
+  techInfo: string | null;
+  cleared: boolean;
+  variableMonitoringId: number | null;
+  /** The monitor that fired, when the station's monitor list knows it. */
+  monitor: {
+    monitorId: number;
+    type: string;
+    value: number;
+    severity: number;
+    origin: string;
+  } | null;
+  severity: number | null;
+  protocolVersion: string;
+  occurredAt: string;
+  receivedAt: string;
+}
+
 export interface StationCommandEntry {
   id: string;
   command: string;
@@ -745,6 +836,11 @@ export const TENANT_AUDIT_ACTIONS = [
   'station.get-installed-certificates',
   'station.certificate-delete',
   'station.certificate-signed',
+  'station.monitor-set',
+  'station.monitor-clear',
+  'station.get-monitoring-report',
+  'station.monitoring-base-set',
+  'station.monitoring-level-set',
   'reservation.create',
   'reservation.cancel',
 ] as const;
