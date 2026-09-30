@@ -198,6 +198,8 @@ export interface Transaction {
   meterStop?: number;
   stoppedReason?: string;
   energyWh?: string;
+  /** `interval_sum` when the charger reports no register (doc 6 §16.7.8). */
+  energySource?: 'register' | 'interval_sum';
   lastMeterWh?: string;
   lastSampleAt?: string;
   cost?: TransactionCostSummary;
@@ -217,7 +219,10 @@ export interface TransactionCost extends TransactionCostSummary {
   billedStartedAt: string;
   billedStoppedAt: string;
   chargingEndedAt?: string;
+  /** How charging end, charging time and idle were measured (doc 6 §16.13). */
+  idleBasis?: 'register' | 'charging_state';
   energyWh?: string;
+  energySource?: 'register' | 'interval_sum';
   timeZone?: string;
   pricedAt: string;
 }
