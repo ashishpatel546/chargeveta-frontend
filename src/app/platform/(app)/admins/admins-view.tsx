@@ -257,8 +257,12 @@ function AdminActions({ admin }: { admin: PlatformAdmin }) {
   });
 
   const reset = useMutation({
-    mutationFn: () =>
-      platformApiSend<PlatformAdminSetupLink>('POST', `/admins/${admin.id}/setup-token`),
+    mutationFn: (voidPassword: boolean) =>
+      platformApiSend<PlatformAdminSetupLink>(
+        'POST',
+        `/admins/${admin.id}/setup-token`,
+        voidPassword ? { voidPassword } : {},
+      ),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ADMINS });
       setLink(result);
@@ -277,7 +281,16 @@ function AdminActions({ admin }: { admin: PlatformAdmin }) {
             description="They are signed out everywhere now and get a new single-use link to choose a password from. Their current password keeps working until the link is used."
             confirmLabel="Issue reset link"
             pending={reset.isPending}
-            onConfirm={() => reset.mutateAsync()}
+            onConfirm={() => reset.mutateAsync(false)}
+          />
+          <ConfirmDialog
+            trigger={<Button variant="outline" size="sm" />}
+            triggerLabel="Reset and void password"
+            title={`Void ${label}'s password?`}
+            description="For a password known or feared leaked: it stops working now, they are signed out everywhere, and they get a new single-use link to choose one from. Until they use it they cannot sign in at all."
+            confirmLabel="Void and issue link"
+            pending={reset.isPending}
+            onConfirm={() => reset.mutateAsync(true)}
           />
           <ConfirmDialog
             trigger={<Button variant="outline" size="sm" />}
