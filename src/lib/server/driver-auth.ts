@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { config } from '../config';
-import type { FormState, OtpRequestState } from '../forms';
+import type { FormState, OtpChannel, OtpRequestState } from '../forms';
 import { driverApiFetch, readDriverMessage } from './driver-api';
 import { clearDriverSession, readDriverSession, writeDriverSession } from './driver-session';
 import type { DriverTokenPair } from './driver-session';
@@ -77,10 +77,12 @@ export async function requestOtpAction(
   });
   if (!parsed.success) return { error: z.prettifyError(parsed.error) };
 
-  const result = await post<{ phone: string; resendAfterSeconds: number }>(
-    '/driver/auth/otp',
-    parsed.data,
-  );
+  const result = await post<{
+    phone: string;
+    // Absent from an API older than DRIVER_OTP_CHANNEL, which only had SMS.
+    channel?: OtpChannel;
+    resendAfterSeconds: number;
+  }>('/driver/auth/otp', parsed.data);
   if (!result.ok) {
     return {
       error:
@@ -93,6 +95,7 @@ export async function requestOtpAction(
   return {
     sent: {
       phone: result.data.phone,
+      channel: result.data.channel === 'whatsapp' ? 'whatsapp' : 'sms',
       tenantSlug: parsed.data.tenantSlug,
       resendAfterSeconds: result.data.resendAfterSeconds,
     },
