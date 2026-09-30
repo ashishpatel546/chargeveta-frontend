@@ -891,3 +891,73 @@ export interface AttentionPayment {
   attentionReason: string | null;
   refunds: PaymentRefund[];
 }
+
+/**
+ * A figure for a period and the one of equal length just before it, and the
+ * change between them (`charveta` doc 6 §20.4). Values are decimal strings as
+ * everywhere else; `changePct` is the API's, for display only.
+ */
+export interface Kpi {
+  current: string | null;
+  previous: string | null;
+  changePct: number | null;
+}
+
+export interface RevenueKpi {
+  currency: string;
+  netMinor: Kpi;
+  taxMinor: Kpi;
+  grossMinor: Kpi;
+}
+
+export interface DashboardMoney {
+  currency: string;
+  netMinor: string;
+  taxMinor: string;
+  grossMinor: string;
+}
+
+export interface DashboardGroup {
+  key: string;
+  label: string | null;
+  siteName: string | null;
+  sessions: number;
+  energyWh: string;
+  billedMinutes: string;
+  revenue: DashboardMoney[];
+}
+
+export type PaymentMethod = 'free' | 'wallet' | 'online' | 'not_collected';
+export type StartMethod = 'app' | 'card' | 'unregistered' | 'none';
+
+/** `GET /reports/dashboard` — the console's overview (doc 6 §20.4). */
+export interface Dashboard {
+  from: string;
+  to: string;
+  previousFrom: string;
+  previousTo: string;
+  bucket: 'hour' | 'day';
+  asOf: string;
+  kpis: {
+    sessions: Kpi;
+    energyWh: Kpi;
+    averageDurationMinutes: Kpi;
+    averageEnergyWh: Kpi;
+    uniqueDrivers: Kpi;
+    uniqueIdTokens: Kpi;
+    unpricedSessions: Kpi;
+    untrustedClockSessions: Kpi;
+    refusedAuthorizations: Kpi;
+    availability: Kpi;
+    coverage: Kpi;
+    utilisation: Kpi;
+    revenue: RevenueKpi[];
+    activeNow: number;
+  };
+  series: DashboardGroup[];
+  bySite: DashboardGroup[];
+  byStation: DashboardGroup[];
+  heatmap: { weekday: number; hour: number; sessions: number; energyWh: string }[];
+  byPaymentMethod: DashboardGroup[];
+  byStartMethod: DashboardGroup[];
+}

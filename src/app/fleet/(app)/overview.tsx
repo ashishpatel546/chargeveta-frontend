@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { BillingMonthCard } from '@/components/fleet/billing-month';
+import { FleetDashboardPanel } from '@/components/fleet/fleet-dashboard';
 import { useFleetManager } from '@/components/fleet-context';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -12,8 +13,19 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { fleetApiGet } from '@/lib/api/fleet-client';
-import { billingModeLabel, type FleetBillingMonth } from '@/lib/api/fleet-types';
+import {
+  billingModeLabel,
+  type Depot,
+  type FleetBillingMonth,
+  type FleetDashboard,
+  type FleetMember,
+} from '@/lib/api/fleet-types';
+import { downloadCsvVia } from '@/lib/download';
 
+/**
+ * The fleet portal's landing page: the fleet at a glance, its dashboard
+ * (`charveta` doc 6 §23) over a period, how it is billed, and a month's bill.
+ */
 export function FleetOverview() {
   const { fleet } = useFleetManager();
 
@@ -29,6 +41,24 @@ export function FleetOverview() {
           <Count href="/fleet/vehicles" label="Vehicles" value={fleet.vehicleCount} />
           <Count href="/fleet/depots" label="Depots" value={fleet.depotCount} />
         </div>
+
+        <FleetDashboardPanel
+          queryKey={['fleet', 'own']}
+          fetchDashboard={(params) =>
+            fleetApiGet<FleetDashboard>('/fleet-manager/dashboard', params)
+          }
+          fetchMembers={() => fleetApiGet<FleetMember[]>('/fleet-manager/members')}
+          fetchDepots={() => fleetApiGet<Depot[]>('/fleet-manager/depots')}
+          downloadCsv={(params, table) =>
+            downloadCsvVia(
+              '/api/cvf',
+              '/fleet-manager/dashboard',
+              { ...params, table },
+              `fleet-dashboard-${table}.csv`,
+            )
+          }
+          owedLabel="You owe"
+        />
 
         <Card>
           <CardHeader>

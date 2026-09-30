@@ -7,6 +7,8 @@
  * `lib/format.ts` and never do arithmetic on them.
  */
 
+import type { Kpi } from './types';
+
 export type BillingMode = 'driver_pays' | 'fleet_invoice';
 
 export interface Fleet {
@@ -206,4 +208,58 @@ export interface FleetStatement {
   sessions: StatementSession[];
   byRate: StatementRateLine[];
   totals: StatementTotals[];
+}
+
+export interface FleetCost {
+  currency: string;
+  totalMinor: string;
+  owedMinor: string;
+  collectedMinor: string;
+  perKwhMinor: string | null;
+}
+
+export interface FleetDashboardGroup {
+  key: string;
+  label: string | null;
+  sessions: number;
+  energyWh: string;
+  minutes: string;
+  cost: FleetCost[];
+  /** Drivers only: the vehicles assigned to them now (sessions record none). */
+  vehicles?: string[];
+  /** Sites only. */
+  isDepot?: boolean;
+}
+
+/**
+ * A fleet's dashboard (`charveta` doc 6 §23): `GET /fleet-manager/dashboard`
+ * for its managers, `GET /fleets/{id}/dashboard` for staff — the same shape.
+ * Cost is what the monthly bill totals, so a month here and the bill agree.
+ */
+export interface FleetDashboard {
+  from: string;
+  to: string;
+  previousFrom: string;
+  previousTo: string;
+  bucket: 'hour' | 'day';
+  asOf: string;
+  kpis: {
+    sessions: Kpi;
+    energyWh: Kpi;
+    averageDurationMinutes: Kpi;
+    averageEnergyWh: Kpi;
+    activeDrivers: Kpi;
+    unbilledSessions: Kpi;
+    cost: {
+      currency: string;
+      totalMinor: Kpi;
+      owedMinor: Kpi;
+      collectedMinor: Kpi;
+      perKwhMinor: Kpi;
+    }[];
+    activeNow: number;
+  };
+  series: FleetDashboardGroup[];
+  byDriver: FleetDashboardGroup[];
+  bySite: FleetDashboardGroup[];
 }
