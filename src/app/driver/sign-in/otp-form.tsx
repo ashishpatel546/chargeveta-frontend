@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { EMPTY_FORM, EMPTY_OTP_REQUEST } from '@/lib/forms';
+import { EMPTY_FORM, EMPTY_OTP_REQUEST, type OtpChannel } from '@/lib/forms';
 import { requestOtpAction, verifyOtpAction } from '@/lib/server/driver-auth';
 
 /**
@@ -25,6 +25,7 @@ import { requestOtpAction, verifyOtpAction } from '@/lib/server/driver-auth';
 export function OtpForm() {
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
+  const [channel, setChannel] = useState<OtpChannel>('sms');
   const [tenantSlug, setTenantSlug] = useState('');
   const [error, setError] = useState<string | undefined>(undefined);
   const [pending, startTransition] = useTransition();
@@ -35,6 +36,7 @@ export function OtpForm() {
       const result = await requestOtpAction(EMPTY_OTP_REQUEST, form);
       if (result.sent) {
         setPhone(result.sent.phone);
+        setChannel(result.sent.channel);
         setTenantSlug(result.sent.tenantSlug ?? '');
         setStep('code');
         return;
@@ -58,7 +60,22 @@ export function OtpForm() {
       <form action={verify} className="space-y-4">
         <input type="hidden" name="phone" value={phone} />
         <input type="hidden" name="tenantSlug" value={tenantSlug} />
-        <p className="text-muted-foreground text-sm">Code sent to {phone}.</p>
+        {/* Where to look: the API names the channel, the same for every
+            number (it is the operator's setting, not the account's). */}
+        <p className="text-muted-foreground text-sm">
+          {channel === 'whatsapp' ? (
+            <>
+              We sent a code on WhatsApp to{' '}
+              <span className="text-foreground font-medium">{phone}</span>.
+              Open WhatsApp to find it.
+            </>
+          ) : (
+            <>
+              We sent a code by SMS to{' '}
+              <span className="text-foreground font-medium">{phone}</span>.
+            </>
+          )}
+        </p>
         <div className="space-y-2">
           <Label htmlFor="code">6-digit code</Label>
           <Input

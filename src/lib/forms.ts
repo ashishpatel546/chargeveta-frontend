@@ -20,8 +20,16 @@ export const EMPTY_FORM: FormState = {};
  * `FormState` is kept out of `lib/server/auth.ts` — a `'use server'` file may
  * only export async functions, and neither a type nor a constant is one.
  */
+/** Where a driver's sign-in code went — the API's `DRIVER_OTP_CHANNEL`. */
+export type OtpChannel = 'sms' | 'whatsapp';
+
 export interface OtpRequestState {
   error?: string;
-  sent?: { phone: string; tenantSlug?: string; resendAfterSeconds: number };
+  sent?: {
+    phone: string;
+    channel: OtpChannel;
+    tenantSlug?: string;
+    resendAfterSeconds: number;
+  };
 }
 export const EMPTY_OTP_REQUEST: OtpRequestState = {};
