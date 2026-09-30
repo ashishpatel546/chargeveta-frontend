@@ -113,8 +113,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         toast.info('A new alert arrived');
       });
 
-      // An alert changed — for now, a stop alert nobody answered was
-      // escalated (doc 6 §22.4). The board and the bell refetch it.
+      // An alert changed: a stop alert nobody answered was escalated (doc 6
+      // §22.4), or someone else acknowledged one. The board and the bell
+      // refetch it.
       socket.on('notification.updated', () => {
         void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       });
