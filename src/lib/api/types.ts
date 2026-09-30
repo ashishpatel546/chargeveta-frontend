@@ -98,6 +98,23 @@ export interface Station {
 }
 
 /**
+ * What became of a charger's live connection when a quarantine, deactivation
+ * or deletion asked the engine to close it (doc 6 §14.5). The change itself is
+ * saved whatever this says; `not_connected` is a success — there was nothing
+ * to close.
+ */
+export type LiveConnection =
+  | {
+      outcome: 'disconnected';
+      closeCode: number;
+      terminated: boolean;
+      connectedForMs: number;
+    }
+  | { outcome: 'not_connected' }
+  | { outcome: 'connected_elsewhere'; instanceId: string }
+  | { outcome: 'engine_unreachable'; detail: string };
+
+/**
  * How a connector or EVSE came to exist: somebody added it, or a charger
  * reported it and the platform created it.
  */
