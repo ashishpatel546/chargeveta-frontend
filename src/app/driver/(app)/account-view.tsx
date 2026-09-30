@@ -22,7 +22,9 @@ import { NotificationsCard } from './notifications-card';
 
 /**
  * A signed-in driver's own account (`charveta` doc 6 §22.3): who they are,
- * their name, and their password. Cards, sessions, receipts and nearby
+ * their name, their email and their password. The phone the account was
+ * created with is fixed; an email is added here and confirmed by a link
+ * ("Phone first"). Cards, sessions, receipts and nearby
  * stations are their own screens under the bottom nav (`driver-shell.tsx`).
  */
 export function AccountView() {
@@ -33,6 +35,7 @@ export function AccountView() {
     <div className="space-y-4">
       <IdentityCard driver={driver} />
       <NameCard driver={driver} onSaved={setDriver} />
+      <EmailCard driver={driver} />
       <PasswordCard driver={driver} />
       <NotificationsCard />
       <SignOutCard />
@@ -46,7 +49,7 @@ function IdentityCard({ driver }: { driver: DriverDto }) {
       <CardHeader>
         <CardTitle>Your account</CardTitle>
         <CardDescription>
-          How you signed in. To change an email or phone number, contact your
+          Your account is your phone number. To change it, contact your
           operator.
         </CardDescription>
       </CardHeader>
@@ -134,6 +137,70 @@ function NameCard({
   );
 }
 
+function EmailCard({ driver }: { driver: DriverDto }) {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState<string | null>(null);
+
+  const send = useMutation({
+    mutationFn: () =>
+      driverApiSend<{ message: string }>('POST', '/driver/me/email', {
+        email: email.trim(),
+      }),
+    onSuccess: () => {
+      setSent(email.trim());
+      setEmail('');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const confirmed = driver.email && driver.emailVerified ? driver.email : null;
+
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle>{confirmed ? 'Change email' : 'Add an email'}</CardTitle>
+        <CardDescription>
+          {confirmed
+            ? `You can sign in with ${confirmed} as well as your phone.`
+            : 'Lets you sign in with an emailed link or a password, as well as your phone.'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {sent ? (
+          <p className="border-l-2 border-emerald-500 pl-3 text-sm text-emerald-700 dark:text-emerald-500">
+            If {sent} can be added, a confirmation link is on its way. Follow it
+            to add the address to this account.
+          </p>
+        ) : null}
+        <form
+          className="flex gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            send.mutate();
+          }}
+        >
+          <Label htmlFor="email" className="sr-only">
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            maxLength={320}
+            placeholder="you@example.com"
+            required
+          />
+          <Button type="submit" disabled={send.isPending}>
+            {send.isPending ? 'Sending…' : 'Send link'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
 function PasswordCard({ driver }: { driver: DriverDto }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -167,7 +234,9 @@ function PasswordCard({ driver }: { driver: DriverDto }) {
         <CardDescription>
           {driver.hasPassword
             ? 'Ends every other session of yours.'
-            : 'Needs a confirmed email. Until then, sign in with a phone code or an emailed link.'}
+            : driver.emailVerified
+              ? 'Lets you sign in with your email and a password.'
+              : 'Password sign-in is by email: add one above first.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -212,7 +281,10 @@ function PasswordCard({ driver }: { driver: DriverDto }) {
               required
             />
           </div>
-          <Button type="submit" disabled={save.isPending}>
+          <Button
+            type="submit"
+            disabled={save.isPending || !driver.emailVerified}
+          >
             {save.isPending ? 'Saving…' : 'Save password'}
           </Button>
         </form>

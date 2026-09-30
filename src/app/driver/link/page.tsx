@@ -8,8 +8,9 @@ export const metadata: Metadata = { title: 'Sign in with a link' };
 /**
  * Two purposes, told apart by whether a token is on the URL:
  *
- * - With one (`?token=cvl....`), the link an email sent — sign-in or a
- *   registration confirmation alike (`redeemLinkAction`'s doc comment).
+ * - With one (`?token=cvl....`), the link an email sent — sign-in, or
+ *   confirming an address added under Account (`redeemLinkAction`'s doc
+ *   comment).
  * - Without one, a form to request a new link, for someone who followed a
  *   sign-in prompt to "email me a link" or whose old one expired.
  *

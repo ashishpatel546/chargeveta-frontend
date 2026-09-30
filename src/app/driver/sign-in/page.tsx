@@ -31,7 +31,7 @@ export default async function DriverSignInPage({
       <p className="text-muted-foreground text-center text-sm">
         New here?{' '}
         <Link href="/driver/register" className="text-foreground underline underline-offset-4">
-          Register with an email
+          Sign up with your phone number
         </Link>
       </p>
     </main>

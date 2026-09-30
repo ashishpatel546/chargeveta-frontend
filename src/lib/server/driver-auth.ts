@@ -170,49 +170,6 @@ export async function driverLoginAction(
   redirect('/driver');
 }
 
-const registerSchema = tenantScoped.extend({
-  email: z.email('That does not look like an email address'),
-  password: z
-    .string()
-    .min(12, 'Use at least 12 characters')
-    .max(256, 'Use at most 256 characters'),
-  confirm: z.string(),
-  name: z.string().trim().max(120).optional(),
-}).refine((value) => value.password === value.confirm, {
-  message: 'The two passwords do not match',
-  path: ['confirm'],
-});
-
-/**
- * Registers, and sends a link to confirm the address rather than signing in
- * at once — the password only takes effect once that link is followed
- * (`/driver/link`, same redemption `DriverAuthController.register` docs).
- */
-export async function registerDriverAction(
-  _previous: FormState,
-  form: FormData,
-): Promise<FormState> {
-  const parsed = registerSchema.safeParse({
-    tenantSlug: (form.get('tenantSlug') as string | null) || undefined,
-    email: form.get('email'),
-    password: form.get('password'),
-    confirm: form.get('confirm'),
-    name: (form.get('name') as string | null) || undefined,
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Check the form' };
-  }
-
-  const result = await post<{ message: string }>('/driver/auth/register', {
-    tenantSlug: parsed.data.tenantSlug,
-    email: parsed.data.email,
-    password: parsed.data.password,
-    name: parsed.data.name,
-  });
-  if (!result.ok) return { error: result.error };
-  return { message: result.data.message };
-}
-
 // ---------------------------------------------------------------------------
 // Magic link
 // ---------------------------------------------------------------------------
@@ -241,8 +198,10 @@ const redeemLinkSchema = z.object({
 });
 
 /**
- * Redeems a magic link — sign-in or registration-confirmation alike, the API
- * does not distinguish (`DriverAuthController.redeemLink`).
+ * Redeems a magic link — a sign-in link, or one confirming an email a driver
+ * added under Account; either signs in (`DriverAuthController.redeemLink`).
+ * A link never creates an account: only a phone code does (`charveta` doc 6
+ * §22.3, "Phone first").
  *
  * A `'use server'` action, reached only by a form submission a person makes
  * (never by the page load itself): a mail scanner that fetches the link to
