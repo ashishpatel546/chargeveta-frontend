@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { Empty, Failed, Loading } from '@/components/query-state';
 import { ALL, describeDetails, FilterSelect } from '@/components/audit-log';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ import {
   type PlatformTenantListItem,
 } from '@/lib/api/platform-types';
 import { dateTime } from '@/lib/format';
+import { UnknownTenantSignIns } from './unknown-tenant-sign-ins';
 
 const ACTION_LABELS: Record<string, string> = {
   'tenant.create': 'Tenant created',
@@ -47,7 +49,8 @@ const ACTION_LABELS: Record<string, string> = {
  * Everything done above the tenants (doc 6 §19.4), newest first: tenants
  * created, changed and suspended, owner links, admins added, deactivated and
  * reset, sign-ins (refused ones too) and password changes. Read-only — the
- * API keeps it append-only — and never holding a token or password.
+ * API keeps it append-only — and never holding a token or password. A second
+ * tab lists sign-ins refused for a tenant that does not exist (§18.4).
  */
 export function PlatformAuditView() {
   const [action, setAction] = useState<string>(ALL);
@@ -94,7 +97,10 @@ export function PlatformAuditView() {
   ];
   const actorItems = [
     { value: ALL, label: 'Anyone' },
-    ...(admins.data ?? []).map((a) => ({ value: a.id, label: a.name ?? a.email })),
+    ...(admins.data ?? []).map((a) => ({
+      value: a.id,
+      label: a.name ?? a.email,
+    })),
   ];
 
   return (
@@ -104,64 +110,80 @@ export function PlatformAuditView() {
         description="What has been done on this platform and by whom, newest first. Entries are never changed or removed."
       />
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        <FilterSelect value={action} onChange={setAction} items={actionItems} label="Action" />
-        <FilterSelect value={tenantId} onChange={setTenantId} items={tenantItems} label="Tenant" />
-        <FilterSelect value={actorId} onChange={setActorId} items={actorItems} label="Admin" />
-      </div>
-
-      {log.isPending ? <Loading /> : null}
-      {log.isError ? <Failed error={log.error} /> : null}
-      {log.isSuccess && rows.length === 0 ? <Empty>Nothing recorded yet.</Empty> : null}
-
-      {rows.length > 0 ? (
-        <>
-          <div className="overflow-x-auto rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>When</TableHead>
-                  <TableHead>Who</TableHead>
-                  <TableHead>What</TableHead>
-                  <TableHead>Tenant</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>From</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="text-sm whitespace-nowrap">
-                      {dateTime(row.createdAt)}
-                    </TableCell>
-                    <TableCell className="text-sm">{who(row)}</TableCell>
-                    <TableCell className="text-sm">
-                      {ACTION_LABELS[row.action] ?? row.action}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {row.tenantId ? (row.tenantName ?? 'Removed tenant') : '—'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-80 text-xs whitespace-normal">
-                      {describeDetails(row.detail)}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">{row.ipAddress ?? '—'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      <Tabs defaultValue="actions">
+        <TabsList className="mb-4">
+          <TabsTrigger value="actions">Platform actions</TabsTrigger>
+          <TabsTrigger value="unknown-tenant">Unknown-tenant sign-ins</TabsTrigger>
+        </TabsList>
+        <TabsContent value="unknown-tenant">
+          <UnknownTenantSignIns />
+        </TabsContent>
+        <TabsContent value="actions">
+          <div className="mb-4 flex flex-wrap gap-2">
+            <FilterSelect value={action} onChange={setAction} items={actionItems} label="Action" />
+            <FilterSelect
+              value={tenantId}
+              onChange={setTenantId}
+              items={tenantItems}
+              label="Tenant"
+            />
+            <FilterSelect value={actorId} onChange={setActorId} items={actorItems} label="Admin" />
           </div>
-          {log.hasNextPage ? (
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => void log.fetchNextPage()}
-              disabled={log.isFetchingNextPage}
-            >
-              {log.isFetchingNextPage ? 'Loading…' : 'Load more'}
-            </Button>
+
+          {log.isPending ? <Loading /> : null}
+          {log.isError ? <Failed error={log.error} /> : null}
+          {log.isSuccess && rows.length === 0 ? <Empty>Nothing recorded yet.</Empty> : null}
+
+          {rows.length > 0 ? (
+            <>
+              <div className="overflow-x-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>When</TableHead>
+                      <TableHead>Who</TableHead>
+                      <TableHead>What</TableHead>
+                      <TableHead>Tenant</TableHead>
+                      <TableHead>Details</TableHead>
+                      <TableHead>From</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell className="text-sm whitespace-nowrap">
+                          {dateTime(row.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-sm">{who(row)}</TableCell>
+                        <TableCell className="text-sm">
+                          {ACTION_LABELS[row.action] ?? row.action}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {row.tenantId ? (row.tenantName ?? 'Removed tenant') : '—'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground max-w-80 text-xs whitespace-normal">
+                          {describeDetails(row.detail)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{row.ipAddress ?? '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {log.hasNextPage ? (
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => void log.fetchNextPage()}
+                  disabled={log.isFetchingNextPage}
+                >
+                  {log.isFetchingNextPage ? 'Loading…' : 'Load more'}
+                </Button>
+              ) : null}
+            </>
           ) : null}
-        </>
-      ) : null}
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

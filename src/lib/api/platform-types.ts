@@ -133,3 +133,24 @@ export interface PlatformAuditPage {
   items: PlatformAuditEntry[];
   nextCursor: string | null;
 }
+
+/** Which sign-in was refused (doc 6 §18.4). */
+export const SIGN_IN_SURFACES = ['staff', 'fleet-manager', 'driver'] as const;
+
+/** A sign-in refused because its tenant slug named no tenant (doc 6 §18.4). */
+export interface UnknownTenantSignIn {
+  id: string;
+  createdAt: string;
+  surface: string;
+  /** The slug that was asked for. */
+  attemptedSlug: string | null;
+  /** The address tried, lowercased. Never the password. */
+  attemptedEmail: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+export interface UnknownTenantSignInPage {
+  items: UnknownTenantSignIn[];
+  nextCursor: string | null;
+}
