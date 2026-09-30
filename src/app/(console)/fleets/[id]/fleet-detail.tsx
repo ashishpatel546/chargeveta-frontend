@@ -9,6 +9,7 @@ import { MembersTab } from './members-tab';
 import { VehiclesTab } from './vehicles-tab';
 import { ActiveBadge } from '@/components/fleet/billing-badge';
 import { BillingMonthCard } from '@/components/fleet/billing-month';
+import { FleetDashboardPanel } from '@/components/fleet/fleet-dashboard';
 import { FleetSessionsTable } from '@/components/fleet/sessions-table';
 import { PageHeader } from '@/components/page-header';
 import { useCan } from '@/components/principal-context';
@@ -24,10 +25,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiGet, apiSend } from '@/lib/api/client';
 import {
   billingModeLabel,
+  type Depot,
   type Fleet,
+  type FleetDashboard,
+  type FleetMember,
   type FleetBillingMonth,
   type FleetSessionPage,
 } from '@/lib/api/fleet-types';
+import { downloadCsvVia } from '@/lib/download';
 import { date } from '@/lib/format';
 
 /** One fleet, for staff (doc 6 §23): who is in it, what it owns, who manages it, and its bill. */
@@ -74,6 +79,7 @@ export function FleetDetail({ id }: { id: string }) {
       <Tabs defaultValue="overview">
         <TabsList className="flex-wrap">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="drivers">Drivers ({data.memberCount})</TabsTrigger>
           <TabsTrigger value="vehicles">Vehicles ({data.vehicleCount})</TabsTrigger>
           <TabsTrigger value="depots">Depots ({data.depotCount})</TabsTrigger>
@@ -105,6 +111,27 @@ export function FleetDetail({ id }: { id: string }) {
               apiGet<FleetBillingMonth>(`/fleets/${id}/billing`, { month })
             }
             statementHref={(month) => `/fleets/${id}/statement?month=${month}`}
+          />
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="pt-4">
+          {/* What the fleet's managers see on their own overview, from the
+              same API function; mounted only while the tab is open. */}
+          <FleetDashboardPanel
+            queryKey={['fleet', id]}
+            fetchDashboard={(params) =>
+              apiGet<FleetDashboard>(`/fleets/${id}/dashboard`, params)
+            }
+            fetchMembers={() => apiGet<FleetMember[]>(`/fleets/${id}/members`)}
+            fetchDepots={() => apiGet<Depot[]>(`/fleets/${id}/depots`)}
+            downloadCsv={(params, table) =>
+              downloadCsvVia(
+                '/api/cv',
+                `/fleets/${id}/dashboard`,
+                { ...params, table },
+                `fleet-dashboard-${table}.csv`,
+              )
+            }
           />
         </TabsContent>
 

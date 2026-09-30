@@ -10,6 +10,7 @@ import {
   GaugeIcon,
   HistoryIcon,
   KeyIcon,
+  LayoutDashboardIcon,
   MailIcon,
   MapPinIcon,
   MenuIcon,
@@ -42,6 +43,12 @@ interface NavItem {
 }
 
 const OPERATIONS: NavItem[] = [
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboardIcon,
+    needs: 'viewer',
+  },
   { href: '/stations', label: 'Chargers', icon: PlugZapIcon, needs: 'viewer' },
   { href: '/sessions', label: 'Sessions', icon: GaugeIcon, needs: 'viewer' },
   { href: '/cards', label: 'Cards', icon: CreditCardIcon, needs: 'viewer' },
