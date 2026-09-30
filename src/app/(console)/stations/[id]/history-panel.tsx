@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiGet } from '@/lib/api/client';
 import type {
   BootEntry,
+  ComponentEventEntry,
   ConnectionEntry,
   ConnectorStatusEntry,
 } from '@/lib/api/types';
@@ -46,6 +47,7 @@ export function HistoryPanel({ stationId }: { stationId: string }) {
         <TabsTrigger value="boots">Boots</TabsTrigger>
         <TabsTrigger value="connections">Connections</TabsTrigger>
         <TabsTrigger value="reports">Reports</TabsTrigger>
+        <TabsTrigger value="device-events">Device events</TabsTrigger>
       </TabsList>
 
       <TabsContent value="status" className="pt-4">
@@ -59,6 +61,9 @@ export function HistoryPanel({ stationId }: { stationId: string }) {
       </TabsContent>
       <TabsContent value="reports" className="pt-4">
         <Reports stationId={stationId} />
+      </TabsContent>
+      <TabsContent value="device-events" className="pt-4">
+        <DeviceEvents stationId={stationId} />
       </TabsContent>
     </Tabs>
   );
@@ -319,6 +324,139 @@ function Reports({ stationId }: { stationId: string }) {
               </pre>
             </details>
           ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * What an OCPP 2.x charger's device model reported about itself — `NotifyEvent`
+ * (`charveta` doc 6 §13): where a 2.x charger says *why* it faulted, since 2.x
+ * dropped the fault fields from its connector status. A 1.6 charger has none.
+ *
+ * Each event names the monitor that fired it by the charger's id; where the
+ * station's monitor list (the Monitoring tab) knows that monitor, its rule is
+ * shown beside the event.
+ */
+function DeviceEvents({ stationId }: { stationId: string }) {
+  const [openOnly, setOpenOnly] = useState('all');
+
+  const events = useQuery({
+    queryKey: ['station', stationId, 'component-events', openOnly],
+    queryFn: () =>
+      apiGet<ComponentEventEntry[]>(
+        `/stations/${stationId}/component-events`,
+        openOnly === 'open' ? { open: 'true' } : undefined,
+      ),
+  });
+
+  return (
+    <div className="space-y-3">
+      <Select
+        value={openOnly}
+        onValueChange={(value) => setOpenOnly(value ?? 'all')}
+      >
+        <SelectTrigger className="w-60">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Every event</SelectItem>
+          <SelectItem value="open">What is wrong now</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {events.isPending ? <Loading rows={4} /> : null}
+      {events.isError ? <Failed error={events.error} /> : null}
+      {events.isSuccess && events.data.length === 0 ? (
+        <Empty>
+          {openOnly === 'open'
+            ? 'Nothing is currently alerting.'
+            : 'The charger has not reported a device event. OCPP 1.6 chargers never do.'}
+        </Empty>
+      ) : null}
+
+      {events.isSuccess && events.data.length > 0 ? (
+        <div className="overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>Where</TableHead>
+                <TableHead>Variable</TableHead>
+                <TableHead>Value</TableHead>
+                <TableHead>Trigger</TableHead>
+                <TableHead>Monitor</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {events.data.map((entry, index) => (
+                <TableRow key={`${entry.receivedAt}-${entry.stationEventId}-${index}`}>
+                  <TableCell className="text-sm whitespace-nowrap">
+                    {dateTime(entry.occurredAt)}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {entry.evseNumber === 0
+                      ? 'Station'
+                      : entry.connectorNumber === 0
+                        ? `EVSE ${entry.evseNumber}`
+                        : `EVSE ${entry.evseNumber} · connector ${entry.connectorNumber}`}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {entry.componentName}
+                    {entry.componentInstance ? `[${entry.componentInstance}]` : ''}.
+                    {entry.variableName}
+                    {entry.variableInstance ? `[${entry.variableInstance}]` : ''}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {entry.actualValue}
+                    {entry.techCode ? (
+                      <p className="text-muted-foreground text-xs">
+                        {entry.techCode}
+                        {entry.techInfo ? ` — ${entry.techInfo}` : ''}
+                      </p>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        entry.trigger === 'Alerting' && !entry.cleared
+                          ? 'destructive'
+                          : 'outline'
+                      }
+                    >
+                      {entry.trigger}
+                      {entry.cleared ? ' · cleared' : ''}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {entry.monitor ? (
+                      <span
+                        title={`Severity ${entry.monitor.severity}; ${
+                          entry.monitor.origin === 'csms'
+                            ? 'set here'
+                            : 'the charger’s own'
+                        }`}
+                      >
+                        #{entry.monitor.monitorId} · {entry.monitor.type}{' '}
+                        {entry.monitor.value}
+                      </span>
+                    ) : entry.variableMonitoringId !== null ? (
+                      <span className="text-muted-foreground">
+                        #{entry.variableMonitoringId}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {entry.notificationType === 'HardWiredNotification'
+                          ? 'built in'
+                          : '—'}
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : null}
     </div>
