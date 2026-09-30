@@ -19,7 +19,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { apiGet, apiSend } from '@/lib/api/client';
-import type { Site, Station, Tariff } from '@/lib/api/types';
+import type {
+  LiveConnection,
+  Site,
+  Station,
+  Tariff,
+} from '@/lib/api/types';
 import { dateTime } from '@/lib/format';
 
 /**
@@ -50,6 +55,25 @@ export function StationSettingsPanel({ station }: { station: Station }) {
   );
 }
 
+/**
+ * The toast for a change that also asked the engine to close the charger's
+ * connection. The change is saved either way; what varies is whether the
+ * charger is known to be off the network yet. When it is not, the engine's own
+ * once-a-minute check closes it (doc 6 §9.5), so the warning says when rather
+ * than asking the operator to do anything.
+ */
+function announce(done: string, live: LiveConnection | undefined) {
+  if (!live) toast.success(done);
+  else if (live.outcome === 'disconnected')
+    toast.success(`${done}. The charger was disconnected.`);
+  else if (live.outcome === 'not_connected')
+    toast.success(`${done}. The charger was not connected.`);
+  else
+    toast.warning(
+      `${done}, but the charger could not be disconnected yet. It will be within a minute.`,
+    );
+}
+
 function Placement({ station }: { station: Station }) {
   const [locationId, setLocationId] = useState(station.locationId ?? 'none');
   const [tariffId, setTariffId] = useState(station.tariffId ?? 'none');
@@ -67,15 +91,20 @@ function Placement({ station }: { station: Station }) {
 
   const save = useMutation({
     mutationFn: () =>
-      apiSend<Station>('PATCH', `/stations/${station.id}`, {
-        locationId: locationId === 'none' ? null : locationId,
-        tariffId: tariffId === 'none' ? null : tariffId,
-        isActive,
-      }),
-    onSuccess: () => {
+      apiSend<Station & { liveConnection?: LiveConnection }>(
+        'PATCH',
+        `/stations/${station.id}`,
+        {
+          locationId: locationId === 'none' ? null : locationId,
+          tariffId: tariffId === 'none' ? null : tariffId,
+          isActive,
+        },
+      ),
+    onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ['station', station.id] });
       void queryClient.invalidateQueries({ queryKey: ['stations'] });
-      toast.success('Saved');
+      // Present only when this save is the one that deactivated the charger.
+      announce('Saved', saved.liveConnection);
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -211,16 +240,21 @@ function Quarantine({ station }: { station: Station }) {
         ? apiSend<unknown>('DELETE', `/stations/${station.id}/quarantine`, {
             ...(reason.trim() ? { reason: reason.trim() } : {}),
           })
-        : apiSend<unknown>('POST', `/stations/${station.id}/quarantine`, {
-            ...(reason.trim() ? { reason: reason.trim() } : {}),
-          }),
-    onSuccess: () => {
+        : apiSend<{ liveConnection?: LiveConnection }>(
+            'POST',
+            `/stations/${station.id}/quarantine`,
+            { ...(reason.trim() ? { reason: reason.trim() } : {}) },
+          ),
+    onSuccess: (answer) => {
       void queryClient.invalidateQueries({ queryKey: ['station', station.id] });
       void queryClient.invalidateQueries({ queryKey: ['stations'] });
       setReason('');
-      toast.success(
-        station.quarantinedAt ? 'Let back in' : 'Quarantined and disconnected',
-      );
+      if (station.quarantinedAt) toast.success('Let back in');
+      else
+        announce(
+          'Quarantined',
+          (answer as { liveConnection?: LiveConnection }).liveConnection,
+        );
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -275,10 +309,14 @@ function Removal({ station }: { station: Station }) {
   const queryClient = useQueryClient();
 
   const remove = useMutation({
-    mutationFn: () => apiSend<void>('DELETE', `/stations/${station.id}`),
-    onSuccess: () => {
+    mutationFn: () =>
+      apiSend<{ liveConnection?: LiveConnection } | undefined>(
+        'DELETE',
+        `/stations/${station.id}`,
+      ),
+    onSuccess: (answer) => {
       void queryClient.invalidateQueries({ queryKey: ['stations'] });
-      toast.success(`${station.identity} removed`);
+      announce(`${station.identity} removed`, answer?.liveConnection);
       router.push('/stations');
     },
     onError: (error: Error) => toast.error(error.message),
