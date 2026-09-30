@@ -66,7 +66,7 @@ export async function signIn(
 
   await writeSession((await response.json()) as TokenPair);
   // Outside the try: `redirect` works by throwing, and a catch would swallow it.
-  redirect('/stations');
+  redirect('/dashboard');
 }
 
 const resetRequest = z.object({
@@ -189,7 +189,7 @@ export async function redeemSetupToken(
   // in this browser — a shared machine, an admin testing an invitation. The
   // new pair replaces the old one, so they land as who the link was for.
   await writeSession((await response.json()) as TokenPair);
-  redirect('/stations');
+  redirect('/dashboard');
 }
 
 const change = z
@@ -246,7 +246,7 @@ export async function changePassword(
   }
   if (!call.ok) redirect('/sign-in?expired=1');
   if (!call.response.ok) return { error: await readMessage(call.response) };
-  redirect('/stations');
+  redirect('/dashboard');
 }
 
 /** Ends the session on the API as well as here. */

@@ -44,7 +44,7 @@ export default async function ChangePasswordPage() {
         {forced ? (
           <span />
         ) : (
-          <Link href="/stations" className="underline underline-offset-4">
+          <Link href="/dashboard" className="underline underline-offset-4">
             Back to the console
           </Link>
         )}

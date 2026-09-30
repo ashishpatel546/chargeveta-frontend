@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Sign in' };
 export default async function SignInPage({ searchParams }: PageProps<'/sign-in'>) {
   // Already signed in and arriving here by hand: send them on rather than
   // offering a form that would replace a working session.
-  if (await readSession()) redirect('/stations');
+  if (await readSession()) redirect('/dashboard');
 
   const { expired } = await searchParams;
 
