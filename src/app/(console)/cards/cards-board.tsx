@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/page-header';
@@ -17,34 +17,41 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiGet } from '@/lib/api/client';
-import type { IdToken } from '@/lib/api/types';
+import type { IdToken, Page } from '@/lib/api/types';
 import { date } from '@/lib/format';
 import { AddCardDialog } from './add-card-dialog';
 import { CardStatusBadge, FreeChargingBadge } from './badges';
 import { BlockCardDialog, DeleteCardDialog, UnblockCardButton } from './card-actions';
 
-/** What the API returns at most, after which the list is silently truncated. */
-const LIST_CAP = 500;
-
 export function CardsBoard() {
   const [filter, setFilter] = useState('');
   const canAdmin = useCan('admin');
 
-  const cards = useQuery({
+  // Paged newest first (`GET /id-tokens`, doc 6 §15.6); a fleet's card list
+  // can be tens of thousands long.
+  const cards = useInfiniteQuery({
     queryKey: ['cards'],
-    queryFn: () => apiGet<IdToken[]>('/id-tokens'),
+    queryFn: ({ pageParam }) =>
+      apiGet<Page<IdToken>>('/id-tokens', { limit: '200', cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
+
+  const loaded = useMemo(
+    () => cards.data?.pages.flatMap((page) => page.items) ?? [],
+    [cards.data],
+  );
 
   const rows = useMemo(() => {
     const needle = filter.trim().toLowerCase();
-    const all = cards.data ?? [];
+    const all = loaded;
     if (!needle) return all;
     return all.filter((card) =>
       [card.token, card.label]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle)),
     );
-  }, [filter, cards.data]);
+  }, [filter, loaded]);
 
   return (
     <>
@@ -74,7 +81,7 @@ export function CardsBoard() {
       {cards.isError ? <Failed error={cards.error} /> : null}
       {cards.isSuccess && rows.length === 0 ? (
         <Empty>
-          {cards.data.length === 0
+          {loaded.length === 0
             ? 'No cards yet. A card added here is what a charger is answered from the next time it is presented.'
             : 'No card matches that.'}
         </Empty>
@@ -146,12 +153,20 @@ export function CardsBoard() {
             </Table>
           </div>
 
-          {cards.data.length >= LIST_CAP ? (
-            <p className="text-muted-foreground text-xs">
-              The API returns the {LIST_CAP} most recently added cards and does
-              not page, so older ones are not on this list. The filter above
-              searches only what was returned.
-            </p>
+          {cards.hasNextPage ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => void cards.fetchNextPage()}
+                disabled={cards.isFetchingNextPage}
+              >
+                {cards.isFetchingNextPage ? 'Loading…' : 'Load more'}
+              </Button>
+              <p className="text-muted-foreground text-xs">
+                {loaded.length} most recently added shown. The filter above
+                searches only what is loaded.
+              </p>
+            </div>
           ) : null}
         </div>
       ) : null}

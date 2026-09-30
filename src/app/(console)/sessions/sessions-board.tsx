@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/page-header';
@@ -23,7 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiGet } from '@/lib/api/client';
-import type { Station, Transaction } from '@/lib/api/types';
+import type { Page, Station, Transaction } from '@/lib/api/types';
 import { dateTime, energy, money, span } from '@/lib/format';
 
 /**
@@ -51,9 +51,17 @@ export function SessionsBoard() {
 
   // The realtime provider marks `['transactions']` stale on every session
   // event, so a running session updates here without this screen polling.
-  const sessions = useQuery({
+  // Paged newest first (`GET /transactions`, doc 6 §16.11).
+  const sessions = useInfiniteQuery({
     queryKey: ['transactions', filters],
-    queryFn: () => apiGet<Transaction[]>('/transactions', filters),
+    queryFn: ({ pageParam }) =>
+      apiGet<Page<Transaction>>('/transactions', {
+        ...filters,
+        limit: '100',
+        cursor: pageParam,
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
 
   // A session carries its charger as an id. The names are fetched once and
@@ -69,13 +77,16 @@ export function SessionsBoard() {
     return names;
   }, [stations.data]);
 
-  const rows = sessions.data ?? [];
+  const rows = useMemo(
+    () => sessions.data?.pages.flatMap((page) => page.items) ?? [],
+    [sessions.data],
+  );
 
   return (
     <>
       <PageHeader
         title="Sessions"
-        description="Charging sessions, newest first. The API sends the most recent 200."
+        description="Charging sessions, newest first."
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -192,6 +203,17 @@ export function SessionsBoard() {
             </TableBody>
           </Table>
         </div>
+      ) : null}
+
+      {sessions.hasNextPage ? (
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => void sessions.fetchNextPage()}
+          disabled={sessions.isFetchingNextPage}
+        >
+          {sessions.isFetchingNextPage ? 'Loading…' : 'Load more'}
+        </Button>
       ) : null}
     </>
   );
