@@ -95,6 +95,10 @@ export function CommandsPanel({ station }: { station: Station }) {
 
   return (
     <div className="space-y-6">
+      {atLeast(principal.role, 'operator') ? (
+        <LocalListCard station={station} />
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Send a command</CardTitle>
@@ -183,6 +187,78 @@ export function CommandsPanel({ station }: { station: Station }) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+interface LocalListSyncResult {
+  version: number;
+  entries: number;
+  updateType: 'full' | 'differential';
+  command: CommandResult | null;
+}
+
+/**
+ * The charger's offline card list (`charveta` doc 6 §17.9): what it decides
+ * from when it cannot reach us. A sync sends only the cards that changed when
+ * the charger still holds the version last sent, the whole list otherwise.
+ */
+function LocalListCard({ station }: { station: Station }) {
+  const queryClient = useQueryClient();
+  const sync = useMutation({
+    mutationFn: (full: boolean) =>
+      apiSend<LocalListSyncResult>(
+        'POST',
+        `/stations/${station.id}/local-list/sync${full ? '?full=true' : ''}`,
+      ),
+    onSuccess: (answer) => {
+      void queryClient.invalidateQueries({ queryKey: ['station', station.id] });
+      if (!answer.command) {
+        toast.success('The charger’s list is already up to date.');
+        return;
+      }
+      const what =
+        answer.updateType === 'full'
+          ? `the whole list (${answer.entries} cards)`
+          : `${answer.entries} change${answer.entries === 1 ? '' : 's'}`;
+      if (
+        answer.command.outcome === 'answered' &&
+        answer.command.status === 'Accepted'
+      ) {
+        toast.success(`Sent ${what}; the charger holds version ${answer.version}.`);
+      } else {
+        toast.warning(
+          `Sent ${what}, but the charger answered ` +
+            `${answer.command.status ?? answer.command.outcome}; its version is unchanged.`,
+        );
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Offline card list</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-center gap-3">
+        <p className="text-muted-foreground mr-auto text-sm">
+          {station.localListVersion > 0
+            ? `Version ${station.localListVersion} sent and accepted.`
+            : 'Never sent to this charger.'}{' '}
+          What the charger decides from when it cannot reach us.
+        </p>
+        <Button disabled={sync.isPending} onClick={() => sync.mutate(false)}>
+          {sync.isPending ? 'Sending…' : 'Sync'}
+        </Button>
+        <Button
+          variant="outline"
+          disabled={sync.isPending}
+          onClick={() => sync.mutate(true)}
+        >
+          Send the whole list
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
