@@ -283,3 +283,20 @@ export interface DriverPushSubscriptionDto {
   createdAt: string;
   lastPushedAt: string | null;
 }
+
+/** One thing the driver was told (`charveta` doc 6 §22.3, "Notification history"). */
+export interface DriverNotification {
+  id: string;
+  template: string;
+  title: string;
+  body: string;
+  path: string | null;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface DriverNotificationPage {
+  items: DriverNotification[];
+  nextCursor: string | null;
+  unread: number;
+}

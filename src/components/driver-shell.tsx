@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import {
+  BellIcon,
   CreditCardIcon,
   MapPinIcon,
   ReceiptIcon,
@@ -11,7 +13,11 @@ import {
   ZapIcon,
 } from 'lucide-react';
 import { DriverProvider, useDriver } from '@/components/driver-context';
-import type { DriverDto } from '@/lib/api/driver-types';
+import { driverApiGet } from '@/lib/api/driver-client';
+import type {
+  DriverDto,
+  DriverNotificationPage,
+} from '@/lib/api/driver-types';
 import { config } from '@/lib/config';
 import { cn } from '@/lib/utils';
 
@@ -68,12 +74,47 @@ function Header() {
         </span>
         {config.appName}
       </span>
-      {label ? (
-        <span className="text-muted-foreground max-w-32 truncate text-sm">
-          {label}
+      <div className="flex items-center gap-3">
+        {label ? (
+          <span className="text-muted-foreground max-w-32 truncate text-sm">
+            {label}
+          </span>
+        ) : null}
+        <NotificationsBell />
+      </div>
+    </header>
+  );
+}
+
+/**
+ * The way to the notification history (`charveta` doc 6 §22.3), with how many
+ * are unread. The tab bar is full, and this is where a phone app keeps it.
+ */
+function NotificationsBell() {
+  const unread = useQuery({
+    // The same key the notifications screen invalidates once it marks them read.
+    queryKey: ['driver', 'notifications', 'unread'],
+    queryFn: () =>
+      driverApiGet<DriverNotificationPage>('/driver/notifications', {
+        limit: '1',
+      }),
+    select: (page) => page.unread,
+    refetchInterval: 60_000,
+  });
+  const count = unread.data ?? 0;
+  return (
+    <Link
+      href="/driver/notifications"
+      className="relative"
+      aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
+    >
+      <BellIcon className="size-5" />
+      {count > 0 ? (
+        <span className="bg-primary text-primary-foreground absolute -top-1.5 -right-2 min-w-4 rounded-full px-1 text-center text-[10px] leading-4">
+          {count > 99 ? '99+' : count}
         </span>
       ) : null}
-    </header>
+    </Link>
   );
 }
 
