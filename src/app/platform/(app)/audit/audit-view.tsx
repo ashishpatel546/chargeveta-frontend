@@ -40,7 +40,7 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.password-change': 'Changed own password',
   'audit.prune': 'Old audit rows pruned',
   'retention.prune':
-    'Old command, quarantine and message history pruned; old connection addresses cleared',
+    'Old command, quarantine, message and unknown-tenant sign-in history pruned; old connection addresses cleared',
 };
 
 /**
