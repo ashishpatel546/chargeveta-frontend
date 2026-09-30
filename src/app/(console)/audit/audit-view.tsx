@@ -30,6 +30,8 @@ import { dateTime } from '@/lib/format';
 const ACTION_LABELS: Record<string, string> = {
   'staff.sign-in': 'Signed in',
   'staff.sign-in-failed': 'Sign-in refused',
+  'fleet-manager.sign-in-failed': 'Fleet manager sign-in refused',
+  'driver.sign-in-failed': 'Driver sign-in refused',
   'staff.setup-redeemed': 'Set password from link',
   'staff.password-reset-requested': 'Asked for a password reset',
   'staff.password-change': 'Changed own password',
