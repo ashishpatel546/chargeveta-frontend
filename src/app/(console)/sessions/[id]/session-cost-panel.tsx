@@ -90,6 +90,26 @@ function CostBody({ cost }: { cost: TransactionCost }) {
         <Field label="Revision">{cost.revision}</Field>
         <Field label="Billed from">{dateTime(cost.billedStartedAt)}</Field>
         <Field label="Billed to">{dateTime(cost.billedStoppedAt)}</Field>
+        {cost.chargingEndedAt ? (
+          <Field label="Charging ended">{dateTime(cost.chargingEndedAt)}</Field>
+        ) : null}
+        {cost.idleBasis ? (
+          <Field label="Charging and idle measured by">
+            {/* Which evidence decided when charging ended — what a disputed
+                idle fee is answered with. SuspendedEVSE (the charger holding
+                power off) is never idle on the charging-state basis. */}
+            {cost.idleBasis === 'charging_state'
+              ? 'the charger’s charging states'
+              : 'the meter register'}
+          </Field>
+        ) : null}
+        {cost.energySource ? (
+          <Field label="Energy from">
+            {cost.energySource === 'interval_sum'
+              ? 'interval samples, summed'
+              : 'the meter register'}
+          </Field>
+        ) : null}
       </dl>
 
       {cost.unpricedDetail ? (
