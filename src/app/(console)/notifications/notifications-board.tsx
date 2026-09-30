@@ -196,6 +196,7 @@ export function NotificationsBoard() {
                     {alert.escalatedAt ? (
                       <p className="text-destructive text-xs">
                         Escalated {dateTime(alert.escalatedAt)}
+                        {ownerFallbackNote(alert.detail, 'escalation')}
                       </p>
                     ) : null}
                     <LaterEscalation alert={alert} />
@@ -288,6 +289,7 @@ function LaterEscalation({ alert }: { alert: AppNotification }) {
   return (
     <p className="text-destructive text-xs font-medium">
       {escalationLabel(step, alert.detail)} {dateTime(at)}
+      {ownerFallbackNote(alert.detail, 'escalationAgain')}
     </p>
   );
 }
@@ -307,8 +309,41 @@ function escalationLabel(step: number, detail: unknown): string {
   const texted = typeof record.texted === 'number' ? record.texted : 0;
   const whatsapped =
     typeof record.whatsapped === 'number' ? record.whatsapped : 0;
-  if (texted === 0) return `${label} — no phone to text`;
+  // No phone among them, or everyone with one turned texts off and no owner
+  // has one to fall back to.
+  if (texted === 0) return `${label} — nobody to text`;
   return whatsapped > 0
     ? `${label} — SMS sent to ${texted}, WhatsApp to ${whatsapped}`
     : `${label} — SMS sent to ${texted}`;
+}
+
+const CHANNEL_NAMES: Record<string, string> = {
+  email: 'email',
+  sms: 'texts',
+  push: 'pushes',
+};
+
+/**
+ * " — to the owners, as everyone had turned email off": the API sends a step to
+ * the tenant's owners, whatever they chose, on any channel every owner and
+ * admin had turned off (`ownerFallback`, doc 6 §22.4). Which channels, never
+ * who.
+ */
+function ownerFallbackNote(
+  detail: unknown,
+  key: 'escalation' | 'escalationAgain',
+): string {
+  const record =
+    detail && typeof detail === 'object'
+      ? (detail as Record<string, unknown>)[key]
+      : undefined;
+  const channels =
+    record && typeof record === 'object'
+      ? (record as { ownerFallback?: unknown }).ownerFallback
+      : undefined;
+  if (!Array.isArray(channels) || channels.length === 0) return '';
+  const names = channels
+    .filter((c): c is string => typeof c === 'string')
+    .map((c) => CHANNEL_NAMES[c] ?? c);
+  return ` — to the owners, as everyone had turned ${names.join(' and ')} off`;
 }
