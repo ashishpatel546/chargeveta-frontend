@@ -50,6 +50,7 @@ import type {
   FleetDashboard,
   FleetDashboardGroup,
   FleetMember,
+  Vehicle,
 } from '@/lib/api/fleet-types';
 import { dateTime, energy, money } from '@/lib/format';
 import {
@@ -62,7 +63,7 @@ import {
 
 type Metric = 'sessions' | 'energy' | 'cost';
 
-export type FleetDashboardTable = 'series' | 'drivers' | 'sites';
+export type FleetDashboardTable = 'series' | 'drivers' | 'sites' | 'vehicles';
 
 /**
  * A fleet's dashboard (`charveta` doc 6 §23): its members' charging and what
@@ -71,14 +72,21 @@ export type FleetDashboardTable = 'series' | 'drivers' | 'sites';
  * on its page — one component, two routes, the same response.
  *
  * Cost is what the monthly bill totals (`fleet_charges`), so a calendar month
- * here reads the same as that month's bill. Sessions record no vehicle; a
- * driver's row names the vehicles assigned to them now, as context only.
+ * here reads the same as that month's bill.
+ *
+ * "By vehicle" and the vehicle filter use the vehicle recorded on each
+ * session when it started — the driver's one assigned vehicle at that moment
+ * — never today's assignment, so a car changing hands does not move its past
+ * sessions. Sessions with none recorded (no vehicle or several assigned, or
+ * from before vehicles were recorded) are the "Unknown vehicle" row. A
+ * driver's row still names the vehicles assigned to them now, as context.
  */
 export function FleetDashboardPanel({
   queryKey,
   fetchDashboard,
   fetchMembers,
   fetchDepots,
+  fetchVehicles,
   downloadCsv,
   owedLabel = 'Owed by the fleet',
 }: {
@@ -88,6 +96,7 @@ export function FleetDashboardPanel({
   ) => Promise<FleetDashboard>;
   fetchMembers: () => Promise<FleetMember[]>;
   fetchDepots: () => Promise<Depot[]>;
+  fetchVehicles: () => Promise<Vehicle[]>;
   downloadCsv: (
     params: Record<string, string | undefined>,
     table: FleetDashboardTable,
@@ -97,6 +106,7 @@ export function FleetDashboardPanel({
   const [period, setPeriod] = useState(() => presetPeriod('this-month'));
   const [siteId, setSiteId] = useState('all');
   const [driverId, setDriverId] = useState('all');
+  const [vehicleId, setVehicleId] = useState('all');
   const [metric, setMetric] = useState<Metric>('energy');
   const [chosenCurrency, setCurrency] = useState<string | null>(null);
 
@@ -107,6 +117,7 @@ export function FleetDashboardPanel({
     to,
     ...(siteId === 'all' ? {} : { siteId }),
     ...(driverId === 'all' ? {} : { driverId }),
+    ...(vehicleId === 'all' ? {} : { vehicleId }),
   };
 
   const members = useQuery({
@@ -117,8 +128,12 @@ export function FleetDashboardPanel({
     queryKey: [...queryKey, 'depots'],
     queryFn: fetchDepots,
   });
+  const vehicles = useQuery({
+    queryKey: [...queryKey, 'vehicles'],
+    queryFn: fetchVehicles,
+  });
   const dashboard = useQuery({
-    queryKey: [...queryKey, 'dashboard', from, to, siteId, driverId],
+    queryKey: [...queryKey, 'dashboard', from, to, siteId, driverId, vehicleId],
     queryFn: () => fetchDashboard(params),
     enabled: problem === null,
     placeholderData: keepPreviousData,
@@ -186,6 +201,33 @@ export function FleetDashboardPanel({
               {(members.data ?? []).map((member) => (
                 <SelectItem key={member.driverId} value={member.driverId}>
                   {memberName(member)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="fleet-dash-vehicle" className="text-xs">
+            Vehicle
+          </Label>
+          <Select
+            value={vehicleId}
+            onValueChange={(value) => setVehicleId(value ?? 'all')}
+          >
+            <SelectTrigger id="fleet-dash-vehicle" className="w-48">
+              <SelectValue>
+                {(value: string) =>
+                  value === 'all'
+                    ? 'Every vehicle'
+                    : vehicleName(vehicles.data?.find((v) => v.id === value))
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Every vehicle</SelectItem>
+              {(vehicles.data ?? []).map((vehicle) => (
+                <SelectItem key={vehicle.id} value={vehicle.id}>
+                  {vehicleName(vehicle)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -337,7 +379,7 @@ export function FleetDashboardPanel({
 
               <ChartCard
                 title="By driver"
-                description="Vehicles are those assigned to each driver now; sessions do not record which vehicle charged."
+                description="The badges are the vehicles assigned to each driver now. Which vehicle charged is under “By vehicle”."
                 actions={
                   <div className="flex flex-wrap gap-2">
                     {(['drivers', 'sites', 'series'] as const).map((table) => (
@@ -409,6 +451,87 @@ export function FleetDashboardPanel({
                   </Table>
                 </div>
               </ChartCard>
+
+              <ChartCard
+                title="By vehicle"
+                description="The vehicle recorded on each session when it started — the driver’s one assigned vehicle at that moment. Unknown: none was recorded (no vehicle or several assigned, or before vehicles were recorded)."
+                actions={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={csv.isPending}
+                    onClick={() => csv.mutate('vehicles')}
+                  >
+                    <DownloadIcon />
+                    Vehicles CSV
+                  </Button>
+                }
+              >
+                <div className="overflow-x-auto rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Vehicle</TableHead>
+                        <TableHead className="text-right">Sessions</TableHead>
+                        <TableHead className="text-right">Energy</TableHead>
+                        <TableHead className="text-right">Cost</TableHead>
+                        <TableHead className="text-right">Per kWh</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.byVehicle.map((g) => (
+                        <TableRow key={g.key}>
+                          <TableCell className="text-sm">
+                            {g.key === UNKNOWN_VEHICLE ? (
+                              <span className="text-muted-foreground">
+                                Unknown vehicle
+                              </span>
+                            ) : (
+                              <>
+                                <Badge variant="outline">{g.label ?? '—'}</Badge>
+                                {g.vehicleLabel ? (
+                                  <span className="text-muted-foreground ml-2">
+                                    {g.vehicleLabel}
+                                  </span>
+                                ) : null}
+                                {g.key.startsWith('removed:') ? (
+                                  <span className="text-muted-foreground ml-2 text-xs">
+                                    removed
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {g.sessions}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {energy(g.energyWh)}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {g.cost.length === 0
+                              ? '—'
+                              : g.cost.map((c) => (
+                                  <span key={c.currency} className="block">
+                                    {money(c.totalMinor, c.currency)}
+                                  </span>
+                                ))}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {g.cost.length === 0
+                              ? '—'
+                              : g.cost.map((c) => (
+                                  <span key={c.currency} className="block">
+                                    {perKwh(c.currency)(c.perKwhMinor)}
+                                  </span>
+                                ))}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ChartCard>
             </>
           )}
 
@@ -427,6 +550,16 @@ const TITLES: Record<Metric, string> = {
   energy: 'Energy',
   cost: 'Cost',
 };
+
+/** The API's key for sessions with no vehicle recorded. */
+const UNKNOWN_VEHICLE = 'unknown';
+
+function vehicleName(vehicle: Vehicle | undefined): string {
+  if (!vehicle) return 'Vehicle';
+  return vehicle.label
+    ? `${vehicle.registration} · ${vehicle.label}`
+    : vehicle.registration;
+}
 
 function memberName(member: FleetMember | undefined): string {
   if (!member) return 'Driver';

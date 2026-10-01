@@ -18,6 +18,11 @@ import { SessionBillingBadge } from './billing-badge';
 /**
  * A fleet's members' sessions, newest first — only those begun after each
  * member joined the fleet; the API never returns earlier ones.
+ *
+ * The vehicle is the one recorded when the session started (the driver's one
+ * assigned vehicle then), not whoever has the car now; a dash means none was
+ * recorded — no vehicle or several assigned, or a session from before
+ * vehicles were recorded.
  */
 export function FleetSessionsTable({
   queryKey,
@@ -53,6 +58,7 @@ export function FleetSessionsTable({
             <TableRow>
               <TableHead>Started</TableHead>
               <TableHead>Driver</TableHead>
+              <TableHead>Vehicle</TableHead>
               <TableHead>Where</TableHead>
               <TableHead className="text-right">Energy</TableHead>
               <TableHead className="text-right">Charged</TableHead>
@@ -72,6 +78,15 @@ export function FleetSessionsTable({
                 </TableCell>
                 <TableCell className="text-sm">
                   {session.driverName ?? '—'}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {session.vehicle ? (
+                    <span title={session.vehicle.label ?? undefined}>
+                      {session.vehicle.registration}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-sm">
                   {session.siteName ?? session.stationIdentity}
