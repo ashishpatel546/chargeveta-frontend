@@ -1,35 +1,28 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { COUNTRIES, DIAL_CODES } from '@/lib/dial-codes';
-
-const noSubscribe = () => () => {};
-
-/** False while rendering on the server and hydrating, true after. */
-function useHydrated(): boolean {
-  return useSyncExternalStore(
-    noSubscribe,
-    () => true,
-    () => false,
-  );
-}
 
 /**
  * A phone number as country + number, the country preselected from where the
- * driver is (`detectCountry()`), so they type only their own digits.
- *
- * The country is a native `<select>` laid transparently over its own label:
- * the phone's own picker, searchable on both platforms, at no cost here. What
+ * driver is (`detectCountry()`), so they type only their own digits. What
  * reaches the form is one international number in the hidden `name` field —
  * or, when the driver types a `+` themselves, exactly what they typed.
  *
- * The label is the region code and calling code (`IN +91`), not a flag emoji:
- * Windows draws no flag emoji, only the two letters run into the code. The
- * full list of options is rendered only once hydrated — the server sends the
- * chosen one — so a browser (or a translating extension) that names a country
- * differently from the server cannot fail hydration.
+ * The country is the app's own `Select`, showing the region and calling code
+ * (`IN +91`). Not a flag emoji: Windows draws none, only the two letters run
+ * into the code. And not a native `<select>` made invisible over that label:
+ * Chrome drew the native control's own text through it for the owner. The
+ * country names render only in the open list, never in the server's HTML, so
+ * they cannot fail hydration either.
  */
 export function PhoneInput({
   id,
@@ -44,7 +37,6 @@ export function PhoneInput({
     defaultCountry in DIAL_CODES ? defaultCountry : 'IN',
   );
   const [number, setNumber] = useState('');
-  const hydrated = useHydrated();
 
   const dial = DIAL_CODES[country];
   const typed = number.trim();
@@ -56,28 +48,32 @@ export function PhoneInput({
 
   return (
     <div className="flex gap-2">
-      <div className="border-input relative flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-sm">
-        <span className="text-muted-foreground text-xs font-medium" aria-hidden>
-          {country}
-        </span>
-        <span className="tabular-nums">+{dial}</span>
-        <ChevronDown className="text-muted-foreground size-3.5" aria-hidden />
-        <select
-          aria-label="Country"
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="absolute inset-0 cursor-pointer opacity-0"
-        >
-          {(hydrated
-            ? COUNTRIES
-            : COUNTRIES.filter(([region]) => region === country)
-          ).map(([region, label, code]) => (
-            <option key={region} value={region}>
+      <Select
+        value={country}
+        onValueChange={(next) => {
+          if (next) setCountry(next);
+        }}
+      >
+        <SelectTrigger aria-label="Country" className="shrink-0">
+          <SelectValue>
+            {(region: string) => (
+              <>
+                <span className="text-muted-foreground text-xs font-medium">
+                  {region}
+                </span>
+                <span className="tabular-nums">+{DIAL_CODES[region]}</span>
+              </>
+            )}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent alignItemWithTrigger={false} className="w-72">
+          {COUNTRIES.map(([region, label, code]) => (
+            <SelectItem key={region} value={region}>
               {label} (+{code})
-            </option>
+            </SelectItem>
           ))}
-        </select>
-      </div>
+        </SelectContent>
+      </Select>
       <Input
         id={id}
         type="tel"
