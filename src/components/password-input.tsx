@@ -60,6 +60,11 @@ function PasswordInput({
     <div className="relative">
       <Input
         {...props}
+        // Password managers (Chrome's, LastPass, Bitwarden…) write attributes
+        // such as `aria-autocomplete="list"` onto a password field before React
+        // hydrates, which React reports as a mismatch. Only this element's own
+        // attributes are excused, not its children or the form.
+        suppressHydrationWarning
         ref={setRefs}
         type={visible ? 'text' : 'password'}
         className={cn('pr-9', className)}
