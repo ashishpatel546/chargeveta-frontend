@@ -83,6 +83,13 @@ export interface Station {
   quarantinedBy: string | null;
   quarantineReason: string | null;
   localListVersion: number;
+  /**
+   * OCPP 2.1 only (charveta doc 6 §16.13.9): whether the charger is told our
+   * tariff (at Authorize and after it boots), and whether a paying driver's
+   * budget is sent as the session's `maxCost`. Ignored on 1.6 and 2.0.1.
+   */
+  ocpp21SendTariff: boolean;
+  ocpp21SendTransactionLimit: boolean;
   lastSeenAt: string | null;
   /**
    * When and from where the station last connected. The address is the

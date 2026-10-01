@@ -48,6 +48,9 @@ export function StationSettingsPanel({ station }: { station: Station }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Placement station={station} />
+      {station.ocppVersion === '2.1' ? (
+        <Ocpp21Pricing station={station} />
+      ) : null}
       <Credential station={station} />
       <Quarantine station={station} />
       <Removal station={station} />
@@ -173,6 +176,87 @@ function Placement({ station }: { station: Station }) {
         </label>
 
         <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? 'Saving…' : 'Save'}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * What a 2.1 charger is told about price (charveta doc 6 §16.13.9). Shown only
+ * for a 2.1 charger: 1.6 and 2.0.1 have no tariff messages, and the API
+ * ignores both switches there.
+ */
+function Ocpp21Pricing({ station }: { station: Station }) {
+  const [sendTariff, setSendTariff] = useState(station.ocpp21SendTariff);
+  const [sendLimit, setSendLimit] = useState(
+    station.ocpp21SendTransactionLimit,
+  );
+  const queryClient = useQueryClient();
+
+  const save = useMutation({
+    mutationFn: () =>
+      apiSend<Station>('PATCH', `/stations/${station.id}`, {
+        ocpp21SendTariff: sendTariff,
+        ocpp21SendTransactionLimit: sendLimit,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['station', station.id] });
+      toast.success('Saved');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const unchanged =
+    sendTariff === station.ocpp21SendTariff &&
+    sendLimit === station.ocpp21SendTransactionLimit;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Price on the charger</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground text-sm">
+          These only matter on OCPP 2.1, the one version a charger can be told
+          our prices in. Sessions are billed by us either way.
+        </p>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={sendTariff}
+            onChange={(event) => setSendTariff(event.target.checked)}
+            className="mt-0.5 size-4"
+          />
+          <span>
+            Send this charger our tariff
+            <span className="text-muted-foreground block text-xs">
+              With every accepted card, and after it restarts, so it can show
+              drivers the price.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={sendLimit}
+            disabled={!sendTariff}
+            onChange={(event) => setSendLimit(event.target.checked)}
+            className="mt-0.5 size-4"
+          />
+          <span>
+            Tell it what a paying driver can spend
+            <span className="text-muted-foreground block text-xs">
+              The session’s budget as a cost limit, a backstop if we cannot
+              reach the charger to stop it. Needs the tariff on.
+            </span>
+          </span>
+        </label>
+        <Button
+          onClick={() => save.mutate()}
+          disabled={unchanged || save.isPending}
+        >
           {save.isPending ? 'Saving…' : 'Save'}
         </Button>
       </CardContent>

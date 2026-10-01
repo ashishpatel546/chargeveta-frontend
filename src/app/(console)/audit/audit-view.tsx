@@ -111,6 +111,9 @@ const ACTION_LABELS: Record<string, string> = {
   'station.get-monitoring-report': 'Monitors listed',
   'station.monitoring-base-set': 'Monitoring base set',
   'station.monitoring-level-set': 'Monitoring level set',
+  'station.tariff-send': 'Tariff sent to charger',
+  'station.get-tariffs': 'Charger tariffs read',
+  'station.tariffs-clear': 'Charger tariffs cleared',
   'reservation.create': 'Connector reserved',
   'reservation.cancel': 'Reservation cancelled',
 };

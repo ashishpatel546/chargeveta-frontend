@@ -98,6 +98,9 @@ export function CommandsPanel({ station }: { station: Station }) {
       {atLeast(principal.role, 'operator') ? (
         <LocalListCard station={station} />
       ) : null}
+      {atLeast(principal.role, 'operator') && station.ocppVersion === '2.1' ? (
+        <TariffCard station={station} />
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -257,6 +260,131 @@ function LocalListCard({ station }: { station: Station }) {
         >
           Send the whole list
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface TariffAssignment {
+  tariffId: string;
+  tariffKind: string;
+  validFrom?: string;
+  evseIds?: number[];
+}
+
+/**
+ * Our tariff on an OCPP 2.1 charger (`charveta` doc 6 §16.13.9): send the
+ * station's current one as its default for every EVSE, read back what it
+ * holds, or clear them. It is sent on its own after every boot and with
+ * every accepted card; these are for checking and for putting it right.
+ */
+function TariffCard({ station }: { station: Station }) {
+  const queryClient = useQueryClient();
+  const [held, setHeld] = useState<TariffAssignment[] | null>(null);
+
+  const run = useMutation({
+    mutationFn: (name: 'send-tariff' | 'get-tariffs' | 'clear-tariffs') =>
+      apiSend<CommandResult>(
+        'POST',
+        `/stations/${station.id}/commands/${name}`,
+        name === 'clear-tariffs' ? {} : undefined,
+      ).then((answer) => ({ name, answer })),
+    onSuccess: ({ name, answer }) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['station', station.id, 'commands'],
+      });
+      if (answer.outcome !== 'answered') {
+        toast.warning(
+          `The charger did not answer: ${answer.outcome}` +
+            (answer.detail ? ` — ${answer.detail}` : ''),
+        );
+        return;
+      }
+      if (name === 'get-tariffs') {
+        const list =
+          (answer.data as { tariffAssignments?: TariffAssignment[] } | undefined)
+            ?.tariffAssignments ?? [];
+        setHeld(list);
+        toast.success(
+          list.length > 0
+            ? `The charger holds ${list.length} tariff${list.length === 1 ? '' : 's'}.`
+            : `The charger holds no tariff (${answer.status ?? 'no status'}).`,
+        );
+        return;
+      }
+      if (name === 'clear-tariffs') {
+        setHeld(null);
+        const results =
+          (answer.data as { results?: { status: string }[] } | undefined)
+            ?.results ?? [];
+        toast.success(
+          `Cleared: ${results.map((result) => result.status).join(', ') || 'done'}.`,
+        );
+        return;
+      }
+      if (answer.status === 'Accepted') {
+        toast.success('The charger accepted the tariff.');
+      } else {
+        toast.warning(
+          `The charger answered ${answer.status ?? 'no status'}` +
+            (answer.reasonCode ? ` (${answer.reasonCode})` : ''),
+        );
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Tariff on the charger</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-muted-foreground mr-auto text-sm">
+            {station.ocpp21SendTariff
+              ? 'Sent after every restart and with every accepted card, so the charger can show the price.'
+              : 'Sending our tariff is turned off for this charger (Settings).'}
+          </p>
+          <Button
+            disabled={run.isPending || !station.ocpp21SendTariff}
+            onClick={() => run.mutate('send-tariff')}
+          >
+            Send
+          </Button>
+          <Button
+            variant="outline"
+            disabled={run.isPending}
+            onClick={() => run.mutate('get-tariffs')}
+          >
+            Read back
+          </Button>
+          <Button
+            variant="outline"
+            disabled={run.isPending}
+            onClick={() => run.mutate('clear-tariffs')}
+          >
+            Clear
+          </Button>
+        </div>
+        {held && held.length > 0 ? (
+          <ul className="space-y-1 text-sm">
+            {held.map((entry) => (
+              <li key={`${entry.tariffId}-${entry.tariffKind}`}>
+                <span className="font-mono text-xs break-all">
+                  {entry.tariffId}
+                </span>{' '}
+                <span className="text-muted-foreground">
+                  {entry.tariffKind === 'DefaultTariff' ? 'default' : 'driver'}
+                  {entry.evseIds
+                    ? `, EVSE ${entry.evseIds.join(', ')}`
+                    : ', every EVSE'}
+                  {entry.validFrom ? `, from ${dateTime(entry.validFrom)}` : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </CardContent>
     </Card>
   );
