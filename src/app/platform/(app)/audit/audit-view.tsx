@@ -41,6 +41,7 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.sign-in-failed': 'Sign-in refused',
   'admin.password-change': 'Changed own password',
   'audit.prune': 'Old audit rows pruned',
+  'platform.dashboard-view': 'Viewed the platform dashboard',
   'retention.prune':
     'Old command, quarantine, message and unknown-tenant sign-in history pruned; old connection addresses cleared',
 };

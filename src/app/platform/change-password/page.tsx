@@ -42,8 +42,11 @@ export default async function PlatformChangePasswordPage() {
         {me.mustChangePassword ? (
           <span />
         ) : (
-          <Link href="/platform/tenants" className="underline underline-offset-4">
-            Back to tenants
+          <Link
+            href="/platform/dashboard"
+            className="underline underline-offset-4"
+          >
+            Back to the dashboard
           </Link>
         )}
         <form action={platformSignOut}>

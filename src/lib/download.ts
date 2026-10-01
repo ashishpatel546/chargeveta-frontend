@@ -13,8 +13,8 @@ function filenameFrom(disposition: string | null, fallback: string): string {
 }
 
 export async function downloadCsvVia(
-  /** `/api/cv` for staff, `/api/cvf` for a fleet manager. */
-  proxy: '/api/cv' | '/api/cvf',
+  /** `/api/cv` for staff, `/api/cvf` for a fleet manager, `/api/cvp` for a platform admin. */
+  proxy: '/api/cv' | '/api/cvf' | '/api/cvp',
   path: string,
   params: Record<string, string | undefined>,
   fallbackName: string,

@@ -3,6 +3,7 @@
  * Kept apart from `types.ts` because none of it belongs to a tenant: a
  * platform admin works across every operator, above the tenant boundary.
  */
+import type { Kpi } from './types';
 
 export interface PlatformAdminMe {
   id: string;
@@ -108,6 +109,7 @@ export const PLATFORM_AUDIT_ACTIONS = [
   'admin.password-change',
   'audit.prune',
   'retention.prune',
+  'platform.dashboard-view',
 ] as const;
 
 export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[number];
@@ -153,4 +155,55 @@ export interface UnknownTenantSignIn {
 export interface UnknownTenantSignInPage {
   items: UnknownTenantSignIn[];
   nextCursor: string | null;
+}
+
+/**
+ * `GET /platform/dashboard` (`charveta` doc 6 §19.5): every tenant's totals
+ * over a period, against the period of the same length before it. Totals
+ * only — no driver, card, session, charger or site — and each read is
+ * recorded in the platform audit log.
+ */
+export interface PlatformRevenueKpi {
+  currency: string;
+  /** Receipts less credit notes, before tax, minor units. */
+  netMinor: Kpi;
+}
+
+/** What is true now, whatever the period. */
+export interface PlatformNow {
+  activeStations: number;
+  /** Heard from in the last 10 minutes and not quarantined. */
+  onlineStations: number;
+  activeDrivers: number;
+  chargingNow: number;
+}
+
+export interface PlatformDashboardTenant extends PlatformNow {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  enabledModules: string[];
+  sessions: Kpi;
+  energyWh: Kpi;
+  revenue: PlatformRevenueKpi[];
+}
+
+export interface PlatformDashboard {
+  from: string;
+  to: string;
+  previousFrom: string;
+  previousTo: string;
+  bucket: 'hour' | 'day';
+  asOf: string;
+  totals: PlatformNow & {
+    tenants: number;
+    activeTenants: number;
+    sessions: Kpi;
+    energyWh: Kpi;
+    /** Per currency; never summed across one. */
+    revenue: PlatformRevenueKpi[];
+  };
+  tenants: PlatformDashboardTenant[];
+  series: { key: string; sessions: number; energyWh: string }[];
 }

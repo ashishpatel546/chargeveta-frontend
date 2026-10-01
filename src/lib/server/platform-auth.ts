@@ -62,9 +62,10 @@ export async function platformSignInAction(
   }
 
   await writePlatformSession((await response.json()) as PlatformTokenPair);
-  // The tenants page's layout sends a must-change admin on to change their
-  // password, so this does not need to ask first.
-  redirect('/platform/tenants');
+  // The platform pages' layout sends a must-change admin on to change their
+  // password, so this does not need to ask first. The dashboard is the
+  // platform console's landing page (doc 6 §19.5), as it is the staff one's.
+  redirect('/platform/dashboard');
 }
 
 const change = z
@@ -123,7 +124,7 @@ export async function platformChangePasswordAction(
   if (!call.response.ok) {
     return { error: (await readPlatformRefusal(call.response)).message };
   }
-  redirect('/platform/tenants');
+  redirect('/platform/dashboard');
 }
 
 const setup = z
@@ -195,7 +196,7 @@ export async function platformRedeemSetupAction(
   // Replaces any platform session already in this browser, so they land as
   // who the link was for.
   await writePlatformSession((await response.json()) as PlatformTokenPair);
-  redirect('/platform/tenants');
+  redirect('/platform/dashboard');
 }
 
 /** Ends the session on the API as well as here. */
