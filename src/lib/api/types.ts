@@ -806,6 +806,8 @@ export const TENANT_AUDIT_ACTIONS = [
   'staff.sign-in-failed',
   'fleet-manager.sign-in-failed',
   'driver.sign-in-failed',
+  'driver.test-number-code',
+  'driver.test-number-sign-in',
   'staff.setup-redeemed',
   'staff.password-reset-requested',
   'staff.password-change',

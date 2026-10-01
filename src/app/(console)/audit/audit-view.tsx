@@ -32,6 +32,8 @@ const ACTION_LABELS: Record<string, string> = {
   'staff.sign-in-failed': 'Sign-in refused',
   'fleet-manager.sign-in-failed': 'Fleet manager sign-in refused',
   'driver.sign-in-failed': 'Driver sign-in refused',
+  'driver.test-number-code': 'Test phone number asked for a code',
+  'driver.test-number-sign-in': 'Driver signed in with a test phone number',
   'staff.setup-redeemed': 'Set password from link',
   'staff.password-reset-requested': 'Asked for a password reset',
   'staff.password-change': 'Changed own password',
