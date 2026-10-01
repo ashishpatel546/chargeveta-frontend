@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { OtpForm } from '../sign-in/otp-form';
 import { config } from '@/lib/config';
+import { detectCountry } from '@/lib/server/detect-country';
 import { readDriverSession } from '@/lib/server/driver-session';
 
 export const metadata: Metadata = { title: 'Create an account' };
@@ -30,7 +31,7 @@ export default async function DriverRegisterPage() {
           <li>Add an email and a password later, under Account, if you like.</li>
         </ol>
       </div>
-      <OtpForm signUp />
+      <OtpForm signUp defaultCountry={await detectCountry()} />
       <p className="text-muted-foreground text-center text-sm">
         Already have an account?{' '}
         <Link href="/driver/sign-in" className="text-foreground underline underline-offset-4">

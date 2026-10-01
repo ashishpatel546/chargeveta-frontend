@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { SignInTabs } from './sign-in-tabs';
 import { Button } from '@/components/ui/button';
 import { config } from '@/lib/config';
+import { detectCountry } from '@/lib/server/detect-country';
 import { readDriverSession } from '@/lib/server/driver-session';
 
 export const metadata: Metadata = { title: 'Sign in' };
@@ -28,7 +29,7 @@ export default async function DriverSignInPage({
           Your session ended. Sign in again to carry on.
         </p>
       ) : null}
-      <SignInTabs />
+      <SignInTabs defaultCountry={await detectCountry()} />
       <div className="space-y-2 border-t pt-6 text-center">
         <p className="text-muted-foreground text-sm">New here?</p>
         <Button

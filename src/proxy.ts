@@ -36,14 +36,15 @@ export const config = {
      * Everything except: the API routes (which answer 401 themselves), Next's
      * own assets, the sign-in page, the setup page an invitation links to
      * (whose visitor by definition has no session yet), the offline page the
-     * service worker shows, the files a browser fetches to install the app
-     * (those last are requested without cookies and must not redirect), and
+     * service worker shows, the favicons and the files a browser fetches to
+     * install the app (those last are requested without cookies and must not
+     * redirect), and
      * the whole `/driver` tree — a driver carries a *different* cookie pair
      * (`cvd_at`/`cvd_rt`, `lib/server/driver-session.ts`), which this check
      * knows nothing about; `driver/(app)/layout.tsx`'s own `requireDriver()`
      * is the real check there, the same relationship this shortcut has to
      * `requirePrincipal()` for everything else.
      */
-    '/((?!api|_next/static|_next/image|sign-in|setup|offline|icons|manifest.webmanifest|sw.js|favicon.ico|driver).*)',
+    '/((?!api|_next/static|_next/image|sign-in|setup|offline|icons|manifest.webmanifest|sw.js|favicon.ico|icon.svg|driver).*)',
   ],
 };
