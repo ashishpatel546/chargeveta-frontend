@@ -7,7 +7,7 @@
  * `lib/format.ts` and never do arithmetic on them.
  */
 
-import type { Kpi } from './types';
+import type { Kpi, SessionVehicle } from './types';
 
 export type BillingMode = 'driver_pays' | 'fleet_invoice';
 
@@ -106,6 +106,8 @@ export interface FleetSession {
   /** true: the driver paid at the session. false: the fleet owes it. */
   collectedAtSession: boolean | null;
   chargedMinor: string | null;
+  /** The vehicle recorded when it started, never today's assignment. */
+  vehicle: SessionVehicle | null;
 }
 
 export interface FleetSessionPage {
@@ -225,10 +227,12 @@ export interface FleetDashboardGroup {
   energyWh: string;
   minutes: string;
   cost: FleetCost[];
-  /** Drivers only: the vehicles assigned to them now (sessions record none). */
+  /** Drivers only: the vehicles assigned to them now, as context. */
   vehicles?: string[];
   /** Sites only. */
   isDepot?: boolean;
+  /** Vehicles only: the label as recorded (`label` is the registration). */
+  vehicleLabel?: string | null;
 }
 
 /**
@@ -262,4 +266,9 @@ export interface FleetDashboard {
   series: FleetDashboardGroup[];
   byDriver: FleetDashboardGroup[];
   bySite: FleetDashboardGroup[];
+  /**
+   * By the vehicle recorded on each session when it started; key `unknown`
+   * for sessions with none, `removed:<registration>` for a deleted vehicle.
+   */
+  byVehicle: FleetDashboardGroup[];
 }

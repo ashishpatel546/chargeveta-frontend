@@ -31,6 +31,7 @@ import {
   type FleetMember,
   type FleetBillingMonth,
   type FleetSessionPage,
+  type Vehicle,
 } from '@/lib/api/fleet-types';
 import { downloadCsvVia } from '@/lib/download';
 import { date } from '@/lib/format';
@@ -124,6 +125,7 @@ export function FleetDetail({ id }: { id: string }) {
             }
             fetchMembers={() => apiGet<FleetMember[]>(`/fleets/${id}/members`)}
             fetchDepots={() => apiGet<Depot[]>(`/fleets/${id}/depots`)}
+            fetchVehicles={() => apiGet<Vehicle[]>(`/fleets/${id}/vehicles`)}
             downloadCsv={(params, table) =>
               downloadCsvVia(
                 '/api/cv',

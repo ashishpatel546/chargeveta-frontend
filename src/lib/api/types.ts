@@ -211,6 +211,22 @@ export interface Transaction {
   lastSampleAt?: string;
   cost?: TransactionCostSummary;
   isOpen: boolean;
+  /**
+   * The fleet vehicle recorded when the session started (`charveta` doc 6
+   * §23), or null. On `GET /transactions/{id}` only, never on the list.
+   */
+  vehicle?: SessionVehicle | null;
+}
+
+/**
+ * The vehicle recorded on a session at its start: the one active vehicle
+ * assigned to the driver then. `id` is null once the vehicle was deleted;
+ * the plate stays as it was.
+ */
+export interface SessionVehicle {
+  id: string | null;
+  registration: string;
+  label: string | null;
 }
 
 export interface TransactionCost extends TransactionCostSummary {

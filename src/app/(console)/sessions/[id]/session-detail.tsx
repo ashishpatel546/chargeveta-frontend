@@ -81,6 +81,15 @@ export function SessionDetail({ id }: { id: string }) {
                 </Link>
               </Field>
               <Field label="Card">{it.idToken ?? '—'}</Field>
+              {it.vehicle ? (
+                // Only when a fleet vehicle was recorded at the start; a
+                // session without one shows nothing rather than a guess.
+                <Field label="Vehicle">
+                  {it.vehicle.registration}
+                  {it.vehicle.label ? ` · ${it.vehicle.label}` : ''}
+                  {it.vehicle.id === null ? ' (removed)' : ''}
+                </Field>
+              ) : null}
               <Field label="Started">{dateTime(it.startedAt)}</Field>
               <Field label="Stopped">
                 {it.stoppedAt ? dateTime(it.stoppedAt) : 'still running'}
