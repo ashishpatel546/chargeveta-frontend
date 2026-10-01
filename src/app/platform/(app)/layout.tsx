@@ -3,7 +3,7 @@ import { requirePlatformAdmin } from '@/lib/server/platform-principal';
 
 /**
  * Everything a platform admin needs to be signed in for, and to have
- * replaced their temporary password for. `middleware.ts` lets the whole
+ * replaced their temporary password for. `proxy.ts` lets the whole
  * `/platform` tree through, so this is the one place that decides.
  */
 export default async function PlatformAppLayout({

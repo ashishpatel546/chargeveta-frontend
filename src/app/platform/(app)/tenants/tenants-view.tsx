@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { CreateTenantDialog } from './create-tenant-dialog';
-import { TenantActions } from './tenant-actions';
+import { ModulesCell, TenantActions } from './tenant-actions';
 import { PageHeader } from '@/components/page-header';
 import { Empty, Failed, Loading } from '@/components/query-state';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ export function PlatformTenantsView() {
     <>
       <PageHeader
         title="Tenants"
-        description="Every operator on this installation, oldest first. Suspending one refuses all of its people and disconnects its chargers; nothing is deleted."
+        description="Every operator on this installation, oldest first. Suspending one refuses all of its people and disconnects its chargers; nothing is deleted. Modules switch optional features, such as fleets, on per operator."
       >
         <CreateTenantDialog />
       </PageHeader>
@@ -48,6 +48,7 @@ export function PlatformTenantsView() {
                 <TableHead>Slug</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Modules</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Manage</TableHead>
               </TableRow>
@@ -73,6 +74,9 @@ export function PlatformTenantsView() {
                         suspended
                       </Badge>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <ModulesCell tenant={tenant} />
                   </TableCell>
                   <TableCell className="text-sm">{date(tenant.createdAt)}</TableCell>
                   <TableCell className="whitespace-normal">

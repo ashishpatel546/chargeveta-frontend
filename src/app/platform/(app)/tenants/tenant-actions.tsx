@@ -171,3 +171,71 @@ function ResendOwnerLink({ tenant }: { tenant: PlatformTenantListItem }) {
     </>
   );
 }
+
+/**
+ * The tenant's optional modules (doc 4 §3.4, `charveta` doc 6 §23 "The module
+ * switch"). `fleet` is the only one: on, the operator's console shows Fleets
+ * and its fleet managers can sign in; off, those routes answer 404 and every
+ * fleet manager is refused on their next request. Off keeps the data, so
+ * switching it back on restores everything. The API audits each change.
+ */
+export function ModulesCell({ tenant }: { tenant: PlatformTenantListItem }) {
+  const queryClient = useQueryClient();
+  const fleetOn = tenant.enabledModules.includes('fleet');
+
+  const setFleet = useMutation({
+    mutationFn: (on: boolean) => {
+      const others = tenant.enabledModules.filter((module) => module !== 'fleet');
+      return platformApiSend<UpdatedTenant>('PATCH', `/tenants/${tenant.id}`, {
+        enabledModules: on ? [...others, 'fleet'] : others,
+      });
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ['platform', 'tenants'] });
+      toast.success(
+        result.tenant.enabledModules.includes('fleet')
+          ? `Fleets are on for ${result.tenant.name}.`
+          : `Fleets are off for ${result.tenant.name}.`,
+      );
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-sm">
+        Fleets{' '}
+        <span
+          className={
+            fleetOn
+              ? 'font-medium text-emerald-700 dark:text-emerald-400'
+              : 'text-muted-foreground'
+          }
+        >
+          {fleetOn ? 'on' : 'off'}
+        </span>
+      </span>
+      {fleetOn ? (
+        <ConfirmDialog
+          trigger={<Button variant="outline" size="sm" />}
+          triggerLabel="Turn off"
+          title={`Turn fleets off for ${tenant.name}?`}
+          description="Its staff no longer see Fleets, and every fleet manager is signed out and refused. Fleets, vehicles, depots and managers are kept; turning fleets back on restores them."
+          confirmLabel="Turn off"
+          pending={setFleet.isPending}
+          onConfirm={() => setFleet.mutateAsync(false)}
+        />
+      ) : (
+        <ConfirmDialog
+          trigger={<Button variant="outline" size="sm" />}
+          triggerLabel="Turn on"
+          title={`Turn fleets on for ${tenant.name}?`}
+          description="Its admins can then create fleets (companies whose drivers charge here), add their drivers, vehicles and depots, and invite fleet managers to the fleet portal."
+          confirmLabel="Turn on"
+          pending={setFleet.isPending}
+          onConfirm={() => setFleet.mutateAsync(true)}
+        />
+      )}
+    </div>
+  );
+}

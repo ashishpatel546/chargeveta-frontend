@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Forgot password' };
  * "Forgot password?" for staff (doc 6 §19.2). The email it asks for carries a
  * link to `/setup`, the same page an administrator's reset link opens.
  *
- * Under `/sign-in` so the middleware's public-path rule already covers it.
+ * Under `/sign-in` so the proxy's (`proxy.ts`) public-path rule already covers it.
  */
 export default function ForgotPasswordPage() {
   return (

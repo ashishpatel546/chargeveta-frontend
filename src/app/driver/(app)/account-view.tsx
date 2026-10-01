@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
-import { driverApiSend } from '@/lib/api/driver-client';
+import { driverApiGet, driverApiSend } from '@/lib/api/driver-client';
 import type { DriverDto } from '@/lib/api/driver-types';
 import { driverSignOut } from '@/lib/server/driver-auth';
 import { NotificationsCard } from './notifications-card';
@@ -35,7 +35,7 @@ export function AccountView() {
     <div className="space-y-4">
       <IdentityCard driver={driver} />
       <NameCard driver={driver} onSaved={setDriver} />
-      <EmailCard driver={driver} />
+      <EmailCard driver={driver} onChanged={setDriver} />
       <PasswordCard driver={driver} />
       <NotificationsCard />
       <SignOutCard />
@@ -64,6 +64,14 @@ function IdentityCard({ driver }: { driver: DriverDto }) {
                 (not confirmed)
               </span>
             )}
+          </p>
+        ) : null}
+        {driver.pendingEmail && driver.pendingEmail !== driver.email ? (
+          <p>
+            {driver.pendingEmail}{' '}
+            <span className="text-amber-700 dark:text-amber-500">
+              (not confirmed yet)
+            </span>
           </p>
         ) : null}
         {driver.phone ? (
@@ -137,23 +145,37 @@ function NameCard({
   );
 }
 
-function EmailCard({ driver }: { driver: DriverDto }) {
+function EmailCard({
+  driver,
+  onChanged,
+}: {
+  driver: DriverDto;
+  onChanged: (driver: DriverDto) => void;
+}) {
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState<string | null>(null);
 
+  // The API records the address as pending whatever happens next, so the
+  // account is re-read rather than guessed at.
   const send = useMutation({
-    mutationFn: () =>
-      driverApiSend<{ message: string }>('POST', '/driver/me/email', {
-        email: email.trim(),
-      }),
-    onSuccess: () => {
-      setSent(email.trim());
+    mutationFn: async (address: string) => {
+      await driverApiSend<{ message: string }>('POST', '/driver/me/email', {
+        email: address,
+      });
+      return driverApiGet<DriverDto>('/driver/me');
+    },
+    onSuccess: (updated) => {
+      onChanged(updated);
       setEmail('');
+      toast.success('Confirmation link sent. Check your inbox.');
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   const confirmed = driver.email && driver.emailVerified ? driver.email : null;
+  const pending =
+    driver.pendingEmail && driver.pendingEmail !== confirmed
+      ? driver.pendingEmail
+      : null;
 
   return (
     <Card size="sm">
@@ -166,17 +188,34 @@ function EmailCard({ driver }: { driver: DriverDto }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {sent ? (
-          <p className="border-l-2 border-emerald-500 pl-3 text-sm text-emerald-700 dark:text-emerald-500">
-            If {sent} can be added, a confirmation link is on its way. Follow it
-            to add the address to this account.
-          </p>
+        {pending ? (
+          <div className="space-y-2 border-l-2 border-amber-500 pl-3 text-sm">
+            <p>
+              <span className="font-medium">{pending}</span>{' '}
+              <span className="text-amber-700 dark:text-amber-500">
+                not confirmed yet
+              </span>
+            </p>
+            <p className="text-muted-foreground">
+              Follow the link we emailed to confirm it. Until then it cannot be
+              used to sign in. No email, or the link has expired?
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={send.isPending}
+              onClick={() => send.mutate(pending)}
+            >
+              {send.isPending ? 'Sending…' : 'Send the link again'}
+            </Button>
+          </div>
         ) : null}
         <form
           className="flex gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            send.mutate();
+            send.mutate(email.trim());
           }}
         >
           <Label htmlFor="email" className="sr-only">
@@ -189,7 +228,7 @@ function EmailCard({ driver }: { driver: DriverDto }) {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             maxLength={320}
-            placeholder="you@example.com"
+            placeholder={pending ? 'A different address' : 'you@example.com'}
             required
           />
           <Button type="submit" disabled={send.isPending}>

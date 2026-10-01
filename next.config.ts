@@ -28,12 +28,27 @@ const nextConfig: NextConfig = {
   // browser-cache setting may raise that: through the dev tunnel, Cloudflare
   // turned both `max-age=0` and `no-cache` into four hours. `no-store` is the
   // one value it passes through untouched.
+  //
+  // The same four hours hit the dev server's own scripts and styles: its chunk
+  // names do not change when their contents do, so through the tunnel a
+  // browser kept running a page's old code against new server HTML — a
+  // hydration error and stale styles for hours after a change. In development
+  // they are `no-store` too. A production build names each chunk by its hash,
+  // so Next's own year-long caching is right there and is left alone.
   async headers() {
     return [
       {
         source: "/sw.js",
         headers: [{ key: "Cache-Control", value: "no-store" }],
       },
+      ...(process.env.NODE_ENV === "production"
+        ? []
+        : [
+            {
+              source: "/_next/static/:path*",
+              headers: [{ key: "Cache-Control", value: "no-store" }],
+            },
+          ]),
     ];
   },
 };

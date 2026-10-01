@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM, EMPTY_OTP_REQUEST, type OtpChannel } from '@/lib/forms';
 import { requestOtpAction, verifyOtpAction } from '@/lib/server/driver-auth';
+import { PhoneInput } from './phone-input';
 
 /**
  * Phone sign-in: request a code, then enter it.
@@ -21,8 +22,18 @@ import { requestOtpAction, verifyOtpAction } from '@/lib/server/driver-auth';
  * React only wraps it in the server-action machinery when `fn` itself is one,
  * so `sendCode`/`verify` stay ordinary client functions that call the real
  * server actions and set state imperatively once they resolve.
+ *
+ * `signUp` only changes the words: the code creates the account on first use
+ * either way, so the sign-up page and the sign-in tab are the same request.
+ * `defaultCountry` is the phone field's starting country (`detectCountry()`).
  */
-export function OtpForm() {
+export function OtpForm({
+  signUp = false,
+  defaultCountry,
+}: {
+  signUp?: boolean;
+  defaultCountry: string;
+}) {
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
   const [channel, setChannel] = useState<OtpChannel>('sms');
@@ -95,7 +106,13 @@ export function OtpForm() {
           </p>
         ) : null}
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? 'Signing in…' : 'Sign in'}
+          {pending
+            ? signUp
+              ? 'Creating your account…'
+              : 'Signing in…'
+            : signUp
+              ? 'Create account'
+              : 'Sign in'}
         </Button>
         <button
           type="button"
@@ -125,14 +142,7 @@ export function OtpForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="phone">Phone number</Label>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+91 98765 43210"
-          required
-        />
+        <PhoneInput id="phone" name="phone" defaultCountry={defaultCountry} />
       </div>
       {error ? (
         <p role="alert" className="text-destructive text-sm">

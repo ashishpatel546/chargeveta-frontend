@@ -5,7 +5,7 @@ import { PasswordForm } from './password-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /** The two ways a driver reaches a session directly; the third, a magic link, lives at `/driver/link`. */
-export function SignInTabs() {
+export function SignInTabs({ defaultCountry }: { defaultCountry: string }) {
   return (
     <Tabs defaultValue="phone">
       <TabsList className="w-full">
@@ -17,7 +17,7 @@ export function SignInTabs() {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="phone" className="pt-4">
-        <OtpForm />
+        <OtpForm defaultCountry={defaultCountry} />
       </TabsContent>
       <TabsContent value="email" className="pt-4">
         <PasswordForm />
