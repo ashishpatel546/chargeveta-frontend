@@ -139,7 +139,8 @@ function BalanceCard({ wallet }: { wallet: WalletDto }) {
   );
 }
 
-function TopUpDialog({ wallet }: { wallet: WalletDto }) {
+/** Also on the home screen, so the two always top up the same way. */
+export function TopUpDialog({ wallet }: { wallet: WalletDto }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const driver = useDriver();

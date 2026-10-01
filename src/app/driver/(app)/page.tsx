@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { AccountView } from './account-view';
+import { HomeView } from './home-view';
 
-export const metadata: Metadata = { title: 'Account' };
+export const metadata: Metadata = { title: 'Home' };
 
-export default function DriverAccountPage() {
-  return <AccountView />;
+export default function DriverHomePage() {
+  return <HomeView />;
 }

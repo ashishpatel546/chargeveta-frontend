@@ -36,7 +36,7 @@ export function AccountView() {
       <IdentityCard driver={driver} />
       <NameCard driver={driver} onSaved={setDriver} />
       <EmailCard driver={driver} onChanged={setDriver} />
-      <PasswordCard driver={driver} />
+      <PasswordCard driver={driver} onSaved={setDriver} />
       <NotificationsCard />
       <SignOutCard />
     </div>
@@ -240,7 +240,13 @@ function EmailCard({
   );
 }
 
-function PasswordCard({ driver }: { driver: DriverDto }) {
+function PasswordCard({
+  driver,
+  onSaved,
+}: {
+  driver: DriverDto;
+  onSaved: (driver: DriverDto) => void;
+}) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -259,6 +265,11 @@ function PasswordCard({ driver }: { driver: DriverDto }) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirm('');
+      // The API answers 204, so the driver everyone else reads is updated
+      // here: without it this card kept saying "Set a password", looked as
+      // if the save had done nothing, and the next try left out the current
+      // password the API now asks for.
+      if (!driver.hasPassword) onSaved({ ...driver, hasPassword: true });
       toast.success(
         'Password saved. Every other device you signed in on has been signed out.',
       );

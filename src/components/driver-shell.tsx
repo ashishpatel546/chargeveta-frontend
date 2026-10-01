@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   BellIcon,
   CreditCardIcon,
+  HomeIcon,
   MapPinIcon,
   ReceiptIcon,
   UserIcon,
@@ -29,12 +30,12 @@ interface DriverNavItem {
 
 /** Doc 6 §22.3/§22.4: everything a signed-in driver's bottom tab bar reaches. */
 const NAV_ITEMS: DriverNavItem[] = [
+  { href: '/driver', label: 'Home', icon: HomeIcon },
   { href: '/driver/stations', label: 'Nearby', icon: MapPinIcon },
   { href: '/driver/sessions', label: 'Sessions', icon: ZapIcon },
   { href: '/driver/wallet', label: 'Wallet', icon: WalletIcon },
   { href: '/driver/cards', label: 'Cards', icon: CreditCardIcon },
   { href: '/driver/receipts', label: 'Receipts', icon: ReceiptIcon },
-  { href: '/driver', label: 'Account', icon: UserIcon },
 ];
 
 /**
@@ -81,6 +82,7 @@ function Header() {
           </span>
         ) : null}
         <NotificationsBell />
+        <AccountLink />
       </div>
     </header>
   );
@@ -114,6 +116,25 @@ function NotificationsBell() {
           {count > 99 ? '99+' : count}
         </span>
       ) : null}
+    </Link>
+  );
+}
+
+/**
+ * Account lives in the header, beside the bell, since the home screen took
+ * its tab: settings are visited rarely, and the tab bar is for what is not.
+ */
+function AccountLink() {
+  const pathname = usePathname();
+  const active = pathname.startsWith('/driver/account');
+  return (
+    <Link
+      href="/driver/account"
+      aria-label="Account"
+      aria-current={active ? 'page' : undefined}
+      className={cn(active ? 'text-foreground' : 'text-muted-foreground')}
+    >
+      <UserIcon className="size-5" />
     </Link>
   );
 }
