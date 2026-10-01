@@ -21,6 +21,9 @@ export interface DriverDto {
   phone: string | null;
   name: string | null;
   emailVerified: boolean;
+  /** An address asked to be added and not confirmed yet; it does not sign in. */
+  pendingEmail: string | null;
+  pendingEmailRequestedAt: string | null;
   phoneVerified: boolean;
   /** Whether password sign-in is set up — `changePassword` needs the old one only if this is true. */
   hasPassword: boolean;

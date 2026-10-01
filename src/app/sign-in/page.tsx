@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SignInForm } from './sign-in-form';
 import { config } from '@/lib/config';
@@ -29,6 +30,12 @@ export default async function SignInPage({ searchParams }: PageProps<'/sign-in'>
         </p>
       ) : null}
       <SignInForm />
+      <p className="text-muted-foreground border-t pt-6 text-center text-sm">
+        Charging your car?{' '}
+        <Link href="/driver/sign-in" className="text-foreground underline underline-offset-4">
+          Open the driver app
+        </Link>
+      </p>
     </main>
   );
 }

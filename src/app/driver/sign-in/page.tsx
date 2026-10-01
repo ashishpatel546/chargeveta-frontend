@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SignInTabs } from './sign-in-tabs';
+import { Button } from '@/components/ui/button';
 import { config } from '@/lib/config';
 import { readDriverSession } from '@/lib/server/driver-session';
 
@@ -28,12 +29,20 @@ export default async function DriverSignInPage({
         </p>
       ) : null}
       <SignInTabs />
-      <p className="text-muted-foreground text-center text-sm">
-        New here?{' '}
-        <Link href="/driver/register" className="text-foreground underline underline-offset-4">
-          Sign up with your phone number
-        </Link>
-      </p>
+      <div className="space-y-2 border-t pt-6 text-center">
+        <p className="text-muted-foreground text-sm">New here?</p>
+        <Button
+          variant="outline"
+          className="w-full"
+          render={<Link href="/driver/register" />}
+          nativeButton={false}
+        >
+          Create an account
+        </Button>
+        <p className="text-muted-foreground text-xs">
+          All you need is your mobile number.
+        </p>
+      </div>
     </main>
   );
 }
