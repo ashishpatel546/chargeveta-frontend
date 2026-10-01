@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * still good, and only the API knows that. What this saves is rendering a whole
  * page for someone who is plainly signed out.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (request.cookies.has('cv_rt')) return NextResponse.next();
   // The fleet portal carries its own cookie pair (`cvf_at`/`cvf_rt`) and is
   // checked by `fleet/(app)/layout.tsx`'s `requireFleetManager()`, as
