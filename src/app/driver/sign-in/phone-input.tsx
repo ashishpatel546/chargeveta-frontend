@@ -1,14 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { COUNTRIES, DIAL_CODES } from '@/lib/dial-codes';
 
-/** A region's flag, from its two regional-indicator letters. */
-function flag(region: string): string {
-  return String.fromCodePoint(
-    ...[...region].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
+const noSubscribe = () => () => {};
+
+/** False while rendering on the server and hydrating, true after. */
+function useHydrated(): boolean {
+  return useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
   );
 }
 
@@ -20,6 +24,12 @@ function flag(region: string): string {
  * the phone's own picker, searchable on both platforms, at no cost here. What
  * reaches the form is one international number in the hidden `name` field —
  * or, when the driver types a `+` themselves, exactly what they typed.
+ *
+ * The label is the region code and calling code (`IN +91`), not a flag emoji:
+ * Windows draws no flag emoji, only the two letters run into the code. The
+ * full list of options is rendered only once hydrated — the server sends the
+ * chosen one — so a browser (or a translating extension) that names a country
+ * differently from the server cannot fail hydration.
  */
 export function PhoneInput({
   id,
@@ -34,6 +44,7 @@ export function PhoneInput({
     defaultCountry in DIAL_CODES ? defaultCountry : 'IN',
   );
   const [number, setNumber] = useState('');
+  const hydrated = useHydrated();
 
   const dial = DIAL_CODES[country];
   const typed = number.trim();
@@ -45,8 +56,10 @@ export function PhoneInput({
 
   return (
     <div className="flex gap-2">
-      <div className="border-input relative flex h-9 shrink-0 items-center gap-1 rounded-md border px-2.5 text-sm">
-        <span aria-hidden>{flag(country)}</span>
+      <div className="border-input relative flex h-9 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-sm">
+        <span className="text-muted-foreground text-xs font-medium" aria-hidden>
+          {country}
+        </span>
         <span className="tabular-nums">+{dial}</span>
         <ChevronDown className="text-muted-foreground size-3.5" aria-hidden />
         <select
@@ -55,7 +68,10 @@ export function PhoneInput({
           onChange={(e) => setCountry(e.target.value)}
           className="absolute inset-0 cursor-pointer opacity-0"
         >
-          {COUNTRIES.map(([region, label, code]) => (
+          {(hydrated
+            ? COUNTRIES
+            : COUNTRIES.filter(([region]) => region === country)
+          ).map(([region, label, code]) => (
             <option key={region} value={region}>
               {label} (+{code})
             </option>
