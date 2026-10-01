@@ -123,6 +123,13 @@ function Placement({ station }: { station: Station }) {
           <Select
             value={locationId}
             onValueChange={(value) => setLocationId(value ?? 'none')}
+            items={[
+              { value: 'none', label: 'No site' },
+              ...(sites.data ?? []).map((site) => ({
+                value: site.id,
+                label: site.name,
+              })),
+            ]}
           >
             <SelectTrigger id="site" className="w-full">
               <SelectValue />
@@ -147,6 +154,13 @@ function Placement({ station }: { station: Station }) {
           <Select
             value={tariffId}
             onValueChange={(value) => setTariffId(value ?? 'none')}
+            items={[
+              { value: 'none', label: 'Use the site’s tariff' },
+              ...(tariffs.data ?? []).map((tariff) => ({
+                value: tariff.id,
+                label: tariff.name,
+              })),
+            ]}
           >
             <SelectTrigger id="tariff" className="w-full">
               <SelectValue />
