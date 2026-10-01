@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { InstallBanner } from '@/components/install-banner';
 import { config } from '@/lib/config';
 
 /**
@@ -20,5 +21,10 @@ export const metadata: Metadata = {
 };
 
 export default function DriverLayout({ children }: LayoutProps<'/driver'>) {
-  return children;
+  return (
+    <>
+      {children}
+      <InstallBanner />
+    </>
+  );
 }
