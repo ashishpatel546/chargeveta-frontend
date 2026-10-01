@@ -13,7 +13,7 @@ export default async function PlatformSignInPage({
   // `expired` means the console sent this visitor here because the API
   // refused their session; sending them back while the cookies linger would
   // loop.
-  if (!expired && (await readPlatformSession())) redirect('/platform/tenants');
+  if (!expired && (await readPlatformSession())) redirect('/platform/dashboard');
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">

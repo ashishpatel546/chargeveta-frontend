@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   BuildingIcon,
+  LayoutDashboardIcon,
   KeyRoundIcon,
   LogOutIcon,
   ScrollTextIcon,
@@ -16,6 +17,7 @@ import { platformSignOut } from '@/lib/server/platform-auth';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
+  { href: '/platform/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
   { href: '/platform/tenants', label: 'Tenants', icon: BuildingIcon },
   { href: '/platform/admins', label: 'Admins', icon: UsersIcon },
   { href: '/platform/audit', label: 'Audit log', icon: ScrollTextIcon },
