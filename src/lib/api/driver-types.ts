@@ -1,4 +1,8 @@
-import type { ConnectorStatus, OcppVersion } from '@/lib/api/types';
+import type {
+  ConnectorStatus,
+  OcppVersion,
+  SessionVehicle,
+} from '@/lib/api/types';
 
 /**
  * The shapes the API answers a driver with — `lib/api/types.ts`'s convention,
@@ -58,6 +62,21 @@ export interface DriverSessionDto {
   receiptId: string | null;
   /** Running cost and what limits it — null when none was recorded. */
   limit: DriverSessionLimitDto | null;
+  /** The fleet vehicle recorded for it (picked, or the only one), or null. */
+  vehicle: SessionVehicle | null;
+}
+
+/**
+ * `GET /driver/vehicles` — the fleet vehicles assigned to the driver, to pick
+ * from before a start (doc 6 §23 "The driver picks the car"). Empty outside a
+ * fleet. With several, a start must name one (`vehicleId`).
+ */
+export interface DriverVehicleDto {
+  id: string;
+  registration: string;
+  label: string | null;
+  fleetId: string;
+  fleetName: string;
 }
 
 /**

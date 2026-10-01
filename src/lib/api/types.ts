@@ -219,9 +219,9 @@ export interface Transaction {
 }
 
 /**
- * The vehicle recorded on a session at its start: the one active vehicle
- * assigned to the driver then. `id` is null once the vehicle was deleted;
- * the plate stays as it was.
+ * The vehicle recorded on a session at its start: the one the driver picked
+ * in the app, or else the one active vehicle assigned to them then. `id` is
+ * null once the vehicle was deleted; the plate stays as it was.
  */
 export interface SessionVehicle {
   id: string | null;

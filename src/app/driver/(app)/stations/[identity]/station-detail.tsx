@@ -31,6 +31,7 @@ import type {
 import { money } from '@/lib/format';
 import { openRazorpayCheckout } from '@/lib/razorpay-checkout';
 import { QuoteCard } from './quote-card';
+import { rememberVehicle, useVehicleChoice, VehiclePicker } from './vehicle-picker';
 
 /**
  * A charger by its identity (doc 6 §22.3) — what a QR code on it carries, or
@@ -57,6 +58,7 @@ export function StationDetail({ identity }: { identity: string }) {
   });
 
   const driver = useDriver();
+  const vehicle = useVehicleChoice(driver.id);
 
   const [connectorKey, setConnectorKey] = useState<string | undefined>(undefined);
   const [cardId, setCardId] = useState<string | undefined>(undefined);
@@ -97,10 +99,12 @@ export function StationDetail({ identity }: { identity: string }) {
           ? { connectorId: connector.connectorId }
           : { evseId: connector.evseId }),
         ...(cardId ? { cardId } : {}),
+        ...(vehicle.vehicleId ? { vehicleId: vehicle.vehicleId } : {}),
       });
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['driver', 'sessions'] });
+      if (vehicle.vehicleId) rememberVehicle(driver.id, vehicle.vehicleId);
       reportCommand(result);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -116,7 +120,9 @@ export function StationDetail({ identity }: { identity: string }) {
           ? { connectorId: connector.connectorId }
           : { evseId: connector.evseId }),
         ...(cardId ? { cardId } : {}),
+        ...(vehicle.vehicleId ? { vehicleId: vehicle.vehicleId } : {}),
       });
+      if (vehicle.vehicleId) rememberVehicle(driver.id, vehicle.vehicleId);
       const paid = await openRazorpayCheckout({
         keyId: checkout.keyId,
         orderId: checkout.orderId,
@@ -235,9 +241,11 @@ export function StationDetail({ identity }: { identity: string }) {
               </div>
             ) : null}
 
+            <VehiclePicker choice={vehicle} />
+
             <Button
               className="w-full"
-              disabled={!doc.online || start.isPending || !selectedKey}
+              disabled={!doc.online || start.isPending || !selectedKey || !vehicle.ready}
               onClick={() => start.mutate()}
             >
               {start.isPending ? 'Starting…' : 'Start charging'}
@@ -246,7 +254,9 @@ export function StationDetail({ identity }: { identity: string }) {
               <Button
                 variant="outline"
                 className="w-full"
-                disabled={!doc.online || payByCard.isPending || !selectedKey}
+                disabled={
+                  !doc.online || payByCard.isPending || !selectedKey || !vehicle.ready
+                }
                 onClick={() => payByCard.mutate()}
               >
                 {payByCard.isPending ? 'Opening Checkout…' : 'Pay by card instead'}

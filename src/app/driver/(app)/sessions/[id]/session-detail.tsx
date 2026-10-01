@@ -97,6 +97,14 @@ export function SessionDetail({ id }: { id: string }) {
                 <span>{doc.stoppedReason ?? 'Stopped'}</span>
               )}
             </Row>
+            {doc.vehicle ? (
+              <Row label="Vehicle">
+                {doc.vehicle.registration}
+                {doc.vehicle.label ? (
+                  <span className="text-muted-foreground"> · {doc.vehicle.label}</span>
+                ) : null}
+              </Row>
+            ) : null}
             <Row label="Started">{dateTime(doc.startedAt)}</Row>
             <Row label="Duration">
               {span(doc.startedAt, doc.stoppedAt ?? undefined)}

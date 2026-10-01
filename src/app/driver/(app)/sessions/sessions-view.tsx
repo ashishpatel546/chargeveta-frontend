@@ -83,6 +83,7 @@ function SessionRow({ session }: { session: DriverSessionDto }) {
             <p className="text-muted-foreground truncate text-xs">
               {dateTime(session.startedAt)} · {span(session.startedAt, session.stoppedAt ?? undefined)}
               {session.energyWh ? ` · ${energy(session.energyWh)}` : ''}
+              {session.vehicle ? ` · ${session.vehicle.registration}` : ''}
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
