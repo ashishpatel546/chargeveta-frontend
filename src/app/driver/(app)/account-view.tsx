@@ -60,7 +60,7 @@ function IdentityCard({ driver }: { driver: DriverDto }) {
             {driver.emailVerified ? (
               <span className="text-muted-foreground">(confirmed)</span>
             ) : (
-              <span className="text-amber-700 dark:text-amber-500">
+              <span className="text-caution-ink">
                 (not confirmed)
               </span>
             )}
@@ -69,7 +69,7 @@ function IdentityCard({ driver }: { driver: DriverDto }) {
         {driver.pendingEmail && driver.pendingEmail !== driver.email ? (
           <p>
             {driver.pendingEmail}{' '}
-            <span className="text-amber-700 dark:text-amber-500">
+            <span className="text-caution-ink">
               (not confirmed yet)
             </span>
           </p>
@@ -80,7 +80,7 @@ function IdentityCard({ driver }: { driver: DriverDto }) {
             {driver.phoneVerified ? (
               <span className="text-muted-foreground">(confirmed)</span>
             ) : (
-              <span className="text-amber-700 dark:text-amber-500">
+              <span className="text-caution-ink">
                 (not confirmed)
               </span>
             )}
@@ -189,10 +189,10 @@ function EmailCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {pending ? (
-          <div className="space-y-2 border-l-2 border-amber-500 pl-3 text-sm">
+          <div className="space-y-2 border-l-2 border-caution pl-3 text-sm">
             <p>
               <span className="font-medium">{pending}</span>{' '}
-              <span className="text-amber-700 dark:text-amber-500">
+              <span className="text-caution-ink">
                 not confirmed yet
               </span>
             </p>

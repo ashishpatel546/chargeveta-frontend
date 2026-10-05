@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ForgotForm } from './forgot-form';
-import { config } from '@/lib/config';
+import { AuthLayout } from '@/components/auth-layout';
 
 export const metadata: Metadata = { title: 'Forgot password' };
 
@@ -13,11 +13,9 @@ export const metadata: Metadata = { title: 'Forgot password' };
  */
 export default function ForgotPasswordPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {config.appName}
-        </h1>
+    <AuthLayout surface="console">
+      <div className="space-y-2">
+        <h1 className="heading text-3xl">Reset your password</h1>
         <p className="text-muted-foreground text-sm">
           We will email you a link to choose a new password. Your current
           password keeps working until you use it.
@@ -29,6 +27,6 @@ export default function ForgotPasswordPage() {
           Back to sign in
         </Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }

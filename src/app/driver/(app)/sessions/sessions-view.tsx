@@ -3,6 +3,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Empty, Failed, Loading } from '@/components/driver-query-state';
+import { HistorySwitch } from './history-switch';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,8 @@ export function SessionsView() {
 
   return (
     <>
-      <PageHeader title="Sessions" />
+      <PageHeader title="History" />
+      <HistorySwitch />
 
       {sessions.isPending ? <Loading rows={3} /> : null}
       {sessions.isError ? <Failed error={sessions.error} /> : null}
@@ -90,7 +92,7 @@ function SessionRow({ session }: { session: DriverSessionDto }) {
             {!session.stoppedAt ? (
               <Badge
                 variant="outline"
-                className="border-sky-600/30 bg-sky-600/10 font-medium text-sky-700 dark:text-sky-400"
+                className="border-live/50 bg-live/15 font-medium text-live-ink"
               >
                 running
               </Badge>

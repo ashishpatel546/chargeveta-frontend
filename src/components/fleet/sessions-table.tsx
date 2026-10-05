@@ -52,7 +52,7 @@ export function FleetSessionsTable({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-md border">
+      <div className="bg-card overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -71,7 +71,7 @@ export function FleetSessionsTable({
                 <TableCell className="text-sm">
                   {dateTime(session.startedAt)}
                   {!session.stoppedAt ? (
-                    <span className="ml-2 text-xs text-sky-700 dark:text-sky-400">
+                    <span className="ml-2 text-xs text-live-ink">
                       running
                     </span>
                   ) : null}

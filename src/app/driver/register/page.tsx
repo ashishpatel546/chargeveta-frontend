@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { OtpForm } from '../sign-in/otp-form';
-import { config } from '@/lib/config';
 import { detectCountry } from '@/lib/server/detect-country';
 import { readDriverSession } from '@/lib/server/driver-session';
+import { AuthLayout } from '@/components/auth-layout';
 
 export const metadata: Metadata = { title: 'Create an account' };
 
@@ -19,10 +19,9 @@ export default async function DriverRegisterPage() {
   if (await readDriverSession()) redirect('/driver');
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <div className="space-y-1">
-        <p className="text-muted-foreground text-sm">{config.appName}</p>
-        <h1 className="text-2xl font-semibold tracking-tight">
+    <AuthLayout surface="driver">
+      <div className="space-y-2">
+        <h1 className="heading text-3xl">
           Create your account
         </h1>
         <ol className="text-muted-foreground list-decimal space-y-1 pl-5 text-sm">
@@ -38,6 +37,6 @@ export default async function DriverRegisterPage() {
           Sign in
         </Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }

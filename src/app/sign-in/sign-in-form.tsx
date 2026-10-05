@@ -2,19 +2,23 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM } from '@/lib/forms';
+import { keepFormOnSubmit } from '@/lib/keep-form';
 import { signIn } from '@/lib/server/auth';
 
 export function SignInForm() {
-  const [state, action] = useActionState(signIn, EMPTY_FORM);
+  const [state, action, pending] = useActionState(signIn, EMPTY_FORM);
 
   return (
-    <form action={action} className="space-y-4">
+    <form
+      action={action}
+      onSubmit={keepFormOnSubmit(action)}
+      className="space-y-4"
+    >
       <div className="space-y-2">
         <Label htmlFor="tenantSlug">Operator</Label>
         <Input
@@ -65,14 +69,12 @@ export function SignInForm() {
         </p>
       ) : null}
 
-      <Submit />
+      <Submit pending={pending} />
     </form>
   );
 }
 
-function Submit() {
-  // `useFormStatus` reads the enclosing form, so it has to be its own component.
-  const { pending } = useFormStatus();
+function Submit({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" className="w-full" disabled={pending}>
       {pending ? 'Signing in…' : 'Sign in'}

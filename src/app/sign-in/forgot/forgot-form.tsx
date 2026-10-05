@@ -15,7 +15,7 @@ export function ForgotForm() {
     return (
       <p
         role="status"
-        className="border-l-2 border-emerald-600 pl-3 text-sm text-emerald-700 dark:text-emerald-500"
+        className="border-l-2 border-ok pl-3 text-sm text-ok-ink"
       >
         {state.message} It can take a minute to arrive; check your spam folder
         too. The link works once.

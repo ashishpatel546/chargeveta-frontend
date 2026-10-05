@@ -13,7 +13,7 @@ export function RequestLinkForm() {
 
   if (state.message) {
     return (
-      <p className="border-l-2 border-emerald-500 pl-3 text-sm text-emerald-700 dark:text-emerald-500">
+      <p className="border-l-2 border-ok pl-3 text-sm text-ok-ink">
         {state.message}
       </p>
     );

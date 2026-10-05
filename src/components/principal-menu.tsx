@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -25,12 +26,14 @@ export function PrincipalMenu({ principal }: { principal: Principal }) {
         <UserIcon className="size-5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel className="font-normal">
-          <p className="truncate text-sm font-medium">{name}</p>
-          <p className="text-muted-foreground text-xs capitalize">
-            {principal.role}
-          </p>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal">
+            <p className="truncate text-sm font-medium">{name}</p>
+            <p className="text-muted-foreground text-xs capitalize">
+              {principal.role}
+            </p>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {principal.kind === 'user' ? (
           <DropdownMenuItem render={<Link href="/change-password" />}>
@@ -39,6 +42,7 @@ export function PrincipalMenu({ principal }: { principal: Principal }) {
         ) : null}
         <form action={signOut}>
           <DropdownMenuItem
+            nativeButton
             render={<button type="submit" className="w-full text-left" />}
           >
             Sign out

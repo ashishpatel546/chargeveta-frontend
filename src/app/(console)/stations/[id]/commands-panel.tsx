@@ -151,7 +151,7 @@ export function CommandsPanel({ station }: { station: Station }) {
           <Empty>Nothing has been sent to this charger yet.</Empty>
         ) : null}
         {history.isSuccess && history.data.length > 0 ? (
-          <div className="overflow-x-auto rounded-md border">
+          <div className="bg-card overflow-x-auto rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -573,13 +573,13 @@ function Outcome({ result }: { result: CommandResult }) {
       {result.detail ? <p className="text-sm">{result.detail}</p> : null}
 
       {result.delivered === false ? (
-        <p className="text-sm text-amber-700 dark:text-amber-500">
+        <p className="text-sm text-caution-ink">
           It never reached the charger, so it certainly did not happen. Sending
           it again is safe.
         </p>
       ) : null}
       {result.delivered === true && result.outcome === 'timeout' ? (
-        <p className="text-sm text-amber-700 dark:text-amber-500">
+        <p className="text-sm text-caution-ink">
           The charger was given this and did not answer in time. It may have
           been carried out — check before sending it again.
         </p>

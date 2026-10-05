@@ -2,19 +2,23 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
 import { Label } from '@/components/ui/label';
 import { EMPTY_FORM } from '@/lib/forms';
+import { keepFormOnSubmit } from '@/lib/keep-form';
 import { driverLoginAction } from '@/lib/server/driver-auth';
 
 export function PasswordForm() {
-  const [state, action] = useActionState(driverLoginAction, EMPTY_FORM);
+  const [state, action, pending] = useActionState(driverLoginAction, EMPTY_FORM);
 
   return (
-    <form action={action} className="space-y-4">
+    <form
+      action={action}
+      onSubmit={keepFormOnSubmit(action)}
+      className="space-y-4"
+    >
       <div className="space-y-2">
         <Label htmlFor="pw-tenantSlug">Operator</Label>
         <Input
@@ -43,7 +47,7 @@ export function PasswordForm() {
           {state.error}
         </p>
       ) : null}
-      <Submit />
+      <Submit pending={pending} />
       <p className="text-muted-foreground text-center text-xs">
         <Link href="/driver/link" className="underline underline-offset-4">
           Email me a sign-in link instead
@@ -53,8 +57,7 @@ export function PasswordForm() {
   );
 }
 
-function Submit() {
-  const { pending } = useFormStatus();
+function Submit({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" className="w-full" disabled={pending}>
       {pending ? 'Signing in…' : 'Sign in'}

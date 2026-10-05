@@ -137,7 +137,7 @@ export function PlatformAuditView() {
 
           {rows.length > 0 ? (
             <>
-              <div className="overflow-x-auto rounded-md border">
+              <div className="bg-card overflow-x-auto rounded-xl border">
                 <Table>
                   <TableHeader>
                     <TableRow>

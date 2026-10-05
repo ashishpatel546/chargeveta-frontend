@@ -22,13 +22,12 @@ import {
   minutes,
   ratio,
 } from '@/components/dashboard/format';
-import { KpiCard } from '@/components/dashboard/kpi-card';
+import { ChargingNowCard, KpiCard } from '@/components/dashboard/kpi-card';
 import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { PageHeader } from '@/components/page-header';
 import { Empty, Failed } from '@/components/query-state';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -235,7 +234,8 @@ export function DashboardBoard() {
             site’s own.
           </p>
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+          <div className="stagger grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+            <ChargingNowCard count={data.kpis.activeNow} />
             <KpiCard label="Sessions" kpi={data.kpis.sessions} format={count} />
             <KpiCard label="Energy" kpi={data.kpis.energyWh} format={kwh} />
             {data.kpis.revenue.length === 0 ? (
@@ -256,17 +256,6 @@ export function DashboardBoard() {
                 />
               ))
             )}
-            <Card size="sm">
-              <CardContent className="space-y-1">
-                <p className="text-muted-foreground text-xs">Charging now</p>
-                <p className="text-2xl font-semibold tracking-tight">
-                  {data.kpis.activeNow.toLocaleString('en-IN')}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Open sessions, whatever the period
-                </p>
-              </CardContent>
-            </Card>
             <KpiCard
               label="Average session"
               kpi={data.kpis.averageDurationMinutes}
@@ -539,7 +528,7 @@ function GroupTable({
   subOf?: (group: DashboardGroup) => string | null;
 }) {
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>

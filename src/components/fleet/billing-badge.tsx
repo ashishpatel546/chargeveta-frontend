@@ -13,7 +13,7 @@ export function SessionBillingBadge({ session }: { session: FleetSession }) {
   ) : (
     <Badge
       variant="outline"
-      className="border-amber-600/30 bg-amber-600/10 font-medium text-amber-700 dark:text-amber-400"
+      className="border-caution/30 bg-caution/10 font-medium text-caution-ink"
     >
       fleet owes
     </Badge>
@@ -24,7 +24,7 @@ export function ActiveBadge({ active }: { active: boolean }) {
   return active ? (
     <Badge
       variant="outline"
-      className="border-emerald-600/30 bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400"
+      className="border-ok/30 bg-ok/10 font-medium text-ok-ink"
     >
       active
     </Badge>

@@ -1,4 +1,6 @@
 import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from 'lucide-react';
+import { Readout } from '@/components/readout';
+import { LiveBeam } from '@/components/magicui/live-beam';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Kpi } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
@@ -31,11 +33,11 @@ export function KpiCard({
   hint?: string;
 }) {
   return (
-    <Card size="sm">
-      <CardContent className="space-y-1">
+    <Card size="sm" className="h-full">
+      <CardContent className="space-y-1.5">
         <p className="text-muted-foreground text-xs">{label}</p>
-        <p className="text-2xl font-semibold tracking-tight">
-          {format(kpi.current)}
+        <p className="truncate">
+          <Readout value={format(kpi.current)} className="text-[34px]" />
         </p>
         <Change kpi={kpi} format={format} better={better} />
         {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
@@ -69,8 +71,8 @@ function Change({
       <span
         className={cn(
           'inline-flex items-center gap-0.5 font-medium',
-          good === true && 'text-emerald-700 dark:text-emerald-400',
-          good === false && 'text-red-700 dark:text-red-400',
+          good === true && 'text-ok-ink',
+          good === false && 'text-destructive',
           good === null && 'text-muted-foreground',
         )}
       >
@@ -80,5 +82,51 @@ function Change({
       </span>
       <span className="text-muted-foreground">{before}</span>
     </p>
+  );
+}
+
+/**
+ * Open sessions, right now — the one figure on the dashboard that is live
+ * rather than a period's total, so it is the one that lights up: ink with
+ * the amber current while anything is charging, an ordinary card when not.
+ */
+export function ChargingNowCard({ count }: { count: number }) {
+  const live = count > 0;
+  return (
+    <Card
+      size="sm"
+      className={cn(
+        'relative h-full',
+        live && 'bg-ink text-white ring-0 dark:ring-1 dark:ring-white/10',
+      )}
+    >
+      <CardContent className="space-y-1.5">
+        <p
+          className={cn(
+            'flex items-center gap-1.5 text-xs',
+            live ? 'text-sidebar-foreground' : 'text-muted-foreground',
+          )}
+        >
+          {live ? (
+            <span aria-hidden className="bg-live size-1.5 rounded-full" />
+          ) : null}
+          Charging now
+        </p>
+        <p className={cn('readout text-[34px]', live && 'text-live')}>
+          {count.toLocaleString('en-IN')}
+        </p>
+        <p
+          className={cn(
+            'text-xs',
+            live ? 'text-sidebar-foreground' : 'text-muted-foreground',
+          )}
+        >
+          {live
+            ? `Open ${count === 1 ? 'session' : 'sessions'}, whatever the period`
+            : 'Nothing charging right now'}
+        </p>
+      </CardContent>
+      {live ? <LiveBeam radius={17} /> : null}
+    </Card>
   );
 }

@@ -89,7 +89,7 @@ export function CardsBoard() {
 
       {cards.isSuccess && rows.length > 0 ? (
         <div className="space-y-3">
-          <div className="overflow-x-auto rounded-md border">
+          <div className="bg-card overflow-x-auto rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>

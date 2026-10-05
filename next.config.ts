@@ -4,13 +4,13 @@ import type { NextConfig } from "next";
  * Hostnames, besides localhost, that the dev server lets a page load its dev
  * resources from — `/_next/*` and the hot-reload socket. Next 16 refuses those
  * with a 403 from any other origin, which is what breaks `npm run dev` opened
- * through a tunnel (a phone on https://charveta.appme.in, say) while the same
+ * through a tunnel (a phone on https://chargeveta.appme.in, say) while the same
  * page on localhost works. Comma-separated hostnames, `*.` wildcards allowed;
  * set it empty to allow localhost only. Development only — `next build` and
  * `next start` never read it.
  */
 const allowedDevOrigins = (
-  process.env.DEV_ALLOWED_ORIGINS ?? "charveta.appme.in"
+  process.env.DEV_ALLOWED_ORIGINS ?? "chargeveta.appme.in"
 )
   .split(",")
   .map((host) => host.trim())

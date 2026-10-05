@@ -15,12 +15,12 @@ import { cn } from '@/lib/utils';
 export const STATUS_TONE: Record<string, string> = {
   created: 'text-muted-foreground',
   authorized:
-    'border-sky-600/30 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+    'border-primary/20 bg-primary/5 text-primary',
   captured:
-    'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+    'border-ok/30 bg-ok/10 text-ok-ink',
   released: 'text-muted-foreground',
   refunded: 'text-muted-foreground',
-  failed: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
+  failed: 'border-destructive/30 bg-destructive/10 text-destructive',
 };
 
 const PURPOSE_LABEL: Record<string, string> = {

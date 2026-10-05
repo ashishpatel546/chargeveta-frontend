@@ -49,18 +49,27 @@ export function QuoteCard({ stationId }: { stationId: string }) {
   const currency = data.currency;
 
   return (
-    <Card size="sm">
+    <Card className="rounded-[22px]">
       <CardContent className="space-y-3 text-sm">
-        <div>
-          <p className="font-medium">Price</p>
+        <div className="space-y-1">
+          <p className="text-muted-foreground">Price</p>
+          {data.energyPricePerKwhMinor !== null ? (
+            <p>
+              <span className="readout text-[40px]">
+                {money(data.energyPricePerKwhMinor, currency)}
+              </span>
+              <span className="text-muted-foreground ml-1.5 text-base">per kWh</span>
+            </p>
+          ) : (
+            <p className="font-medium">No energy price</p>
+          )}
           <p className="text-muted-foreground">
-            {data.energyPricePerKwhMinor !== null
-              ? `${money(data.energyPricePerKwhMinor, currency)} per kWh`
-              : 'No energy price'}
             {data.sessionFeeMinor !== null
-              ? ` + ${money(data.sessionFeeMinor, currency)} per session`
+              ? `Plus ${money(data.sessionFeeMinor, currency)} per session`
               : ''}
-            {data.taxRatePercent !== '0' ? `, plus ${data.taxRatePercent}% GST` : ''}
+            {data.taxRatePercent !== '0'
+              ? `${data.sessionFeeMinor !== null ? ', plus' : 'Plus'} ${data.taxRatePercent}% GST`
+              : ''}
           </p>
         </div>
 

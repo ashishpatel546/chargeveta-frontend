@@ -69,8 +69,8 @@ export function SecretOnce({
   note?: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2 rounded-md border border-amber-600/40 bg-amber-600/5 p-3">
-      <p className="text-sm font-medium text-amber-700 dark:text-amber-500">
+    <div className="space-y-2 rounded-md border border-caution/40 bg-caution/5 p-3">
+      <p className="text-sm font-medium text-caution-ink">
         {title}
       </p>
       <p className="text-muted-foreground text-xs">

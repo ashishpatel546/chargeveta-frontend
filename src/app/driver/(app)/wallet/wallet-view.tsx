@@ -67,7 +67,7 @@ export function WalletView() {
       <WithdrawalsSection />
 
       <div className="mt-4 flex items-center justify-between">
-        <h2 className="text-sm font-medium">Recent activity</h2>
+        <h2 className="heading text-lg">Recent activity</h2>
         <Button
           variant="link"
           size="sm"
@@ -105,11 +105,11 @@ export function WalletView() {
 
 function BalanceCard({ wallet }: { wallet: WalletDto }) {
   return (
-    <Card size="sm">
-      <CardContent className="space-y-3">
-        <div>
-          <p className="text-muted-foreground text-xs">Balance</p>
-          <p className="text-2xl font-semibold">{money(wallet.balanceMinor, wallet.currency)}</p>
+    <Card className="rounded-[22px]">
+      <CardContent className="space-y-4">
+        <div className="space-y-1.5">
+          <p className="text-muted-foreground text-sm">Balance</p>
+          <p className="readout text-[48px]">{money(wallet.balanceMinor, wallet.currency)}</p>
           {wallet.enabled && wallet.debtMinor !== '0' ? (
             <p className="text-destructive text-xs">
               You owe {money(wallet.debtMinor, wallet.currency)} from an earlier session. A top-up
@@ -244,7 +244,7 @@ function EntryRow({ entry }: { entry: WalletEntryDto }) {
           </p>
         </div>
         <span
-          className={negative ? 'text-sm font-medium' : 'text-sm font-medium text-emerald-700 dark:text-emerald-400'}
+          className={negative ? 'text-sm font-medium' : 'text-sm font-medium text-ok-ink'}
         >
           {money(entry.amountMinor, entry.currency)}
         </span>

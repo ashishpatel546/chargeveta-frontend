@@ -88,7 +88,7 @@ export function FreeChargingReportPanel() {
 
       {report.isSuccess && report.data.sessions.length > 0 ? (
         <div className="space-y-6">
-          <div className="overflow-x-auto rounded-md border">
+          <div className="bg-card overflow-x-auto rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -121,7 +121,7 @@ export function FreeChargingReportPanel() {
             </Table>
           </div>
 
-          <div className="overflow-x-auto rounded-md border">
+          <div className="bg-card overflow-x-auto rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>

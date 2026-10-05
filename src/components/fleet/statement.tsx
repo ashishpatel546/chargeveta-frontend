@@ -151,7 +151,7 @@ function StatementDocument({ statement }: { statement: FleetStatement }) {
         <h1 className="text-2xl font-semibold tracking-tight">
           Statement for {monthName(statement.month)}
         </h1>
-        <p className="border-l-2 border-amber-500 pl-3 text-sm">
+        <p className="border-l-2 border-caution pl-3 text-sm">
           <strong>This is a statement, not a tax invoice.</strong> The tax
           documents are the receipts (R-) and credit notes (CN-) listed against
           each session, issued when it was charged. Amounts show the price
@@ -248,7 +248,7 @@ function StatementDocument({ statement }: { statement: FleetStatement }) {
 
           <section className="space-y-2">
             <h2 className="font-semibold">GST summary by rate</h2>
-            <div className="overflow-x-auto rounded-md border">
+            <div className="bg-card overflow-x-auto rounded-xl border">
               <Table className="text-xs">
                 <TableHeader>
                   <TableRow>
@@ -281,7 +281,7 @@ function StatementDocument({ statement }: { statement: FleetStatement }) {
           <section className="space-y-2">
             <h2 className="font-semibold">Totals for the month</h2>
             {statement.totals.map((total) => (
-              <div key={total.currency} className="overflow-x-auto rounded-md border">
+              <div key={total.currency} className="bg-card overflow-x-auto rounded-xl border">
                 <Table className="text-sm">
                   <TableHeader>
                     <TableRow>

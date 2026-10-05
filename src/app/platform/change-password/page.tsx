@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChangePasswordForm } from '@/components/change-password-form';
 import { Button } from '@/components/ui/button';
-import { config } from '@/lib/config';
 import {
   platformChangePasswordAction,
   platformSignOut,
 } from '@/lib/server/platform-auth';
 import { readPlatformAdmin } from '@/lib/server/platform-principal';
+import { AuthLayout } from '@/components/auth-layout';
 
 export const metadata: Metadata = { title: 'Change your password' };
 
@@ -21,18 +21,16 @@ export default async function PlatformChangePasswordPage() {
   const me = await readPlatformAdmin();
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {config.appName} platform
-        </h1>
+    <AuthLayout surface="platform">
+      <div className="space-y-2">
+        <h1 className="heading text-3xl">Change your password</h1>
         <p className="text-muted-foreground text-sm">
           Change the password for <strong>{me.email}</strong>. Anywhere else
           you are signed in is signed out; this browser stays signed in.
         </p>
       </div>
       {me.mustChangePassword ? (
-        <p className="border-l-2 border-amber-500 pl-3 text-sm text-amber-700 dark:text-amber-500">
+        <p className="border-l-2 border-caution pl-3 text-sm text-caution-ink">
           You are signed in with a temporary password. Choose your own before
           carrying on.
         </p>
@@ -55,6 +53,6 @@ export default async function PlatformChangePasswordPage() {
           </Button>
         </form>
       </div>
-    </main>
+    </AuthLayout>
   );
 }
