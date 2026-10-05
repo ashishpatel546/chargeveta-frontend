@@ -28,10 +28,10 @@ import { dateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const SEVERITY_TONE: Record<AppNotification['severity'], string> = {
-  info: 'border-sky-600/30 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+  info: 'border-primary/20 bg-primary/5 text-primary',
   warning:
-    'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-500',
-  critical: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
+    'border-caution/30 bg-caution/10 text-caution-ink',
+  critical: 'border-destructive/30 bg-destructive/10 text-destructive',
 };
 
 const KIND_LABEL: Record<NotificationKind, string> = {
@@ -126,7 +126,7 @@ export function NotificationsBoard() {
       ) : null}
 
       {rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>

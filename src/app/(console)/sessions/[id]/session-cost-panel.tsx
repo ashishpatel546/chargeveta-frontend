@@ -80,7 +80,7 @@ function CostBody({ cost }: { cost: TransactionCost }) {
             ) : (
               <Badge
                 variant="outline"
-                className="border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-500"
+                className="border-caution/30 bg-caution/10 text-caution-ink"
               >
                 not trusted
               </Badge>
@@ -150,7 +150,7 @@ function CostLines({ lines }: { lines: unknown[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>

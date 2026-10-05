@@ -7,9 +7,17 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --color-live: var(--current);
+  --color-live-foreground: var(--current-foreground);
+  --color-live-ink: var(--current-ink);
+  --color-caution: var(--caution);
+  --color-caution-ink: var(--caution-ink);
+  --color-ok: var(--ok);
+  --color-ok-ink: var(--ok-ink);
+  --color-ink: var(--ink);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,76 +56,105 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * "Ink & Current". A cool ink-and-paper interface with exactly one warm colour,
+ * sodium amber (`--current`), which means one thing only: energy is flowing
+ * right now (a running session, a charger delivering, a charge's progress).
+ * It is never a button, a link or brand chrome; if nothing is charging, a
+ * screen has no amber on it (Tailwind: `live`). `--ok` is a free charger,
+ * `--caution` wants a look, `--destructive` is a fault. The `-ink` variants are the text-safe (4.5:1) shades of each.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #f5f6fa;
+  --foreground: #141936;
+  --card: #ffffff;
+  --card-foreground: #141936;
+  --popover: #ffffff;
+  --popover-foreground: #141936;
+  --primary: #1a2150;
+  --primary-foreground: #ffffff;
+  --secondary: #eceef5;
+  --secondary-foreground: #1a2150;
+  --muted: #eceef5;
+  --muted-foreground: #5a6280;
+  --accent: #e9ebf4;
+  --accent-foreground: #1a2150;
+  --destructive: #d93b42;
+  --border: #e2e5ee;
+  --input: #d6dae6;
+  --ring: #4a56a6;
+  --current: #ffb020;
+  --current-foreground: #2a1c00;
+  --current-ink: #8a5600;
+  --ok: #1f9d6b;
+  --ok-ink: #13744e;
+  /* The light that travels round the sign-in box: indigo, never amber. */
+  --arc: #5b6cf0;
+  /* Wants a look, not broken: a redder orange than the sodium amber, so a
+     warning is never mistaken for a charge. */
+  --caution: #e2560f;
+  --caution-ink: #a83c06;
+  --ink: #1a2150;
   /* Categorical series colours, in a fixed order validated for colour-blind
      separation (blue, orange, aqua, yellow, magenta); dark mode has its own
      steps of the same hues below. Charts use them by slot, never by rank. */
-  --chart-1: #2a78d6;
+  --chart-1: #3d5bd9;
   --chart-2: #eb6834;
   --chart-3: #1baf7a;
   --chart-4: #eda100;
   --chart-5: #e87ba4;
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.75rem;
+  --sidebar: #1a2150;
+  --sidebar-foreground: #c3c8e4;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #1a2150;
+  --sidebar-accent: #2a3270;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 8%);
+  --sidebar-ring: #7c86c8;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: #3987e5;
+  --background: #0f1433;
+  --foreground: #eceef8;
+  --card: #161c42;
+  --card-foreground: #eceef8;
+  --popover: #1a2150;
+  --popover-foreground: #eceef8;
+  --primary: #e6e9f8;
+  --primary-foreground: #141936;
+  --secondary: #222a5a;
+  --secondary-foreground: #eceef8;
+  --muted: #1d2450;
+  --muted-foreground: #9ca3c8;
+  --accent: #242c60;
+  --accent-foreground: #eceef8;
+  --destructive: #f0646a;
+  --border: rgb(255 255 255 / 9%);
+  --input: rgb(255 255 255 / 14%);
+  --ring: #7c86c8;
+  --current: #ffb020;
+  --current-foreground: #2a1c00;
+  --current-ink: #ffc65a;
+  --ok: #2bb37f;
+  --ok-ink: #5fd3a2;
+  --arc: #9eacff;
+  --caution: #f2752f;
+  --caution-ink: #ff9d66;
+  --ink: #0b0f28;
+  --chart-1: #6f8cf2;
   --chart-2: #d95926;
   --chart-3: #199e70;
   --chart-4: #c98500;
   --chart-5: #d55181;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #0b0f28;
+  --sidebar-foreground: #a9afd2;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #0b0f28;
+  --sidebar-accent: #1d2450;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 7%);
+  --sidebar-ring: #7c86c8;
 }
 
 @layer base {
@@ -129,5 +166,166 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/*
+ * A live reading — kWh, ₹, kW, % — condensed and tabular, like a meter's
+ * dial. The one typographic signature of the app: labels stay small and
+ * quiet, the number carries the screen.
+ */
+@utility readout {
+  font-stretch: 75%;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+/* Headings run slightly narrow: the same voice as the readouts, quieter. */
+@utility heading {
+  font-stretch: 88%;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  :where(td, th, dd) {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * The one orchestrated entrance: a grid's children rise in turn on first
+ * paint (the dashboard's figures). Reduced motion collapses it via the rule
+ * above.
+ */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.stagger > * {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger > :nth-child(2) { animation-delay: 40ms; }
+.stagger > :nth-child(3) { animation-delay: 80ms; }
+.stagger > :nth-child(4) { animation-delay: 120ms; }
+.stagger > :nth-child(5) { animation-delay: 160ms; }
+.stagger > :nth-child(6) { animation-delay: 200ms; }
+.stagger > :nth-child(7) { animation-delay: 240ms; }
+.stagger > :nth-child(8) { animation-delay: 280ms; }
+.stagger > :nth-child(n + 9) { animation-delay: 320ms; }
+
+/*
+ * Touch-sized controls for the surfaces people use on a phone (the driver
+ * app, every sign-in page). `components/ui` stays shadcn's own dense
+ * defaults, which the console keeps; this only lifts them where it is put.
+ * Icon buttons keep their square size (`size-*` is their own class).
+ */
+/* Dialogs portal out of the tree, so they follow whatever surface opened them. */
+:where(.roomy, body:has(.roomy) [data-slot='dialog-content'])
+  :is([data-slot='input'], [data-slot='select-trigger']) {
+  height: 2.75rem;
+  padding-inline: 0.875rem;
+  font-size: 1rem;
+}
+:where(.roomy, body:has(.roomy) [data-slot='dialog-content'])
+  :is([data-slot='button'], [data-slot='dialog-trigger'], [data-slot='dialog-close']):not(
+    .size-6,
+    .size-7,
+    .size-8,
+    .size-9,
+    [class*='p-0']
+  ) {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  border-radius: 0.75rem;
+}
+.roomy [data-slot='tabs-list'] {
+  height: 2.75rem;
+}
+
+/* Tables: a quiet header row, so the data carries the weight. */
+[data-slot='table-header'] {
+  background: color-mix(in oklab, var(--muted) 55%, transparent);
+}
+[data-slot='table-head'] {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+/*
+ * `BorderBeam` (components/magicui/border-beam.tsx): a gradient head that
+ * travels the element's rounded edge on `offset-path`, seen only through a
+ * ring-shaped mask; `.beam-halo` is a blurred copy behind, for the glow.
+ */
+.beam-edge,
+.beam-halo {
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+}
+.beam-edge {
+  z-index: 2;
+  border: 2px solid transparent;
+  mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+}
+.beam-halo {
+  z-index: -1;
+  filter: blur(12px);
+  opacity: 0.7;
+}
+.beam-head {
+  position: absolute;
+  width: 160px;
+  aspect-ratio: 1;
+  offset-path: rect(0 auto auto 0 round var(--beam-radius));
+  background: linear-gradient(
+    to left,
+    var(--beam-color) 8%,
+    color-mix(in oklab, var(--beam-color) 55%, transparent) 40%,
+    transparent 85%
+  );
+  animation: beam-travel var(--beam-duration) linear infinite;
+}
+@keyframes beam-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .beam-head {
+    display: none;
+  }
+  .beam-edge {
+    border-color: color-mix(in oklab, var(--beam-color) 45%, transparent);
+    mask-image: none;
   }
 }

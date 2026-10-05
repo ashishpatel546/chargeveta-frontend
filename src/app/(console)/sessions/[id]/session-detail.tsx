@@ -63,7 +63,7 @@ export function SessionDetail({ id }: { id: string }) {
               {it.isOpen ? (
                 <Badge
                   variant="outline"
-                  className="border-sky-600/30 bg-sky-600/10 font-medium text-sky-700 dark:text-sky-400"
+                  className="border-live/50 bg-live/15 font-medium text-live-ink"
                 >
                   running
                 </Badge>

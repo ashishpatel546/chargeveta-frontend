@@ -136,19 +136,19 @@ export function WithdrawalsSection() {
 const STATUS: Record<string, { label: string; tone: string }> = {
   processing: {
     label: 'On its way',
-    tone: 'border-sky-600/30 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+    tone: 'border-primary/20 bg-primary/5 text-primary',
   },
   completed: {
     label: 'Sent',
-    tone: 'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+    tone: 'border-ok/30 bg-ok/10 text-ok-ink',
   },
   partially_returned: {
     label: 'Partly returned',
-    tone: 'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-400',
+    tone: 'border-caution/30 bg-caution/10 text-caution-ink',
   },
   returned: {
     label: 'Returned to wallet',
-    tone: 'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-400',
+    tone: 'border-caution/30 bg-caution/10 text-caution-ink',
   },
 };
 

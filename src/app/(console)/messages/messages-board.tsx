@@ -114,7 +114,7 @@ export function MessagesBoard() {
         <Empty>Nothing has been sent yet.</Empty>
       ) : null}
       {messages.isSuccess && messages.data.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -248,19 +248,19 @@ const CHANNEL_LABEL: Record<MessageChannel, string> = {
 const STATUS: Record<MessageStatus, { label: string; tone: string }> = {
   pending: {
     label: 'Waiting',
-    tone: 'border-sky-600/30 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+    tone: 'border-primary/20 bg-primary/5 text-primary',
   },
   sent: {
     label: 'Sent',
-    tone: 'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
+    tone: 'border-ok/30 bg-ok/10 text-ok-ink',
   },
   skipped: {
     label: 'Not sent',
-    tone: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400',
+    tone: 'border-border bg-muted text-muted-foreground',
   },
   failed: {
     label: 'Failed',
-    tone: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
+    tone: 'border-destructive/30 bg-destructive/10 text-destructive',
   },
 };
 

@@ -50,7 +50,7 @@ export function SessionReadings({ id }: { id: string }) {
           readings.
         </p>
       ) : null}
-      <div className="overflow-x-auto rounded-md border">
+      <div className="bg-card overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>

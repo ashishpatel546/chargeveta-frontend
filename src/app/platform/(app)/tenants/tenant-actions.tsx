@@ -107,7 +107,7 @@ function DisconnectCounts({ counts }: { counts: ChargerDisconnects }) {
         ))}
       </dl>
       {counts.failed > 0 ? (
-        <p className="border-l-2 border-amber-500 pl-3 text-sm text-amber-700 dark:text-amber-500">
+        <p className="border-l-2 border-caution pl-3 text-sm text-caution-ink">
           Some chargers could not be told to disconnect. They are still refused
           when they next connect, since the tenant is suspended.
         </p>
@@ -208,7 +208,7 @@ export function ModulesCell({ tenant }: { tenant: PlatformTenantListItem }) {
         <span
           className={
             fleetOn
-              ? 'font-medium text-emerald-700 dark:text-emerald-400'
+              ? 'font-medium text-ok-ink'
               : 'text-muted-foreground'
           }
         >

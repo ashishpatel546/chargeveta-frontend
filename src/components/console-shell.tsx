@@ -22,6 +22,7 @@ import {
   WalletIcon,
   WebhookIcon,
 } from 'lucide-react';
+import { Wordmark } from '@/components/brand';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { NotificationBell } from '@/components/notification-bell';
@@ -29,7 +30,6 @@ import { PrincipalMenu } from '@/components/principal-menu';
 import { PrincipalProvider } from '@/components/principal-context';
 import { RealtimeProvider } from '@/components/realtime-provider';
 import { atLeast, hasModule, type Principal, type Role } from '@/lib/api/types';
-import { config } from '@/lib/config';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -113,23 +113,26 @@ export function ConsoleShell({
     <PrincipalProvider principal={principal}>
     <RealtimeProvider>
       <div className="flex min-h-full flex-1">
-        <aside className="bg-sidebar hidden w-60 shrink-0 flex-col border-r md:flex print:hidden">
+        <aside className="bg-sidebar text-sidebar-foreground sticky top-0 hidden h-dvh w-64 shrink-0 flex-col lg:flex print:hidden">
           <Brand />
           <Nav principal={principal} />
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 print:hidden">
+          <header className="bg-background/80 sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b px-4 backdrop-blur-md md:px-6 lg:px-8 print:hidden">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger
                 render={
-                  <Button variant="ghost" size="icon" className="md:hidden" />
+                  <Button variant="ghost" size="icon" className="lg:hidden" />
                 }
               >
                 <MenuIcon className="size-5" />
                 <span className="sr-only">Menu</span>
               </SheetTrigger>
-              <SheetContent side="left" className="w-60 p-0">
+              <SheetContent
+                side="left"
+                className="bg-sidebar text-sidebar-foreground w-72 border-none p-0"
+              >
                 <SheetTitle className="sr-only">Menu</SheetTitle>
                 <Brand />
                 <Nav
@@ -139,12 +142,15 @@ export function ConsoleShell({
               </SheetContent>
             </Sheet>
 
+            <Wordmark className="lg:hidden" />
             <div className="flex-1" />
             <NotificationBell />
             <PrincipalMenu principal={principal} />
           </header>
 
-          <main className="min-w-0 flex-1 p-4 md:p-6 print:p-0">{children}</main>
+          <main className="mx-auto w-full max-w-[1600px] min-w-0 flex-1 p-4 md:p-6 lg:p-8 print:p-0">
+            {children}
+          </main>
         </div>
       </div>
     </RealtimeProvider>
@@ -154,11 +160,8 @@ export function ConsoleShell({
 
 function Brand() {
   return (
-    <div className="flex h-14 items-center gap-2 border-b px-4 font-semibold">
-      <span aria-hidden className="text-lg">
-        ⚡
-      </span>
-      {config.appName}
+    <div className="flex h-16 shrink-0 items-center px-5 text-white">
+      <Wordmark inverted />
     </div>
   );
 }
@@ -173,7 +176,7 @@ function Nav({
   const pathname = usePathname();
 
   return (
-    <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+    <nav className="flex-1 space-y-5 overflow-y-auto px-3 pt-2 pb-6">
       {SECTIONS.map((section) => {
         const items = section.items.filter(
           (item) =>
@@ -183,7 +186,7 @@ function Nav({
         if (items.length === 0) return null;
         return (
           <div key={section.title} className="space-y-1">
-            <p className="text-muted-foreground px-2 text-xs font-medium uppercase">
+            <p className="text-sidebar-foreground/60 px-3 pb-1 text-xs font-medium">
               {section.title}
             </p>
             {items.map((item) => {
@@ -196,13 +199,13 @@ function Nav({
                   onClick={onNavigate}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
+                    'focus-visible:ring-sidebar-ring flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors outline-none focus-visible:ring-2',
                     active
-                      ? 'bg-accent text-accent-foreground font-medium'
-                      : 'text-muted-foreground hover:bg-accent/50',
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : 'hover:bg-sidebar-accent/50 hover:text-white',
                   )}
                 >
-                  <item.icon className="size-4" />
+                  <item.icon className="size-4 opacity-80" />
                   {item.label}
                 </Link>
               );

@@ -164,7 +164,7 @@ export function StationDetail({ identity }: { identity: string }) {
         description={[doc.address, doc.city].filter(Boolean).join(', ') || doc.identity}
       />
 
-      <div className="space-y-4">
+      <div className="max-w-2xl space-y-4">
         <Card size="sm">
           <CardContent className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Status</span>
@@ -172,7 +172,7 @@ export function StationDetail({ identity }: { identity: string }) {
               variant="outline"
               className={
                 doc.online
-                  ? 'border-emerald-600/30 bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400'
+                  ? 'border-ok/30 bg-ok/10 font-medium text-ok-ink'
                   : 'text-muted-foreground'
               }
             >

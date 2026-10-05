@@ -91,7 +91,7 @@ export function StationDetail({ stationId }: { stationId: string }) {
       </dl>
 
       {station.data.quarantinedAt ? (
-        <p className="border-destructive text-destructive mb-6 rounded-md border-l-2 bg-red-500/5 p-3 text-sm">
+        <p className="border-destructive text-destructive mb-6 rounded-md border-l-2 bg-destructive/5 p-3 text-sm">
           This charger is quarantined: the system refuses its connection and
           drops anything it sends.{' '}
           {station.data.quarantineReason

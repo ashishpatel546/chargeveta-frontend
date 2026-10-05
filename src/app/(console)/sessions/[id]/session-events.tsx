@@ -42,7 +42,7 @@ export function SessionEvents({ id }: { id: string }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>

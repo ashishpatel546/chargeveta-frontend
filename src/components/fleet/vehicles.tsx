@@ -52,7 +52,7 @@ export function VehiclesTable({
 }) {
   const names = new Map(members.map((m) => [m.driverId, memberName(m)]));
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>

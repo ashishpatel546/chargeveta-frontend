@@ -65,7 +65,7 @@ export function AttentionBoard() {
         <Empty>Nothing needs attention. Every driver payment is on track.</Empty>
       ) : null}
       {attention.isSuccess && attention.data.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -156,10 +156,10 @@ export function AttentionBoard() {
 }
 
 const REFUND_TONE: Record<PaymentRefund['status'], string> = {
-  pending: 'border-sky-600/30 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+  pending: 'border-primary/20 bg-primary/5 text-primary',
   processed:
-    'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
-  failed: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
+    'border-ok/30 bg-ok/10 text-ok-ink',
+  failed: 'border-destructive/30 bg-destructive/10 text-destructive',
 };
 
 function RefundLine({

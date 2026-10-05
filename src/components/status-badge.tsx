@@ -10,11 +10,11 @@ import { cn } from '@/lib/utils';
  * free, blue is working, red wants attention.
  */
 const CONNECTOR_TONE: Record<ConnectorStatus, string> = {
-  Available: 'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
-  Occupied: 'border-sky-600/30 bg-sky-600/10 text-sky-700 dark:text-sky-400',
+  Available: 'border-ok/30 bg-ok/10 text-ok-ink',
+  Occupied: 'border-live/50 bg-live/15 text-live-ink',
   Reserved: 'border-violet-600/30 bg-violet-600/10 text-violet-700 dark:text-violet-400',
-  Unavailable: 'border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400',
-  Faulted: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
+  Unavailable: 'border-border bg-muted text-muted-foreground',
+  Faulted: 'border-destructive/30 bg-destructive/10 text-destructive',
 };
 
 export function ConnectorBadge({ status }: { status: ConnectorStatus }) {
@@ -64,7 +64,7 @@ export function LiveBadge({ lastSeenAt }: { lastSeenAt: string | null }) {
     return (
       <Badge
         variant="outline"
-        className="border-emerald-600/30 bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400"
+        className="border-ok/30 bg-ok/10 font-medium text-ok-ink"
       >
         online
       </Badge>
@@ -73,7 +73,7 @@ export function LiveBadge({ lastSeenAt }: { lastSeenAt: string | null }) {
   return (
     <Badge
       variant="outline"
-      className="border-amber-600/30 bg-amber-600/10 font-medium text-amber-700 dark:text-amber-500"
+      className="border-caution/30 bg-caution/10 font-medium text-caution-ink"
     >
       not heard from
     </Badge>
@@ -89,8 +89,8 @@ export function OutcomeBadge({ outcome }: { outcome: string }) {
       className={cn(
         'font-medium',
         good
-          ? 'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400'
-          : 'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-500',
+          ? 'border-ok/30 bg-ok/10 text-ok-ink'
+          : 'border-caution/30 bg-caution/10 text-caution-ink',
       )}
     >
       {outcome.replace(/_/g, ' ')}

@@ -18,7 +18,7 @@ export function AdminSetupLink({
 }) {
   return (
     <div className="space-y-3">
-      <p className="border-l-2 border-amber-500 pl-3 text-sm text-amber-700 dark:text-amber-500">
+      <p className="border-l-2 border-caution pl-3 text-sm text-caution-ink">
         Nothing has been emailed. Send <strong>{email}</strong> the{' '}
         {link.setupUrl ? 'link' : 'token'} below yourself, over something you
         trust.

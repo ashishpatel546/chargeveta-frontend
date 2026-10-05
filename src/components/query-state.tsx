@@ -1,5 +1,6 @@
 'use client';
 
+import { InboxIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api/client';
@@ -12,7 +13,7 @@ export function Loading({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-2" aria-busy>
       {Array.from({ length: rows }, (_, index) => (
-        <Skeleton key={index} className="h-10 w-full" />
+        <Skeleton key={index} className="h-12 w-full rounded-xl" />
       ))}
     </div>
   );
@@ -37,8 +38,11 @@ export function Failed({ error }: { error: unknown }) {
 
 export function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-muted-foreground rounded-md border border-dashed p-8 text-center text-sm">
-      {children}
-    </p>
+    <div className="bg-card/60 text-muted-foreground flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-10 text-center text-sm">
+      <span aria-hidden className="bg-muted grid size-10 place-items-center rounded-xl">
+        <InboxIcon className="size-5" />
+      </span>
+      <p className="max-w-[44ch] text-pretty">{children}</p>
+    </div>
   );
 }

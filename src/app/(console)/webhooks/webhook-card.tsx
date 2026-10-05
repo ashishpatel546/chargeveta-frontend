@@ -45,9 +45,9 @@ import { cn } from '@/lib/utils';
 
 const DELIVERY_TONE: Record<WebhookDelivery['status'], string> = {
   delivered:
-    'border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
-  pending: 'border-amber-600/30 bg-amber-600/10 text-amber-700 dark:text-amber-500',
-  failed: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-400',
+    'border-ok/30 bg-ok/10 text-ok-ink',
+  pending: 'border-caution/30 bg-caution/10 text-caution-ink',
+  failed: 'border-destructive/30 bg-destructive/10 text-destructive',
 };
 
 export function WebhookCard({ endpoint }: { endpoint: WebhookEndpoint }) {
@@ -112,7 +112,7 @@ export function WebhookCard({ endpoint }: { endpoint: WebhookEndpoint }) {
           {endpoint.isActive ? (
             <Badge
               variant="outline"
-              className="border-emerald-600/30 bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400"
+              className="border-ok/30 bg-ok/10 font-medium text-ok-ink"
             >
               active
             </Badge>
@@ -309,7 +309,7 @@ function DeliveriesDialog({
         ) : null}
 
         {deliveries.isSuccess && deliveries.data.length > 0 ? (
-          <div className="max-h-96 overflow-auto rounded-md border">
+          <div className="bg-card max-h-96 overflow-auto rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>

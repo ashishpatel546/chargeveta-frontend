@@ -85,7 +85,7 @@ function ConnectorStatusHistory({ stationId }: { stationId: string }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -145,7 +145,7 @@ function Boots({ stationId }: { stationId: string }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -217,7 +217,7 @@ function Connections({ stationId }: { stationId: string }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -377,7 +377,7 @@ function DeviceEvents({ stationId }: { stationId: string }) {
       ) : null}
 
       {events.isSuccess && events.data.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>

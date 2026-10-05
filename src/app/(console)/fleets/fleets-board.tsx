@@ -61,7 +61,7 @@ export function FleetsBoard() {
         <Empty>No fleets yet.</Empty>
       ) : null}
       {fleets.isSuccess && fleets.data.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>

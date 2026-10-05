@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { RedeemLinkForm } from './redeem-link-form';
 import { RequestLinkForm } from './request-link-form';
-import { config } from '@/lib/config';
+import { AuthLayout } from '@/components/auth-layout';
 
 export const metadata: Metadata = { title: 'Sign in with a link' };
 
@@ -26,11 +26,9 @@ export default async function DriverLinkPage({
   const linkToken = typeof token === 'string' ? token : '';
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {config.appName}
-        </h1>
+    <AuthLayout surface="driver">
+      <div className="space-y-2">
+        <h1 className="heading text-3xl">Sign in with a link</h1>
         <p className="text-muted-foreground text-sm">
           {linkToken
             ? 'Continue to sign in with this link.'
@@ -38,6 +36,6 @@ export default async function DriverLinkPage({
         </p>
       </div>
       {linkToken ? <RedeemLinkForm token={linkToken} /> : <RequestLinkForm />}
-    </main>
+    </AuthLayout>
   );
 }

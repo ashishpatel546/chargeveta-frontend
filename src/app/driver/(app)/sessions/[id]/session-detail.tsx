@@ -75,7 +75,7 @@ export function SessionDetail({ id }: { id: string }) {
         {usedUp ? (
           <div
             role="status"
-            className="rounded-lg border border-amber-600/30 bg-amber-600/10 p-3 text-sm text-amber-800 dark:text-amber-300"
+            className="rounded-lg border border-caution/30 bg-caution/10 p-3 text-sm text-caution-ink"
           >
             {running ? `Stopping: ${usedUp}.` : `Stopped: ${usedUp}.`}
           </div>
@@ -89,7 +89,7 @@ export function SessionDetail({ id }: { id: string }) {
               {running ? (
                 <Badge
                   variant="outline"
-                  className="border-sky-600/30 bg-sky-600/10 font-medium text-sky-700 dark:text-sky-400"
+                  className="border-live/50 bg-live/15 font-medium text-live-ink"
                 >
                   running
                 </Badge>

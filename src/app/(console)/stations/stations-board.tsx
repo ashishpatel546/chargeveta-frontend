@@ -89,7 +89,7 @@ export function StationsBoard() {
       ) : null}
 
       {stations.isSuccess && rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -136,7 +136,7 @@ export function StationsBoard() {
                       <Badge variant="outline">disabled</Badge>
                     ) : null}
                     {!station.hasCredential ? (
-                      <Badge variant="outline" className="text-amber-600">
+                      <Badge variant="outline" className="text-caution-ink">
                         no password
                       </Badge>
                     ) : null}

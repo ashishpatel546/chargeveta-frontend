@@ -134,7 +134,7 @@ function StationRow({ station }: { station: DriverStationDto }) {
                 variant="outline"
                 className={
                   station.online
-                    ? 'border-emerald-600/30 bg-emerald-600/10 font-medium text-emerald-700 dark:text-emerald-400'
+                    ? 'border-ok/30 bg-ok/10 font-medium text-ok-ink'
                     : 'text-muted-foreground'
                 }
               >

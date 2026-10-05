@@ -121,13 +121,13 @@ export function NotificationsCard() {
             Push is not configured on this installation.
           </p>
         ) : permission === 'denied' ? (
-          <p className="text-amber-700 dark:text-amber-500">
+          <p className="text-caution-ink">
             This browser is blocking notifications. Allow them in the site
             settings (the icon beside the address), then reload.
           </p>
         ) : on ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-emerald-700 dark:text-emerald-500">
+            <span className="text-ok-ink">
               On for this device.
             </span>
             <Button

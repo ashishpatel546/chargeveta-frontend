@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SetupForm } from './setup-form';
-import { config } from '@/lib/config';
+import { AuthLayout } from '@/components/auth-layout';
 
 export const metadata: Metadata = { title: 'Set your password' };
 
@@ -22,11 +22,9 @@ export default async function SetupPage({ searchParams }: PageProps<'/setup'>) {
   const setupToken = typeof token === 'string' ? token : '';
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {config.appName}
-        </h1>
+    <AuthLayout surface="console">
+      <div className="space-y-2">
+        <h1 className="heading text-3xl">Choose a password</h1>
         <p className="text-muted-foreground text-sm">
           Choose a password for your account. You will be signed in straight
           after.
@@ -36,7 +34,7 @@ export default async function SetupPage({ searchParams }: PageProps<'/setup'>) {
         <SetupForm setupToken={setupToken} />
       ) : (
         <div className="space-y-3 text-sm">
-          <p className="border-l-2 border-amber-500 pl-3 text-amber-700 dark:text-amber-500">
+          <p className="border-l-2 border-caution pl-3 text-caution-ink">
             This link is missing its token. Open it again from the email, or
             ask your administrator for a new one.
           </p>
@@ -47,6 +45,6 @@ export default async function SetupPage({ searchParams }: PageProps<'/setup'>) {
           </p>
         </div>
       )}
-    </main>
+    </AuthLayout>
   );
 }

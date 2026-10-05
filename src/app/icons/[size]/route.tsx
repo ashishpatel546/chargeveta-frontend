@@ -33,7 +33,7 @@ export async function GET(
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(180deg, #14b8a6, #0f766e)',
+          background: '#1a2150',
           borderRadius: size * 0.22,
         }}
       >

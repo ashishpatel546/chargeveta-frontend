@@ -3,6 +3,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Empty, Failed, Loading } from '@/components/driver-query-state';
+import { HistorySwitch } from '../sessions/history-switch';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,7 +29,8 @@ export function ReceiptsView() {
 
   return (
     <>
-      <PageHeader title="Receipts" />
+      <PageHeader title="History" />
+      <HistorySwitch />
 
       {receipts.isPending ? <Loading rows={3} /> : null}
       {receipts.isError ? <Failed error={receipts.error} /> : null}

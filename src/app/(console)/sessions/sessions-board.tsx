@@ -137,7 +137,7 @@ export function SessionsBoard() {
       ) : null}
 
       {sessions.isSuccess && rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-card overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -192,7 +192,7 @@ export function SessionsBoard() {
                     {session.isOpen ? (
                       <Badge
                         variant="outline"
-                        className="border-sky-600/30 bg-sky-600/10 font-medium text-sky-700 dark:text-sky-400"
+                        className="border-live/50 bg-live/15 font-medium text-live-ink"
                       >
                         running
                       </Badge>

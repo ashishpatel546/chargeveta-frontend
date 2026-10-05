@@ -9,6 +9,7 @@ import {
   SquarePlusIcon,
   XIcon,
 } from 'lucide-react';
+import { BrandMark } from '@/components/brand';
 import { Button } from '@/components/ui/button';
 import { config } from '@/lib/config';
 import { cn } from '@/lib/utils';
@@ -160,12 +161,7 @@ export function InstallBanner() {
         </Button>
 
         <div className="flex items-start gap-3">
-          <span
-            aria-hidden
-            className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-lg text-xl"
-          >
-            ⚡
-          </span>
+          <BrandMark className="size-10 rounded-xl" />
           <div className="min-w-0 flex-1">
             <p id="install-banner-title" className="font-semibold">
               Install {config.appName}
