@@ -52,6 +52,7 @@ export function StationSettingsPanel({ station }: { station: Station }) {
         <Ocpp21Pricing station={station} />
       ) : null}
       <Credential station={station} />
+      <ConnectionSecurity station={station} />
       <Quarantine station={station} />
       <Removal station={station} />
     </div>
@@ -322,6 +323,98 @@ function Credential({ station }: { station: Station }) {
           disabled={password.length < 20 || save.isPending}
         >
           {save.isPending ? 'Saving…' : 'Set password'}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+const SECURITY_PROFILES: Record<number, { label: string; help: string }> = {
+  0: {
+    label: "Profile 0: no password",
+    help: "For development only. Refused in production.",
+  },
+  1: {
+    label: "Profile 1: password, without TLS (ws://)",
+    help: "For an older charger that cannot do TLS. The password crosses the network unencrypted, so use it only when the charger leaves no choice.",
+  },
+  2: {
+    label: "Profile 2: password over TLS (wss://)",
+    help: "The default. The charger connects to wss:// and sends its password inside the encrypted connection. A plain ws:// connection is refused.",
+  },
+  3: {
+    label: "Profile 3: client certificate (mutual TLS)",
+    help: "The charger proves itself with its own certificate, pinned by its fingerprint instead of a password.",
+  },
+};
+
+/**
+ * How the charger must connect (OCPP security profile). Profiles 1 and 2 are
+ * the ones an operator picks between; 0 and 3 are shown only when a charger
+ * already has one, since 0 is refused in production and 3 also needs a pinned
+ * client certificate set through the API.
+ */
+function ConnectionSecurity({ station }: { station: Station }) {
+  const [profile, setProfile] = useState(String(station.securityProfile));
+  const queryClient = useQueryClient();
+
+  const save = useMutation({
+    mutationFn: () =>
+      apiSend<Station>("PATCH", `/stations/${station.id}`, {
+        securityProfile: Number(profile),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["station", station.id] });
+      toast.success("Saved. It applies the next time the charger connects.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const choices = [1, 2];
+  if (!choices.includes(station.securityProfile))
+    choices.push(station.securityProfile);
+  const items = choices
+    .sort((a, b) => a - b)
+    .map((p) => ({
+      value: String(p),
+      label: SECURITY_PROFILES[p]?.label ?? `Profile ${p}`,
+    }));
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Connection security</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="security-profile">Security profile</Label>
+          <Select
+            value={profile}
+            onValueChange={(value) => setProfile(value ?? profile)}
+            items={items}
+          >
+            <SelectTrigger id="security-profile" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {items.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground text-xs">
+            {SECURITY_PROFILES[Number(profile)]?.help}
+          </p>
+        </div>
+        <Button
+          onClick={() => save.mutate()}
+          disabled={
+            profile === String(station.securityProfile) || save.isPending
+          }
+        >
+          {save.isPending ? "Saving…" : "Save"}
         </Button>
       </CardContent>
     </Card>
