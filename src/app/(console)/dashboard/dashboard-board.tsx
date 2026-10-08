@@ -234,7 +234,7 @@ export function DashboardBoard() {
             site’s own.
           </p>
 
-          <div className="stagger grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+          <div className="stagger grid grid-cols-2 gap-3 xl:grid-cols-4">
             <ChargingNowCard count={data.kpis.activeNow} />
             <KpiCard label="Sessions" kpi={data.kpis.sessions} format={count} />
             <KpiCard label="Energy" kpi={data.kpis.energyWh} format={kwh} />
@@ -256,56 +256,83 @@ export function DashboardBoard() {
                 />
               ))
             )}
-            <KpiCard
-              label="Average session"
-              kpi={data.kpis.averageDurationMinutes}
-              format={minutes}
-              better="neutral"
-            />
-            <KpiCard
-              label="Average energy per session"
-              kpi={data.kpis.averageEnergyWh}
-              format={kwh}
-              better="neutral"
-            />
-            <KpiCard
-              label="Drivers"
-              kpi={data.kpis.uniqueDrivers}
-              format={count}
-              hint={`${count(data.kpis.uniqueIdTokens.current)} distinct cards and app tokens`}
-            />
-            <KpiCard
-              label="Availability"
-              kpi={data.kpis.availability}
-              format={ratio}
-              hint={`Seen ${ratio(data.kpis.coverage.current)} of connector time`}
-            />
-            <KpiCard
-              label="Utilisation"
-              kpi={data.kpis.utilisation}
-              format={ratio}
-              hint="Session time ÷ connector up time"
-            />
-            <KpiCard
-              label="Unpriced sessions"
-              kpi={data.kpis.unpricedSessions}
-              format={count}
-              better="down"
-            />
-            <KpiCard
-              label="Billed on our clock"
-              kpi={data.kpis.untrustedClockSessions}
-              format={count}
-              better="down"
-              hint="The charger’s clock was not trusted"
-            />
-            <KpiCard
-              label="Refused card taps"
-              kpi={data.kpis.refusedAuthorizations}
-              format={count}
-              better="down"
-            />
           </div>
+
+          <section aria-labelledby="kpi-use" className="space-y-2">
+            <h2 id="kpi-use" className="heading text-sm">
+              How your network is used
+            </h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+              <KpiCard
+                compact
+                label="Average session"
+                kpi={data.kpis.averageDurationMinutes}
+                format={minutes}
+                better="neutral"
+              />
+              <KpiCard
+                compact
+                label="Average energy per session"
+                kpi={data.kpis.averageEnergyWh}
+                format={kwh}
+                better="neutral"
+              />
+              <KpiCard
+                compact
+                label="Drivers"
+                kpi={data.kpis.uniqueDrivers}
+                format={count}
+                hint={`${count(data.kpis.uniqueIdTokens.current)} distinct cards and app tokens`}
+              />
+              <KpiCard
+                compact
+                label="Availability"
+                kpi={data.kpis.availability}
+                format={ratio}
+                hint={`Seen ${ratio(data.kpis.coverage.current)} of connector time`}
+              />
+              <KpiCard
+                compact
+                label="Utilisation"
+                kpi={data.kpis.utilisation}
+                format={ratio}
+                hint="Session time ÷ connector up time"
+              />
+            </div>
+          </section>
+
+          <section aria-labelledby="kpi-attention" className="space-y-2">
+            <h2 id="kpi-attention" className="heading text-sm">
+              Needs a look
+            </h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              <KpiCard
+                compact
+                label="Unpriced sessions"
+                kpi={data.kpis.unpricedSessions}
+                format={count}
+                better="down"
+                href={`/sessions?flagged=true&from=${data.from}&to=${data.to}`}
+              />
+              <KpiCard
+                compact
+                label="Billed on our clock"
+                kpi={data.kpis.untrustedClockSessions}
+                format={count}
+                better="down"
+                hint="The charger’s clock was not trusted"
+                href={`/sessions?flagged=true&from=${data.from}&to=${data.to}`}
+              />
+              <KpiCard
+                compact
+                label="Refused card taps"
+                kpi={data.kpis.refusedAuthorizations}
+                format={count}
+                better="down"
+                href="/cards/reads"
+              />
+            </div>
+          </section>
 
           <div className="flex flex-wrap items-center gap-3">
             <Segmented<Metric>

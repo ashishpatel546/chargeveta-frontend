@@ -20,15 +20,21 @@ export function FilterSelect({
   onChange,
   items,
   label,
+  className = 'w-56',
 }: {
   value: string;
   onChange: (value: string) => void;
   items: { value: string; label: string }[];
   label: string;
+  className?: string;
 }) {
   return (
-    <Select value={value} onValueChange={(next) => onChange(next ?? ALL)} items={items}>
-      <SelectTrigger className="w-56" aria-label={label}>
+    <Select
+      value={value}
+      onValueChange={(next) => onChange(next ?? ALL)}
+      items={items}
+    >
+      <SelectTrigger className={className} aria-label={label}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

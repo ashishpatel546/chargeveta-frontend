@@ -1,4 +1,10 @@
-import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from 'lucide-react';
+import {
+  ArrowDownRightIcon,
+  ArrowUpRightIcon,
+  ChevronRightIcon,
+  MinusIcon,
+} from 'lucide-react';
+import Link from 'next/link';
 import { Readout } from '@/components/readout';
 import { LiveBeam } from '@/components/magicui/live-beam';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +29,8 @@ export function KpiCard({
   format,
   better = 'up',
   hint,
+  compact = false,
+  href,
 }: {
   label: string;
   kpi: Kpi;
@@ -31,18 +39,49 @@ export function KpiCard({
   better?: Better;
   /** A line under the figure, such as what it is measured against. */
   hint?: string;
+  /** A supporting figure: smaller, so the headline row carries the screen. */
+  compact?: boolean;
+  /** Where the rows behind the figure are, when there is such a list. */
+  href?: string;
 }) {
-  return (
-    <Card size="sm" className="h-full">
+  const card = (
+    <Card
+      size="sm"
+      className={cn(
+        'h-full',
+        href && 'group-hover:ring-ring/40 transition-shadow',
+      )}
+    >
       <CardContent className="space-y-1.5">
-        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
+          {label}
+          {href ? (
+            <ChevronRightIcon
+              aria-hidden
+              className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100"
+            />
+          ) : null}
+        </p>
         <p className="truncate">
-          <Readout value={format(kpi.current)} className="text-[34px]" />
+          <Readout
+            value={format(kpi.current)}
+            className={compact ? 'text-2xl' : 'text-[40px]'}
+          />
         </p>
         <Change kpi={kpi} format={format} better={better} />
         {hint ? <p className="text-muted-foreground text-xs">{hint}</p> : null}
       </CardContent>
     </Card>
+  );
+  return href ? (
+    <Link
+      href={href}
+      className="group block h-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+    >
+      {card}
+    </Link>
+  ) : (
+    card
   );
 }
 
@@ -112,7 +151,7 @@ export function ChargingNowCard({ count }: { count: number }) {
           ) : null}
           Charging now
         </p>
-        <p className={cn('readout text-[34px]', live && 'text-live')}>
+        <p className={cn('readout text-[40px]', live && 'text-live')}>
           {count.toLocaleString('en-IN')}
         </p>
         <p

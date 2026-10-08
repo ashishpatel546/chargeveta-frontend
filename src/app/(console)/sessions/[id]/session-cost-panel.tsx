@@ -3,12 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Empty, Failed, Loading } from '@/components/query-state';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -116,7 +111,7 @@ function CostBody({ cost }: { cost: TransactionCost }) {
         <p className="text-muted-foreground text-sm">{cost.unpricedDetail}</p>
       ) : null}
 
-      <CostLines lines={cost.lines} />
+      <CostLines lines={cost.lines} currency={cost.currency} />
     </>
   );
 }
@@ -128,12 +123,65 @@ function CostBody({ cost }: { cost: TransactionCost }) {
  * priced the session, so this renders the keys it finds rather than the keys it
  * expects — a line with a field this console has never seen still shows it.
  */
-function CostLines({ lines }: { lines: unknown[] }) {
+function CostLines({
+  lines,
+  currency,
+}: {
+  lines: unknown[];
+  currency?: string;
+}) {
   if (lines.length === 0) {
     return <p className="text-muted-foreground text-sm">No lines.</p>;
   }
 
   const rows = lines.filter(isPlainObject);
+  // The shape every tariff today writes: say it in words, and keep the raw
+  // fields one click away for whoever is checking the arithmetic.
+  if (rows.length === lines.length && rows.every(isPricedLine)) {
+    return (
+      <div className="space-y-2">
+        <div className="bg-card overflow-x-auto rounded-xl border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Charge</TableHead>
+                <TableHead className="text-right">Quantity</TableHead>
+                <TableHead className="text-right">Unit price</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell className="text-sm">
+                    {String(row.description)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm">
+                    {String(row.quantity)} {unitName(row.unit)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right text-sm">
+                    {money(String(row.unitPriceMinor), currency)} /{' '}
+                    {unitName(row.unit, true)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-medium">
+                    {money(String(row.amountMinor), currency)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <details className="text-sm">
+          <summary className="text-muted-foreground cursor-pointer">
+            Line details as stored
+          </summary>
+          <div className="mt-2">
+            <RawLines rows={rows} />
+          </div>
+        </details>
+      </div>
+    );
+  }
   if (rows.length !== lines.length) {
     return (
       <pre className="bg-muted overflow-x-auto rounded-md p-3 text-xs">
@@ -142,6 +190,11 @@ function CostLines({ lines }: { lines: unknown[] }) {
     );
   }
 
+  return <RawLines rows={rows} />;
+}
+
+/** Every key the lines carry, as columns — for a shape this console does not know. */
+function RawLines({ rows }: { rows: Record<string, unknown>[] }) {
   const columns: string[] = [];
   for (const row of rows) {
     for (const key of Object.keys(row)) {
@@ -173,6 +226,22 @@ function CostLines({ lines }: { lines: unknown[] }) {
       </Table>
     </div>
   );
+}
+
+function isPricedLine(row: Record<string, unknown>): boolean {
+  return (
+    typeof row.description === 'string' &&
+    row.quantity !== undefined &&
+    typeof row.unit === 'string' &&
+    row.unitPriceMinor !== undefined &&
+    row.amountMinor !== undefined
+  );
+}
+
+/** `kWh`, `min`, `h` as a reader says them. */
+function unitName(unit: unknown, one = false): string {
+  if (unit === 'h') return one ? 'hour' : 'h';
+  return String(unit);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

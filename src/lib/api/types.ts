@@ -162,6 +162,33 @@ export interface Connector {
   updatedAt: string;
 }
 
+/** `GET /stations/board`: the charger list's live layer (`charveta` doc 6 §17). */
+export interface StationBoard {
+  summary: {
+    /** Open sessions on chargers heard from in the last 15 minutes. */
+    chargingNow: number;
+    faultedConnectors: number;
+    availableConnectors: number;
+    totalConnectors: number;
+    onlineStations: number;
+    offlineStations: number;
+    /** Wh since `since`, decimal text. */
+    energyWh: string;
+    since: string;
+  };
+  stations: { stationId: string; connectors: BoardConnector[] }[];
+}
+
+export interface BoardConnector {
+  evseNumber: number;
+  connectorNumber: number;
+  status: ConnectorStatus;
+  statusUpdatedAt: string | null;
+  connectorType: string | null;
+  /** A session with no recorded stop is on this connector. */
+  charging: boolean;
+}
+
 export interface Site {
   id: string;
   tenantId: string;
@@ -216,6 +243,18 @@ export interface Transaction {
    * §23), or null. On `GET /transactions/{id}` only, never on the list.
    */
   vehicle?: SessionVehicle | null;
+  /**
+   * The driver whose card started the session, when it was a driver's card
+   * then and still is (`charveta` doc 6 §22.3). On the list only.
+   */
+  driver?: TransactionDriver;
+}
+
+export interface TransactionDriver {
+  id: string;
+  name: string | null;
+  /** E.164, or null for a driver who signed up by email. */
+  phone: string | null;
 }
 
 /**
@@ -989,6 +1028,16 @@ export interface Reservation {
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;
+}
+
+/**
+ * A page asked for by number (`?page=`): `total` is counted up to the API's
+ * cap, and `totalCapped` says there are more than that.
+ */
+export interface NumberedPage<T> extends Page<T> {
+  page: number;
+  total: number;
+  totalCapped: boolean;
 }
 
 /** One refund asked of Razorpay (`charveta` doc 6 §22.4). */

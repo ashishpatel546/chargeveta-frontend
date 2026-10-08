@@ -294,10 +294,20 @@
   mask-clip: padding-box, border-box;
   mask-composite: intersect;
 }
+/*
+ * The glow, kept to a band along the edge: the mask applies after the blur,
+ * so the travelling head glows only where the border is instead of showing
+ * as a blurred square outside the element.
+ */
 .beam-halo {
   z-index: -1;
-  filter: blur(12px);
-  opacity: 0.7;
+  inset: -7px;
+  border: 8px solid transparent;
+  mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+  mask-clip: padding-box, border-box;
+  mask-composite: intersect;
+  filter: blur(6px);
+  opacity: 0.8;
 }
 .beam-head {
   position: absolute;
@@ -328,4 +338,90 @@
     border-color: color-mix(in oklab, var(--beam-color) 45%, transparent);
     mask-image: none;
   }
+}
+
+/*
+ * Site pins on the Sites map (`sites-map.tsx`): the number of chargers in a
+ * round badge. Amber only while something there is charging, green when a
+ * charger there is online, quiet otherwise.
+ */
+.site-pin-wrap {
+  background: none;
+  border: 0;
+}
+.site-pin {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 2px solid var(--card);
+  font: 600 13px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--foreground) 25%, transparent);
+}
+.site-pin--quiet {
+  background: var(--muted-foreground);
+  color: var(--card);
+}
+.site-pin--online {
+  background: var(--ok);
+  color: #fff;
+}
+.site-pin--charging {
+  background: var(--current);
+  color: var(--current-foreground);
+  box-shadow:
+    0 0 0 6px color-mix(in oklab, var(--current) 30%, transparent),
+    0 2px 8px color-mix(in oklab, var(--foreground) 25%, transparent);
+}
+.sites-map.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--muted);
+}
+/* OpenStreetMap's tiles are loud; muted, the pins carry the map. */
+.sites-map .leaflet-tile-pane {
+  filter: saturate(0.45) contrast(0.95);
+}
+/* The same tiles, dimmed and inverted to sit in dark mode. */
+.dark .sites-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9)
+    saturate(0.5);
+}
+/* Doubled class: leaflet.css loads after this file and would win a tie. */
+.sites-map .leaflet-popup-content-wrapper,
+.sites-map .leaflet-popup-tip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 6px 24px color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+.sites-map .leaflet-popup-content {
+  margin: 12px 14px;
+}
+.sites-map .leaflet-control-zoom a,
+.sites-map .leaflet-control-attribution {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+.sites-map .leaflet-control-attribution a {
+  color: var(--muted-foreground);
+}
+.site-pop {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+}
+.site-pop span {
+  color: var(--muted-foreground);
+}
+.site-pop a {
+  margin-top: 6px;
+  color: var(--primary);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dark .site-pop a {
+  color: var(--foreground);
 }
