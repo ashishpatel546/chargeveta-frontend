@@ -1,5 +1,6 @@
 'use client';
 
+import { FilterCombobox } from '@/components/filter-combobox';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -7,13 +8,6 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { apiGet } from '@/lib/api/client';
 import type { Station } from '@/lib/api/types';
 import {
@@ -87,25 +81,25 @@ export function ReadsBoard() {
       >
         <div className="space-y-2">
           <Label htmlFor="token-mode">Card</Label>
-          <Select
+          <FilterCombobox
+            id="token-mode"
             value={mode}
-            onValueChange={(value) => {
+            onChange={(value) => {
               // "Any card" and "could not be read" need nothing typed, so they
               // take effect at once; only a token has to be finished first.
-              const next = (value as TokenMode | null) ?? 'any';
+              const next = value as TokenMode;
               setMode(next);
               setApplied({ mode: next, token: draft.trim() });
             }}
-          >
-            <SelectTrigger id="token-mode">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">Any card</SelectItem>
-              <SelectItem value="exact">This token</SelectItem>
-              <SelectItem value="unreadable">Could not be read</SelectItem>
-            </SelectContent>
-          </Select>
+            items={[
+              { value: 'any', label: 'Any card' },
+              { value: 'exact', label: 'This token' },
+              { value: 'unreadable', label: 'Could not be read' },
+            ]}
+            allValue="any"
+            label="Card"
+            className="w-48"
+          />
         </div>
 
         {mode === 'exact' ? (
@@ -124,41 +118,34 @@ export function ReadsBoard() {
 
         <div className="space-y-2">
           <Label htmlFor="station">Charger</Label>
-          <Select
+          <FilterCombobox
+            id="station"
             value={stationId}
-            onValueChange={(value) => setStationId(value ?? 'all')}
-          >
-            <SelectTrigger id="station">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Every charger</SelectItem>
-              {(stations.data ?? []).map((station) => (
-                <SelectItem key={station.id} value={station.id}>
-                  {station.identity}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={setStationId}
+            items={[
+              { value: 'all', label: 'Every charger' },
+              ...[...(stations.data ?? [])]
+                .sort((a, b) => a.identity.localeCompare(b.identity))
+                .map((station) => ({
+                  value: station.id,
+                  label: station.identity,
+                })),
+            ]}
+            label="Charger"
+            className="w-52"
+          />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="result">Result</Label>
-          <Select
+          <FilterCombobox
+            id="result"
             value={status}
-            onValueChange={(value) => setStatus(value ?? 'all')}
-          >
-            <SelectTrigger id="result">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DECISION_FILTERS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={setStatus}
+            items={DECISION_FILTERS}
+            label="Result"
+            className="w-48"
+          />
         </div>
 
         {mode === 'exact' ? (

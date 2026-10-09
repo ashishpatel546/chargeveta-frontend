@@ -1,5 +1,6 @@
 'use client';
 
+import { FilterCombobox } from '@/components/filter-combobox';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -8,13 +9,6 @@ import { Empty, Failed, Loading } from '@/components/query-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -72,40 +66,32 @@ export function MessagesBoard() {
       <TestSend />
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Select
+        <FilterCombobox
           value={channel}
-          onValueChange={(value) =>
-            setChannel((value as MessageChannel | 'all' | null) ?? 'all')
-          }
-        >
-          <SelectTrigger className="w-36" aria-label="Channel">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All channels</SelectItem>
-            <SelectItem value="email">Email</SelectItem>
-            <SelectItem value="sms">SMS</SelectItem>
-            <SelectItem value="whatsapp">WhatsApp</SelectItem>
-            <SelectItem value="push">Push</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
+          onChange={(value) => setChannel(value as MessageChannel | 'all')}
+          items={[
+            { value: 'all', label: 'All channels' },
+            { value: 'email', label: 'Email' },
+            { value: 'sms', label: 'SMS' },
+            { value: 'whatsapp', label: 'WhatsApp' },
+            { value: 'push', label: 'Push' },
+          ]}
+          label="Channel"
+          className="w-full sm:w-44"
+        />
+        <FilterCombobox
           value={status}
-          onValueChange={(value) =>
-            setStatus((value as MessageStatus | 'all' | null) ?? 'all')
-          }
-        >
-          <SelectTrigger className="w-36" aria-label="Status">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Any status</SelectItem>
-            <SelectItem value="pending">Waiting</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="skipped">Not sent</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
+          onChange={(value) => setStatus(value as MessageStatus | 'all')}
+          items={[
+            { value: 'all', label: 'Any status' },
+            { value: 'pending', label: 'Waiting' },
+            { value: 'sent', label: 'Sent' },
+            { value: 'skipped', label: 'Not sent' },
+            { value: 'failed', label: 'Failed' },
+          ]}
+          label="Status"
+          className="w-full sm:w-44"
+        />
       </div>
 
       {messages.isPending ? <Loading rows={5} /> : null}

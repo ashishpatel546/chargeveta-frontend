@@ -17,6 +17,8 @@ import { apiGet } from '@/lib/api/client';
 import type { Tariff } from '@/lib/api/types';
 import { dateTime } from '@/lib/format';
 import { CreateTariffDialog } from './create-tariff-dialog';
+import { TariffsInfo } from './pricing-info';
+import { RoundingInfo, roundingLabel } from './rounding-field';
 
 export function TariffsBoard() {
   const canAdmin = useCan('admin');
@@ -32,6 +34,7 @@ export function TariffsBoard() {
         title="Tariffs"
         description="What a session costs. A price change is a new version, so a session keeps the prices it was charged under."
       >
+        <TariffsInfo />
         {canAdmin ? <CreateTariffDialog /> : null}
       </PageHeader>
 
@@ -53,7 +56,12 @@ export function TariffsBoard() {
                 <TableHead>Currency</TableHead>
                 <TableHead>Version</TableHead>
                 <TableHead>In force from</TableHead>
-                <TableHead>Rounding</TableHead>
+                <TableHead>
+                  <span className="inline-flex items-center gap-1">
+                    Rounding
+                    <RoundingInfo />
+                  </span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -83,7 +91,7 @@ export function TariffsBoard() {
                     )}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {tariff.currentVersion?.rounding ?? '—'}
+                    {roundingLabel(tariff.currentVersion?.rounding)}
                   </TableCell>
                 </TableRow>
               ))}

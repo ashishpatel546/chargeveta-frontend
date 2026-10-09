@@ -39,8 +39,6 @@ import { downloadCsvVia } from '@/lib/download';
 import { dateTime, energy, money, span } from '@/lib/format';
 import { localDate, periodProblem } from '@/lib/period';
 
-const ALL_STATIONS = 'all';
-
 /** The API's export limit (`GET /transactions/export`), checked here first. */
 const EXPORT_MAX_DAYS = 31;
 
@@ -90,7 +88,7 @@ export function SessionsBoard() {
     () => ({
       from: weekStart(),
       to: localDate(new Date()),
-      station: ALL_STATIONS,
+      charger: '',
       by: 'ref',
       q: '',
       open: '',
@@ -130,6 +128,17 @@ export function SessionsBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settled]);
 
+  // The charger is typed too, not picked from a list that grows with the
+  // network; the API matches any part of its identity.
+  const [chargerText, setChargerText] = useState(state.charger);
+  const chargerSettled = useDebounced(chargerText.trim());
+  useEffect(() => {
+    if (chargerSettled !== state.charger)
+      update({ charger: chargerSettled, page: '1' });
+    // Only a settled change of the text should write the URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chargerSettled]);
+
   // "Running now" looks at every date: a session left open since last month
   // is exactly the one an operator is looking for.
   const problem = openOnly ? null : periodProblem(state.from, state.to);
@@ -148,7 +157,7 @@ export function SessionsBoard() {
   const filters = useMemo<Record<string, string | undefined>>(
     () => ({
       ...(period ?? {}),
-      ...(state.station === ALL_STATIONS ? {} : { stationId: state.station }),
+      ...(state.charger ? { charger: state.charger } : {}),
       ...(openOnly ? { open: 'true' } : {}),
       ...(flaggedOnly ? { costFlagged: 'true' } : {}),
       ...(state.q ? { [by]: state.q } : {}),
@@ -157,7 +166,7 @@ export function SessionsBoard() {
     }),
     [
       period,
-      state.station,
+      state.charger,
       openOnly,
       flaggedOnly,
       state.q,
@@ -193,13 +202,12 @@ export function SessionsBoard() {
       names.set(station.id, station.identity);
     return names;
   }, [stations.data]);
-  const stationItems = useMemo(
-    () => [
-      { value: ALL_STATIONS, label: 'Every charger' },
-      ...[...(stations.data ?? [])]
-        .sort((a, b) => a.identity.localeCompare(b.identity))
-        .map((station) => ({ value: station.id, label: station.identity })),
-    ],
+  // Suggestions while typing; the search itself is the API's.
+  const chargerSuggestions = useMemo(
+    () =>
+      [...(stations.data ?? [])]
+        .map((station) => station.identity)
+        .sort((a, b) => a.localeCompare(b)),
     [stations.data],
   );
 
@@ -226,11 +234,12 @@ export function SessionsBoard() {
   });
 
   const filtered =
-    state.station !== ALL_STATIONS || openOnly || flaggedOnly || state.q !== '';
+    state.charger !== '' || openOnly || flaggedOnly || state.q !== '';
   const reset = () => {
     setText('');
+    setChargerText('');
     update({
-      station: ALL_STATIONS,
+      charger: '',
       q: '',
       open: '',
       flagged: '',
@@ -294,28 +303,32 @@ export function SessionsBoard() {
           />
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="sessions-station" className="text-xs">
+        <div className="w-full space-y-1 md:w-auto">
+          <Label htmlFor="sessions-charger" className="text-xs">
             Charger
           </Label>
-          <Select
-            value={state.station}
-            onValueChange={(value) =>
-              update({ station: value ?? ALL_STATIONS, page: '1' })
-            }
-            items={stationItems}
-          >
-            <SelectTrigger id="sessions-station" className="min-w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {stationItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
+          <div className="relative">
+            <SearchIcon
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+              aria-hidden
+            />
+            <Input
+              id="sessions-charger"
+              type="search"
+              value={chargerText}
+              onChange={(event) => setChargerText(event.target.value)}
+              placeholder="Any charger, e.g. CP-001"
+              list="sessions-charger-options"
+              autoComplete="off"
+              className="w-full pl-8 md:w-52"
+              maxLength={48}
+            />
+            <datalist id="sessions-charger-options">
+              {chargerSuggestions.map((identity) => (
+                <option key={identity} value={identity} />
               ))}
-            </SelectContent>
-          </Select>
+            </datalist>
+          </div>
         </div>
 
         <div className="w-full space-y-1 md:w-auto">

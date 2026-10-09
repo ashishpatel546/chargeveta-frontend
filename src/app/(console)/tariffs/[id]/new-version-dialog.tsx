@@ -15,13 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { apiSend } from '@/lib/api/client';
 import type { Tariff, TariffVersion } from '@/lib/api/types';
 import { dateTime } from '@/lib/format';
@@ -32,6 +25,7 @@ import {
   type RoundingMode,
 } from '../definition';
 import { DefinitionEditor } from '../definition-editor';
+import { RoundingField } from '../rounding-field';
 
 /**
  * A price change, as a new version.
@@ -144,23 +138,11 @@ export function NewVersionDialog({
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="version-rounding">Rounding</Label>
-              <Select
-                value={rounding}
-                onValueChange={(value) =>
-                  setRounding((value as RoundingMode | null) ?? 'half_up')
-                }
-              >
-                <SelectTrigger id="version-rounding">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="half_up">half up</SelectItem>
-                  <SelectItem value="half_even">half even</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <RoundingField
+              id="version-rounding"
+              value={rounding}
+              onChange={setRounding}
+            />
           </div>
 
           <DefinitionEditor

@@ -1,17 +1,11 @@
 'use client';
 
+import { FilterCombobox } from '@/components/filter-combobox';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Empty, Failed, Loading } from '@/components/query-state';
 import { ConnectorBadge } from '@/components/status-badge';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -289,18 +283,13 @@ function Reports({ stationId }: { stationId: string }) {
 
   return (
     <div className="space-y-3">
-      <Select value={kind} onValueChange={(value) => setKind(value ?? 'all')}>
-        <SelectTrigger className="w-60">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {REPORT_KINDS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterCombobox
+        value={kind}
+        onChange={setKind}
+        items={REPORT_KINDS}
+        label="Report kind"
+        className="w-full sm:w-60"
+      />
 
       {reports.isPending ? <Loading rows={4} /> : null}
       {reports.isError ? <Failed error={reports.error} /> : null}
@@ -353,18 +342,16 @@ function DeviceEvents({ stationId }: { stationId: string }) {
 
   return (
     <div className="space-y-3">
-      <Select
+      <FilterCombobox
         value={openOnly}
-        onValueChange={(value) => setOpenOnly(value ?? 'all')}
-      >
-        <SelectTrigger className="w-60">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Every event</SelectItem>
-          <SelectItem value="open">What is wrong now</SelectItem>
-        </SelectContent>
-      </Select>
+        onChange={setOpenOnly}
+        items={[
+          { value: 'all', label: 'Every event' },
+          { value: 'open', label: 'What is wrong now' },
+        ]}
+        label="Events"
+        className="w-full sm:w-60"
+      />
 
       {events.isPending ? <Loading rows={4} /> : null}
       {events.isError ? <Failed error={events.error} /> : null}
