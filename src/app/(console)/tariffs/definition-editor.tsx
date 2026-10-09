@@ -14,6 +14,7 @@ import {
   toFormMode,
   toJsonMode,
 } from './definition';
+import { PricesInfo } from './pricing-info';
 
 /**
  * The parts of a tariff, as fields — with the raw JSON a switch away.
@@ -59,7 +60,10 @@ export function DefinitionEditor({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <Label>Prices</Label>
+        <div className="flex items-center gap-1">
+          <Label>Prices</Label>
+          <PricesInfo />
+        </div>
         <div className="flex gap-1">
           <Button
             type="button"

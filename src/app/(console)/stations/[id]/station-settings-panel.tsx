@@ -51,6 +51,7 @@ export function StationSettingsPanel({ station }: { station: Station }) {
       {station.ocppVersion === '2.1' ? (
         <Ocpp21Pricing station={station} />
       ) : null}
+      <LoadHardware station={station} />
       <Credential station={station} />
       <ConnectionSecurity station={station} />
       <Quarantine station={station} />
@@ -271,6 +272,137 @@ function Ocpp21Pricing({ station }: { station: Station }) {
         <Button
           onClick={() => save.mutate()}
           disabled={unchanged || save.isPending}
+        >
+          {save.isPending ? 'Saving…' : 'Save'}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+const UNIT_ITEMS = [
+  { value: 'A', label: 'Amps (most AC chargers)' },
+  { value: 'W', label: 'Watts (DC chargers)' },
+];
+const PHASE_ITEMS = [
+  { value: '3', label: 'Three-phase' },
+  { value: '1', label: 'Single-phase' },
+];
+
+/**
+ * What site load management must know of the charger (charveta doc 6 §24.4).
+ * Only used when its site has load management on, but set here because it is
+ * a fact about the hardware, not about the site.
+ */
+function LoadHardware({ station }: { station: Station }) {
+  const [ratingKw, setRatingKw] = useState(
+    station.maxPowerW === null ? '' : String(station.maxPowerW / 1000),
+  );
+  const [unit, setUnit] = useState<'A' | 'W'>(station.chargingRateUnit);
+  const [phases, setPhases] = useState<1 | 3>(station.supplyPhases);
+  const queryClient = useQueryClient();
+
+  const trimmed = ratingKw.trim();
+  const ratingW = trimmed === '' ? null : Math.round(Number(trimmed) * 1000);
+  const invalid =
+    ratingW !== null && (!Number.isFinite(ratingW) || ratingW < 1);
+
+  const save = useMutation({
+    mutationFn: () =>
+      apiSend<Station>('PATCH', `/stations/${station.id}`, {
+        maxPowerW: ratingW,
+        chargingRateUnit: unit,
+        supplyPhases: phases,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['station', station.id] });
+      toast.success('Saved');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const unchanged =
+    ratingW === station.maxPowerW &&
+    unit === station.chargingRateUnit &&
+    phases === station.supplyPhases;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Power and load management</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground text-sm">
+          Used when this charger’s site shares its power between sessions.
+        </p>
+        <div className="space-y-2">
+          <Label htmlFor="rating">Charger rating (kW)</Label>
+          <Input
+            id="rating"
+            value={ratingKw}
+            onChange={(event) => setRatingKw(event.target.value)}
+            placeholder="22"
+            inputMode="decimal"
+          />
+          <p className="text-muted-foreground text-xs">
+            The most the whole charger delivers. Its connectors share it: two
+            cars on a 22 kW dual-connector charger get 22 kW between them,
+            split evenly unless one needs less. Empty means as much as the
+            site allows.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="rate-unit">Limits in</Label>
+            <Select
+              value={unit}
+              items={UNIT_ITEMS}
+              onValueChange={(value) => setUnit(value === 'W' ? 'W' : 'A')}
+            >
+              <SelectTrigger id="rate-unit">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UNIT_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phases">Phases</Label>
+            <Select
+              value={String(phases)}
+              items={PHASE_ITEMS}
+              onValueChange={(value) => setPhases(value === '1' ? 1 : 3)}
+            >
+              <SelectTrigger id="phases">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PHASE_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Check the charger’s manual: many AC chargers accept a limit only in
+          amps, and refuse one in watts.
+        </p>
+        {invalid ? (
+          <p className="text-destructive text-xs">
+            The rating is a number of kilowatts above zero.
+          </p>
+        ) : null}
+        <Button
+          onClick={() => save.mutate()}
+          disabled={unchanged || invalid || save.isPending}
         >
           {save.isPending ? 'Saving…' : 'Save'}
         </Button>

@@ -355,7 +355,7 @@ export function StationsBoard() {
             onChange={(value) => update({ conn: value, page: '1' })}
             items={CONNECTOR_ITEMS}
             label="Connector"
-            className="w-full md:w-40"
+            className="w-full md:w-48"
           />
           <FilterSelect
             value={state.status}
@@ -369,14 +369,14 @@ export function StationsBoard() {
             onChange={(value) => update({ ocpp: value, page: '1' })}
             items={OCPP_ITEMS}
             label="OCPP version"
-            className="w-full md:w-44"
+            className="w-full md:w-52"
           />
           <FilterSelect
             value={state.flag}
             onChange={(value) => update({ flag: value, page: '1' })}
             items={FLAG_ITEMS}
             label="State"
-            className="w-full md:w-36"
+            className="w-full md:w-44"
           />
         </FilterDisclosure>
         {filtered ? (

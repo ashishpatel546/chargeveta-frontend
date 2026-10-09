@@ -15,6 +15,8 @@ import { apiGet } from '@/lib/api/client';
 import type { Tariff, TariffVersion } from '@/lib/api/types';
 import { dateTime } from '@/lib/format';
 import { DefinitionView, JsonBlock } from '../definition-view';
+import { TariffsInfo } from '../pricing-info';
+import { roundingLabel } from '../rounding-field';
 import { NewVersionDialog } from './new-version-dialog';
 import { RenameTariffDialog } from './rename-tariff-dialog';
 
@@ -52,6 +54,7 @@ export function TariffDetail({ id }: { id: string }) {
         title={tariff.data.name}
         description={`${tariff.data.currency} · ${versions.length} version${versions.length === 1 ? '' : 's'} · created ${dateTime(tariff.data.createdAt)}`}
       >
+        <TariffsInfo />
         {canAdmin ? (
           <>
             <RenameTariffDialog tariff={tariff.data} />
@@ -115,7 +118,9 @@ function VersionCard({
           {standing === 'superseded' ? (
             <Badge variant="outline">superseded</Badge>
           ) : null}
-          <Badge variant="outline">{version.rounding}</Badge>
+          <Badge variant="outline">
+            Rounding: {roundingLabel(version.rounding)}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

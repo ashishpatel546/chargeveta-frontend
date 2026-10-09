@@ -1,5 +1,6 @@
 'use client';
 
+import { FilterCombobox } from '@/components/filter-combobox';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { DownloadIcon } from 'lucide-react';
@@ -29,13 +30,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -158,80 +152,58 @@ export function FleetDashboardPanel({
           <Label htmlFor="fleet-dash-site" className="text-xs">
             Depot
           </Label>
-          <Select value={siteId} onValueChange={(value) => setSiteId(value ?? 'all')}>
-            <SelectTrigger id="fleet-dash-site" className="w-48">
-              <SelectValue>
-                {(value: string) =>
-                  value === 'all'
-                    ? 'Anywhere'
-                    : (depots.data?.find((d) => d.locationId === value)?.name ??
-                      'Depot')
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Anywhere</SelectItem>
-              {(depots.data ?? []).map((depot) => (
-                <SelectItem key={depot.locationId} value={depot.locationId}>
-                  {depot.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterCombobox
+            id="fleet-dash-site"
+            value={siteId}
+            onChange={setSiteId}
+            items={[
+              { value: 'all', label: 'Anywhere' },
+              ...(depots.data ?? []).map((depot) => ({
+                value: depot.locationId,
+                label: depot.name,
+              })),
+            ]}
+            label="Depot"
+            className="w-48"
+          />
         </div>
         <div className="space-y-1">
           <Label htmlFor="fleet-dash-driver" className="text-xs">
             Driver
           </Label>
-          <Select
+          <FilterCombobox
+            id="fleet-dash-driver"
             value={driverId}
-            onValueChange={(value) => setDriverId(value ?? 'all')}
-          >
-            <SelectTrigger id="fleet-dash-driver" className="w-48">
-              <SelectValue>
-                {(value: string) =>
-                  value === 'all'
-                    ? 'Every driver'
-                    : memberName(members.data?.find((m) => m.driverId === value))
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Every driver</SelectItem>
-              {(members.data ?? []).map((member) => (
-                <SelectItem key={member.driverId} value={member.driverId}>
-                  {memberName(member)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={setDriverId}
+            items={[
+              { value: 'all', label: 'Every driver' },
+              ...(members.data ?? []).map((member) => ({
+                value: member.driverId,
+                label: memberName(member),
+              })),
+            ]}
+            label="Driver"
+            className="w-48"
+          />
         </div>
         <div className="space-y-1">
           <Label htmlFor="fleet-dash-vehicle" className="text-xs">
             Vehicle
           </Label>
-          <Select
+          <FilterCombobox
+            id="fleet-dash-vehicle"
             value={vehicleId}
-            onValueChange={(value) => setVehicleId(value ?? 'all')}
-          >
-            <SelectTrigger id="fleet-dash-vehicle" className="w-48">
-              <SelectValue>
-                {(value: string) =>
-                  value === 'all'
-                    ? 'Every vehicle'
-                    : vehicleName(vehicles.data?.find((v) => v.id === value))
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Every vehicle</SelectItem>
-              {(vehicles.data ?? []).map((vehicle) => (
-                <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicleName(vehicle)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={setVehicleId}
+            items={[
+              { value: 'all', label: 'Every vehicle' },
+              ...(vehicles.data ?? []).map((vehicle) => ({
+                value: vehicle.id,
+                label: vehicleName(vehicle),
+              })),
+            ]}
+            label="Vehicle"
+            className="w-48"
+          />
         </div>
       </div>
 

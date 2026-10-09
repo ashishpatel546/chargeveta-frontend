@@ -54,7 +54,7 @@ export const COMMANDS: CommandSpec[] = [
     label: 'Start a session',
     needs: 'operator',
     description:
-      'Starts charging on the operator’s say-so. The card is judged here first: one that would be refused is refused without asking the charger.',
+      'Asks the charger to start charging for a card, as if it had been tapped there. The car should be plugged in. The card is checked first: one that would be refused is refused without asking the charger.',
     fields: [
       {
         name: 'token',
@@ -62,14 +62,18 @@ export const COMMANDS: CommandSpec[] = [
         type: 'text',
         required: true,
         placeholder: 'DEADBEEF',
-        help: 'The session is recorded against this card, and it is billed to it.',
+        help: 'The card number (ID token), as listed under Cards. The session is recorded against this card, and it is billed to it.',
       },
-      { ...EVSE_ID },
+      {
+        ...EVSE_ID,
+        help: 'Which charging point to start on. The charger picks the plug on it. Leave empty to let the charger choose.',
+      },
       {
         name: 'connectorId',
         label: 'Connector',
         type: 'number',
         versions: ['1.6'],
+        help: 'Which plug to start on (1, 2, …). Leave empty to let the charger choose.',
       },
     ],
   },

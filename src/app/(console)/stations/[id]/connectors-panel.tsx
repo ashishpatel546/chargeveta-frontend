@@ -11,8 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiGet, apiSend } from '@/lib/api/client';
-import type { Connector, Evse, Station } from '@/lib/api/types';
+import type { Connector, Evse, OcppVersion, Station } from '@/lib/api/types';
 import { since } from '@/lib/format';
+import { AddEvseInfo, ConnectorTypeInfo, EvsesInfo } from './connectors-info';
 
 /**
  * What a charger's connectors are doing.
@@ -41,6 +42,18 @@ export function ConnectorsPanel({ station }: { station: Station }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-muted-foreground max-w-[70ch] text-sm">
+          Each EVSE is one charging point that charges one car at a time; its
+          connectors are the plugs on it. The charger fills this in itself when
+          it connects.
+        </p>
+        <EvsesInfo
+          ocppVersion={station.ocppVersion}
+          text="EVSEs and connectors explained"
+        />
+      </div>
+
       {evses.data.length === 0 ? (
         <Empty>
           Nothing here yet. Connectors appear on their own the first time this
@@ -61,7 +74,9 @@ export function ConnectorsPanel({ station }: { station: Station }) {
         />
       ))}
 
-      {canAdmin ? <AddEvse stationId={station.id} /> : null}
+      {canAdmin ? (
+        <AddEvse stationId={station.id} ocppVersion={station.ocppVersion} />
+      ) : null}
     </div>
   );
 }
@@ -226,9 +241,12 @@ function ConnectorRow({
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`type-edit-${connector.id}`} className="text-xs">
-              Type
-            </Label>
+            <div className="flex items-center gap-1">
+              <Label htmlFor={`type-edit-${connector.id}`} className="text-xs">
+                Type
+              </Label>
+              <ConnectorTypeInfo />
+            </div>
             <Input
               id={`type-edit-${connector.id}`}
               value={connectorType}
@@ -260,7 +278,13 @@ function ConnectorRow({
   );
 }
 
-function AddEvse({ stationId }: { stationId: string }) {
+function AddEvse({
+  stationId,
+  ocppVersion,
+}: {
+  stationId: string;
+  ocppVersion: OcppVersion;
+}) {
   const [evseNumber, setEvseNumber] = useState('1');
   const queryClient = useQueryClient();
 
@@ -280,16 +304,19 @@ function AddEvse({ stationId }: { stationId: string }) {
 
   return (
     <form
-      className="flex items-end gap-2"
+      className="flex flex-wrap items-end gap-2"
       onSubmit={(event) => {
         event.preventDefault();
         add.mutate();
       }}
     >
       <div className="space-y-1">
-        <Label htmlFor="evseNumber" className="text-xs">
-          Add an EVSE
-        </Label>
+        <div className="flex items-center gap-1">
+          <Label htmlFor="evseNumber" className="text-xs">
+            Add an EVSE (number)
+          </Label>
+          <AddEvseInfo ocppVersion={ocppVersion} />
+        </div>
         <Input
           id="evseNumber"
           type="number"
@@ -303,6 +330,12 @@ function AddEvse({ stationId }: { stationId: string }) {
       <Button type="submit" variant="outline" disabled={add.isPending}>
         Add EVSE
       </Button>
+      <p className="text-muted-foreground w-full text-xs">
+        Only needed before the charger has connected.{' '}
+        {ocppVersion === '1.6'
+          ? 'This is an OCPP 1.6 charger: use EVSE 1 only and add every connector under it.'
+          : 'Add one EVSE per car it can charge at the same time, numbered from 1.'}
+      </p>
     </form>
   );
 }
@@ -358,9 +391,12 @@ function AddConnector({
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor={`type-${evseId}`} className="text-xs">
-          Type
-        </Label>
+        <div className="flex items-center gap-1">
+          <Label htmlFor={`type-${evseId}`} className="text-xs">
+            Type (optional)
+          </Label>
+          <ConnectorTypeInfo />
+        </div>
         <Input
           id={`type-${evseId}`}
           value={connectorType}
@@ -372,6 +408,11 @@ function AddConnector({
       <Button type="submit" variant="outline" disabled={add.isPending}>
         Add connector
       </Button>
+      <p className="text-muted-foreground w-full text-xs">
+        A plug on this EVSE, numbered from 1. On OCPP 1.6 all of a charger’s
+        connectors go on EVSE 1; on 2.x a second connector here means another
+        plug type on the same charging point, used one at a time.
+      </p>
     </form>
   );
 }

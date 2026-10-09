@@ -90,6 +90,14 @@ export interface Station {
    */
   ocpp21SendTariff: boolean;
   ocpp21SendTransactionLimit: boolean;
+  /**
+   * What site load management knows of the hardware (charveta doc 6 §24.4):
+   * its rating (null is "as much as the site allows"), whether it takes
+   * limits in amps or watts, and on how many phases it charges.
+   */
+  maxPowerW: number | null;
+  chargingRateUnit: 'A' | 'W';
+  supplyPhases: 1 | 3;
   lastSeenAt: string | null;
   /**
    * When and from where the station last connected. The address is the
@@ -205,6 +213,87 @@ export interface Site {
   gstStateCode: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** A site's load management (charveta doc 6 §24). */
+export interface LoadWindow {
+  /** `HH:MM` in the site's zone. */
+  from: string;
+  /** `HH:MM`; at or before `from` runs past midnight. */
+  to: string;
+  /** ISO weekdays the window starts on; absent is every day. */
+  days?: number[];
+  limitW: number;
+}
+
+export interface LoadPolicy {
+  locationId: string;
+  enabled: boolean;
+  capacityW: number;
+  strategy: 'equal' | 'fifo';
+  minCurrentA: number;
+  voltageV: number;
+  windows: LoadWindow[];
+  lastRunAt: string | null;
+  lastBudgetW: number | null;
+  lastError: string | null;
+  updatedAt: string;
+}
+
+/** Why a session got what it got. */
+export type LoadReason = 'shared' | 'capped' | 'held' | 'fixed' | 'underuse';
+
+export interface LoadSession {
+  transactionId: string;
+  transactionRef: string;
+  stationId: string;
+  stationIdentity: string;
+  evseNumber: number;
+  startedAt: string;
+  drawW: number | null;
+  /** The car's state of charge, when the charger reports one. */
+  socPercent: number | null;
+  targetW: number;
+  reason: LoadReason;
+  sentW: number | null;
+  sentLimit: number | null;
+  sentUnit: 'A' | 'W' | null;
+  sentAt: string | null;
+  expiresAt: string | null;
+  outcome: string | null;
+  detail: string | null;
+}
+
+export interface LoadStation {
+  id: string;
+  identity: string;
+  ocppVersion: OcppVersion;
+  online: boolean;
+  maxPowerW: number | null;
+  chargingRateUnit: 'A' | 'W';
+  supplyPhases: 1 | 3;
+  failsafe: {
+    evseNumber: number;
+    targetW: number;
+    sentW: number | null;
+    sentLimit: number | null;
+    sentUnit: 'A' | 'W' | null;
+    sentAt: string | null;
+    outcome: string | null;
+    detail: string | null;
+  }[];
+}
+
+export interface LoadStatus {
+  locationId: string;
+  policy: LoadPolicy | null;
+  budgetNowW: number | null;
+  windowNow: { from: string; to: string; limitW: number } | null;
+  failsafePerEvseW: number | null;
+  allocatedW: number;
+  drawW: number;
+  sessions: LoadSession[];
+  stations: LoadStation[];
 }
 
 export interface TransactionCostSummary {
@@ -897,6 +986,7 @@ export const TENANT_AUDIT_ACTIONS = [
   'location.create',
   'location.update',
   'location.delete',
+  'location.load-management',
   'webhook.create',
   'webhook.update',
   'webhook.delete',

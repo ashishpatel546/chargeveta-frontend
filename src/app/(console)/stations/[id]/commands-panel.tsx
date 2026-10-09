@@ -9,6 +9,7 @@ import {
   type CommandField,
   type CommandSpec,
 } from './command-catalogue';
+import { CommandGuide, CommandsInfo } from './command-guides';
 import { usePrincipal } from '@/components/principal-context';
 import { Empty, Failed, Loading } from '@/components/query-state';
 import { OutcomeBadge } from '@/components/status-badge';
@@ -104,7 +105,10 @@ export function CommandsPanel({ station }: { station: Station }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Send a command</CardTitle>
+          <CardTitle className="flex items-center gap-1 text-base">
+            Send a command
+            <CommandsInfo />
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -430,7 +434,10 @@ function CommandForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <p className="text-muted-foreground text-sm">{spec.description}</p>
+      <p className="text-muted-foreground text-sm">
+        {spec.description}{' '}
+        <CommandGuide commandId={spec.id} ocppVersion={station.ocppVersion} />
+      </p>
 
       {fields.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">

@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { FilterCombobox } from '@/components/filter-combobox';
 
 /**
  * Pieces both audit logs share — the platform's (`/platform/audit`) and a
@@ -20,31 +14,26 @@ export function FilterSelect({
   onChange,
   items,
   label,
+  id,
   className = 'w-56',
 }: {
   value: string;
   onChange: (value: string) => void;
   items: { value: string; label: string }[];
   label: string;
+  id?: string;
   className?: string;
 }) {
   return (
-    <Select
+    <FilterCombobox
       value={value}
-      onValueChange={(next) => onChange(next ?? ALL)}
+      onChange={onChange}
       items={items}
-    >
-      <SelectTrigger className={className} aria-label={label}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      label={label}
+      id={id}
+      allValue={ALL}
+      className={className}
+    />
   );
 }
 
