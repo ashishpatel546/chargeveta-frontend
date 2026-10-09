@@ -20,7 +20,7 @@ export function BeamBox({
       <div className="bg-card relative rounded-[inherit] border shadow-[0_24px_60px_-32px_rgb(26_33_80/0.35)]">
         {children}
       </div>
-      <BorderBeam tone="arc" radius={28} halo duration={8} />
+      <BorderBeam tone="arc" radius={28} halo duration={8} length={280} />
     </div>
   );
 }

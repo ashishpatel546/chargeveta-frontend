@@ -280,45 +280,56 @@
  * travels the element's rounded edge on `offset-path`, seen only through a
  * ring-shaped mask; `.beam-halo` is a blurred copy behind, for the glow.
  */
+/*
+ * `.beam-clip` holds both layers and clips them: the travelling head is a
+ * large square that otherwise sticks out past the card at the corners and
+ * widens the page's scrollable area, which made the whole screen jump as the
+ * light went round the bottom corners.
+ */
+.beam-clip {
+  pointer-events: none;
+  position: absolute;
+  inset: -12px;
+  overflow: hidden;
+}
 .beam-edge,
 .beam-halo {
   pointer-events: none;
   position: absolute;
-  inset: -1px;
-  border-radius: inherit;
+  border-radius: var(--beam-radius);
 }
 .beam-edge {
   z-index: 2;
-  border: 2px solid transparent;
+  inset: 11px;
+  border: 1px solid transparent;
   mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
   mask-clip: padding-box, border-box;
   mask-composite: intersect;
 }
 /*
- * The glow, kept to a band along the edge: the mask applies after the blur,
- * so the travelling head glows only where the border is instead of showing
- * as a blurred square outside the element.
+ * The glow, kept to a thin band along the edge: the mask applies after the
+ * blur, so the head glows only where the border is.
  */
 .beam-halo {
   z-index: -1;
-  inset: -7px;
-  border: 8px solid transparent;
+  inset: 9px;
+  border: 3px solid transparent;
   mask-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
   mask-clip: padding-box, border-box;
   mask-composite: intersect;
-  filter: blur(6px);
-  opacity: 0.8;
+  filter: blur(3px);
+  opacity: 0.7;
 }
 .beam-head {
   position: absolute;
-  width: 160px;
+  width: var(--beam-length, 90px);
   aspect-ratio: 1;
   offset-path: rect(0 auto auto 0 round var(--beam-radius));
   background: linear-gradient(
     to left,
-    var(--beam-color) 8%,
-    color-mix(in oklab, var(--beam-color) 55%, transparent) 40%,
-    transparent 85%
+    var(--beam-color) 5%,
+    color-mix(in oklab, var(--beam-color) 45%, transparent) 30%,
+    transparent 70%
   );
   animation: beam-travel var(--beam-duration) linear infinite;
 }

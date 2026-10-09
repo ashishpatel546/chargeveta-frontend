@@ -15,6 +15,7 @@ export function BorderBeam({
   radius,
   halo = false,
   duration = 7,
+  length = 90,
   className,
 }: {
   tone: 'live' | 'arc';
@@ -24,15 +25,18 @@ export function BorderBeam({
   halo?: boolean;
   /** Seconds per lap. */
   duration?: number;
+  /** Length of the streak, in px. */
+  length?: number;
   className?: string;
 }) {
   const style = {
     '--beam-color': tone === 'live' ? 'var(--current)' : 'var(--arc)',
     '--beam-radius': `${radius}px`,
     '--beam-duration': `${duration}s`,
+    '--beam-length': `${length}px`,
   } as React.CSSProperties;
   return (
-    <>
+    <span aria-hidden className="beam-clip">
       {halo ? (
         <span aria-hidden className="beam-halo" style={style}>
           <span className="beam-head" />
@@ -41,6 +45,6 @@ export function BorderBeam({
       <span aria-hidden className={cn('beam-edge', className)} style={style}>
         <span className="beam-head" />
       </span>
-    </>
+    </span>
   );
 }
