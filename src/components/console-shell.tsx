@@ -22,7 +22,9 @@ import {
   WalletIcon,
   WebhookIcon,
 } from 'lucide-react';
+import { useCountScreens } from '@/components/back-button';
 import { Wordmark } from '@/components/brand';
+import { InstallBanner } from '@/components/install-banner';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { NotificationBell } from '@/components/notification-bell';
@@ -108,6 +110,7 @@ export function ConsoleShell({
   children: React.ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useCountScreens();
 
   return (
     <PrincipalProvider principal={principal}>
@@ -153,6 +156,7 @@ export function ConsoleShell({
           </main>
         </div>
       </div>
+      <InstallBanner app="console" />
     </RealtimeProvider>
     </PrincipalProvider>
   );

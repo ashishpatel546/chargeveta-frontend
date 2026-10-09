@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { DownloadIcon, SearchIcon, XIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { MapPinOffIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FilterSelect } from '@/components/audit-log';
@@ -368,7 +369,14 @@ export function SitesBoard() {
               <TableBody>
                 {table.pageRows.map((site) => (
                   <TableRow key={site.id}>
-                    <TableCell className="font-medium">{site.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/sites/${site.id}`}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {site.name}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm">
                       {site.city ?? '—'}
                       <p className="text-muted-foreground text-xs">

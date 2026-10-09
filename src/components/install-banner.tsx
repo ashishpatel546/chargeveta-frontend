@@ -18,7 +18,20 @@ import { cn } from '@/lib/utils';
 const SHOW_AFTER_MS = 3_000;
 /** How long a dismissal is honoured before the banner may ask again. */
 const SNOOZE_MS = 24 * 60 * 60 * 1000;
-const STORAGE_KEY = 'cv.driver.installBanner.dismissedAt';
+
+/** Which installable surface the banner is offering. */
+type App = 'driver' | 'console';
+
+const COPY: Record<App, { storageKey: string; pitch: string }> = {
+  driver: {
+    storageKey: 'cv.driver.installBanner.dismissedAt',
+    pitch: 'Add it to your home screen for one-tap access and charging alerts.',
+  },
+  console: {
+    storageKey: 'cv.console.installBanner.dismissedAt',
+    pitch: 'Install the console for one-tap access to your chargers and alerts.',
+  },
+};
 
 /** Pages under `/driver` that have no bottom tab bar to sit above. */
 const PUBLIC_PREFIXES = ['/driver/sign-in', '/driver/register', '/driver/link'];
@@ -32,9 +45,9 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-type Platform = 'ios' | 'android';
+type Platform = 'ios' | 'android' | 'desktop';
 
-function detectPlatform(): Platform | null {
+function detectPlatform(): 'ios' | 'android' | null {
   const ua = navigator.userAgent;
   // iPadOS 13+ reports itself as a Mac; the touch points give it away.
   if (
@@ -55,27 +68,32 @@ function isInstalled(): boolean {
   );
 }
 
-function recentlyDismissed(): boolean {
+function recentlyDismissed(storageKey: string): boolean {
   try {
-    const at = Number(window.localStorage.getItem(STORAGE_KEY));
+    const at = Number(window.localStorage.getItem(storageKey));
     return Number.isFinite(at) && at > 0 && Date.now() - at < SNOOZE_MS;
   } catch {
     return false;
   }
 }
 
-function rememberDismissal(): void {
+function rememberDismissal(storageKey: string): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    window.localStorage.setItem(storageKey, String(Date.now()));
   } catch {
     // Private window or blocked storage: it asks again next visit, nothing else.
   }
 }
 
 /**
- * "Install the app" banner for the driver PWA, on Android and iPhone/iPad
- * only — the console is a desktop tool and the driver app is the one meant to
- * live on a home screen.
+ * "Install the app" banner, for the driver PWA and the operator console —
+ * each its own installable app with its own manifest scope, and its own
+ * dismissal.
+ *
+ * On a phone or tablet it always shows (with steps where there is no install
+ * prompt). On a desktop it shows only for the console, and only once Chromium
+ * has handed over a real install prompt — a desktop with no install API gets
+ * no instructions, since its browser's own address-bar icon is already there.
  *
  * Android Chromium hands over a real install prompt (`beforeinstallprompt`),
  * so there it is one button; when the browser withholds that event (Firefox,
@@ -87,8 +105,9 @@ function rememberDismissal(): void {
  * the browser's own prompt — keeps it away for a day (`localStorage`, so per
  * device and browser).
  */
-export function InstallBanner() {
+export function InstallBanner({ app = 'driver' }: { app?: App }) {
   const pathname = usePathname();
+  const { storageKey, pitch } = COPY[app];
   // Null until the delay has passed — and again once closed or installed.
   const [platform, setPlatform] = useState<Platform | null>(null);
   const [installEvent, setInstallEvent] =
@@ -96,11 +115,20 @@ export function InstallBanner() {
 
   useEffect(() => {
     const detected = detectPlatform();
-    if (!detected || isInstalled() || recentlyDismissed()) return;
+    const desktopToo = app === 'console';
+    if (
+      (!detected && !desktopToo) ||
+      isInstalled() ||
+      recentlyDismissed(storageKey)
+    ) {
+      return;
+    }
     const onBeforeInstall = (event: Event) => {
       // Keep Chrome's own mini-infobar out of the way; ours replaces it.
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
+      // A desktop shows the banner only when there is a prompt to give it.
+      if (!detected) setPlatform('desktop');
     };
     const onInstalled = () => {
       setPlatform(null);
@@ -108,22 +136,21 @@ export function InstallBanner() {
     };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
     window.addEventListener('appinstalled', onInstalled);
-    const timer = window.setTimeout(
-      () => setPlatform(detected),
-      SHOW_AFTER_MS,
-    );
+    const timer = detected
+      ? window.setTimeout(() => setPlatform(detected), SHOW_AFTER_MS)
+      : undefined;
 
     return () => {
       window.clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
       window.removeEventListener('appinstalled', onInstalled);
     };
-  }, []);
+  }, [app, storageKey]);
 
   if (!platform) return null;
 
   const dismiss = () => {
-    rememberDismissal();
+    rememberDismissal(storageKey);
     setPlatform(null);
   };
 
@@ -137,14 +164,15 @@ export function InstallBanner() {
     else dismiss();
   };
 
-  const hasTabBar = !PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  const hasTabBar =
+    app === 'driver' && !PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 
   return (
     <div
       role="dialog"
       aria-labelledby="install-banner-title"
       className={cn(
-        'fixed inset-x-0 z-50 mx-auto w-full max-w-md px-3',
+        'fixed inset-x-0 z-50 mx-auto w-full max-w-md px-3 print:hidden',
         'animate-in fade-in slide-in-from-bottom-4 duration-300',
         hasTabBar ? 'bottom-20' : 'bottom-4',
       )}
@@ -166,14 +194,11 @@ export function InstallBanner() {
             <p id="install-banner-title" className="font-semibold">
               Install {config.appName}
             </p>
-            <p className="text-muted-foreground text-sm">
-              Add it to your home screen for one-tap access and charging
-              alerts.
-            </p>
+            <p className="text-muted-foreground text-sm">{pitch}</p>
           </div>
         </div>
 
-        {platform === 'android' && installEvent ? (
+        {platform !== 'ios' && installEvent ? (
           <Button className="mt-3 w-full" size="lg" onClick={install}>
             <DownloadIcon />
             Install app

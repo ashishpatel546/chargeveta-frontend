@@ -88,6 +88,7 @@ const ACTION_LABELS: Record<string, string> = {
   'location.create': 'Site added',
   'location.update': 'Site changed',
   'location.delete': 'Site deleted',
+  'location.load-management': 'Site load management changed',
   'webhook.create': 'Webhook added',
   'webhook.update': 'Webhook changed',
   'webhook.delete': 'Webhook deleted',

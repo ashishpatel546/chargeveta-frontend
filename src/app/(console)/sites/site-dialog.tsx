@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { LocateFixedIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -178,6 +179,21 @@ function body(form: Form, editing: boolean): Record<string, unknown> {
   };
 }
 
+/**
+ * Why the browser would not say where it is, in the operator's words.
+ * `GeolocationPositionError`'s codes: 1 denied, 2 unavailable, 3 timeout.
+ */
+function locationFailure(error: GeolocationPositionError): string {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      return 'Location access is blocked for this site. Allow it in the browser’s site settings, or type the coordinates.';
+    case error.TIMEOUT:
+      return 'Finding your location took too long. Try again, or type the coordinates.';
+    default:
+      return 'Your location is not available right now. Type the coordinates instead.';
+  }
+}
+
 export function SiteDialog({
   site,
   tariffs,
@@ -192,6 +208,37 @@ export function SiteDialog({
   const queryClient = useQueryClient();
   const zones = knownTimeZones();
   const found = problems(form);
+  const [locating, setLocating] = useState(false);
+
+  /**
+   * Fills both boxes from the device's own position — meant for an operator
+   * standing at the site. Six decimal places is about 10 cm, finer than any
+   * fix a phone gets, so nothing real is rounded away.
+   */
+  function fillCurrentLocation() {
+    if (!('geolocation' in navigator)) {
+      toast.error('This browser cannot share its location. Type the coordinates instead.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        setForm((current) => ({
+          ...current,
+          latitude: position.coords.latitude.toFixed(6),
+          longitude: position.coords.longitude.toFixed(6),
+        }));
+        const accuracy = Math.round(position.coords.accuracy);
+        toast.success(`Location filled in, accurate to about ${accuracy} m.`);
+      },
+      (error) => {
+        setLocating(false);
+        toast.error(locationFailure(error));
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
+    );
+  }
 
   function set<K extends keyof Form>(key: K, value: Form[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -310,10 +357,22 @@ export function SiteDialog({
               />
             </div>
           </div>
-          <p className="text-muted-foreground text-xs">
-            Both or neither. They are what the driver apps search by, so half a
-            pair is refused.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-muted-foreground text-xs">
+              Both or neither. They are what the driver apps search by, so half
+              a pair is refused.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={fillCurrentLocation}
+              disabled={locating}
+            >
+              <LocateFixedIcon />
+              {locating ? 'Locating…' : 'Use my current location'}
+            </Button>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="site-zone">Time zone</Label>
