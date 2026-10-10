@@ -12,9 +12,10 @@ export const metadata: Metadata = { title: 'Sign in' };
 export default async function DriverSignInPage({
   searchParams,
 }: PageProps<'/driver/sign-in'>) {
-  if (await readDriverSession()) redirect('/driver');
-
   const { expired } = await searchParams;
+
+  // Not after a failed session — see the staff sign-in page.
+  if (!expired && (await readDriverSession())) redirect('/driver');
 
   return (
     <AuthLayout surface="driver">

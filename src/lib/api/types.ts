@@ -281,6 +281,12 @@ export interface LoadStation {
     sentAt: string | null;
     outcome: string | null;
     detail: string | null;
+    /**
+     * The share per point rounds under the site's minimum current, so 0 was
+     * sent: a car takes nothing below 6 A, and this charger idles until it
+     * hears from us.
+     */
+    belowMinimum: boolean;
   }[];
 }
 
@@ -290,6 +296,9 @@ export interface LoadStatus {
   budgetNowW: number | null;
   windowNow: { from: string; to: string; limitW: number } | null;
   failsafePerEvseW: number | null;
+  /** Chargers not heard from in `silentAfterDays`, left out of the count. */
+  silentStations: number;
+  silentAfterDays: number;
   allocatedW: number;
   drawW: number;
   sessions: LoadSession[];

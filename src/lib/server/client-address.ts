@@ -91,6 +91,14 @@ export async function clientHeaders(): Promise<Record<string, string>> {
   } catch {
     return {};
   }
+  return clientHeadersFrom(incoming);
+}
+
+/**
+ * `clientHeaders()`, from a request's headers in hand — for `proxy.ts`, which
+ * is given the request rather than reaching it through `next/headers`.
+ */
+export function clientHeadersFrom(incoming: Headers): Record<string, string> {
   const forwarded: Record<string, string> = {};
   const address = believedClientAddress(
     incoming.get('x-forwarded-for'),

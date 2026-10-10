@@ -3,6 +3,7 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import type { Principal } from '../api/types';
 import { apiGet, SessionExpiredError } from './api';
+import { readSession } from './session';
 
 /**
  * Who is signed in, or a redirect to the sign-in page.
@@ -14,10 +15,12 @@ import { apiGet, SessionExpiredError } from './api';
  * the API will actually allow.
  */
 export async function readPrincipal(): Promise<Principal> {
+  // Nobody signed in at all: a plain sign-in, not "your session ended".
+  if (!(await readSession())) redirect('/sign-in');
   try {
     return await apiGet<Principal>('/auth/me');
   } catch (error) {
-    if (error instanceof SessionExpiredError) redirect('/sign-in');
+    if (error instanceof SessionExpiredError) redirect('/sign-in?expired=1');
     throw error;
   }
 }

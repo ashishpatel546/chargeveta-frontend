@@ -1,8 +1,15 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { config } from '../config';
 import { clientHeaders } from './client-address';
+import {
+  requestRefresh,
+  sessionCookies,
+  DRIVER_SURFACE,
+  type RefreshResult,
+  type StoredSession,
+  type TokenPair,
+} from './session-surfaces';
 
 /**
  * Where a driver's tokens live — the same idea as `session.ts`, in cookies of
@@ -15,52 +22,32 @@ import { clientHeaders } from './client-address';
  * once without either signing the other out — a developer testing both, or an
  * operator who is also a driver of their own fleet.
  */
-const ACCESS_COOKIE = 'cvd_at';
-const REFRESH_COOKIE = 'cvd_rt';
+const SURFACE = DRIVER_SURFACE;
 
-export const DRIVER_SESSION_COOKIES = [ACCESS_COOKIE, REFRESH_COOKIE] as const;
+export const DRIVER_SESSION_COOKIES = [
+  SURFACE.accessCookie,
+  SURFACE.refreshCookie,
+] as const;
 
-export interface DriverTokenPair {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresInSeconds: number;
-}
+export type DriverTokenPair = TokenPair;
+export type DriverSession = StoredSession;
 
-export interface DriverSession {
-  accessToken: string;
-  refreshToken: string;
-}
-
-function cookieOptions(maxAgeSeconds: number) {
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: maxAgeSeconds,
-  };
-}
-
-/** Matches the API's driver refresh-token idle window (`charveta` doc 6 §22.3). */
-const REFRESH_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
-
+/**
+ * The session the cookies hold, or null when nobody is signed in — decided by
+ * the refresh cookie, since the access cookie lapses with its short-lived
+ * token long before the session does (`session.ts`'s `readSession`).
+ */
 export async function readDriverSession(): Promise<DriverSession | null> {
   const jar = await cookies();
-  const accessToken = jar.get(ACCESS_COOKIE)?.value;
-  const refreshToken = jar.get(REFRESH_COOKIE)?.value;
-  if (!accessToken || !refreshToken) return null;
-  return { accessToken, refreshToken };
+  const refreshToken = jar.get(SURFACE.refreshCookie)?.value;
+  if (!refreshToken) return null;
+  return { accessToken: jar.get(SURFACE.accessCookie)?.value, refreshToken };
 }
 
+/** Route Handlers and Server Actions only — see `session.ts`'s `writeSession`. */
 export async function writeDriverSession(pair: DriverTokenPair): Promise<void> {
   const jar = await cookies();
-  jar.set(ACCESS_COOKIE, pair.accessToken, cookieOptions(pair.expiresInSeconds));
-  jar.set(
-    REFRESH_COOKIE,
-    pair.refreshToken,
-    cookieOptions(REFRESH_MAX_AGE_SECONDS),
-  );
+  for (const cookie of sessionCookies(SURFACE, pair)) jar.set(cookie);
 }
 
 export async function clearDriverSession(): Promise<void> {
@@ -68,26 +55,9 @@ export async function clearDriverSession(): Promise<void> {
   for (const name of DRIVER_SESSION_COOKIES) jar.delete(name);
 }
 
-/**
- * Exchanges a driver refresh token for a new pair.
- *
- * `/driver/auth/refresh` answers the same `TokenPairDto` shape `/auth/refresh`
- * does (no `created` flag — that only ever comes back from the sign-in routes
- * themselves), so this returns the same `DriverTokenPair` shape as every other
- * driver sign-in call by construction.
- */
+/** Exchanges a refresh token for a new pair — single use, as for staff. */
 export async function refreshDriverTokens(
   refreshToken: string,
-): Promise<DriverTokenPair | null> {
-  const response = await fetch(`${config.apiBaseUrl}/driver/auth/refresh`, {
-    method: 'POST',
-    headers: {
-        'content-type': 'application/json',
-        ...(await clientHeaders()),
-      },
-    body: JSON.stringify({ refreshToken }),
-    cache: 'no-store',
-  });
-  if (!response.ok) return null;
-  return (await response.json()) as DriverTokenPair;
+): Promise<RefreshResult> {
+  return requestRefresh(SURFACE, refreshToken, await clientHeaders());
 }

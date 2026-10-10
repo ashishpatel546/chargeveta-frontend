@@ -23,6 +23,16 @@ export interface ApiRequest {
   body?: string;
   contentType?: string | null;
   accept?: string | null;
+  /**
+   * Whether this call may refresh the session. Off for a page rendering on the
+   * server: a Server Component cannot set a cookie, so a refresh there would
+   * spend the single-use refresh token without storing its replacement, and
+   * the browser's next request would present the replaced one — which the API
+   * treats as stolen and revokes the session. Pages are refreshed in
+   * `proxy.ts` before they render instead. Defaults to on, for the Route
+   * Handlers and Server Actions that can store what a refresh returns.
+   */
+  allowRefresh?: boolean;
 }
 
 export type ApiCall =
@@ -35,19 +45,27 @@ export async function apiFetch(
 ): Promise<ApiCall> {
   const session = await readSession();
   if (!session) return { ok: false, expired: true };
+  const allowRefresh = request.allowRefresh ?? true;
 
   const url = `${config.apiBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
-  let response = await send(url, request, session.accessToken);
-  if (response.status !== 401) return { ok: true, response };
+  if (session.accessToken) {
+    const response = await send(url, request, session.accessToken);
+    if (response.status !== 401) return { ok: true, response };
+  }
+  if (!allowRefresh) return { ok: false, expired: true };
 
   const refreshed = await refreshTokens(session.refreshToken);
-  if (!refreshed) {
+  if (refreshed.kind === 'refused') {
     await clearSession();
     return { ok: false, expired: true };
   }
-  await writeSession(refreshed);
-  response = await send(url, request, refreshed.accessToken);
-  return { ok: true, response };
+  if (refreshed.kind === 'unavailable') {
+    // The session may well be fine; only the API is not. Say so, rather than
+    // signing the user out over an outage.
+    return { ok: true, response: apiUnavailable() };
+  }
+  await writeSession(refreshed.pair);
+  return { ok: true, response: await send(url, request, refreshed.pair.accessToken) };
 }
 
 async function send(
@@ -96,7 +114,10 @@ export class SessionExpiredError extends Error {
  * whole of it.
  */
 export async function apiGet<T>(path: string): Promise<T> {
-  const call = await apiFetch(path, { accept: 'application/json' });
+  const call = await apiFetch(path, {
+    accept: 'application/json',
+    allowRefresh: false,
+  });
   if (!call.ok) throw new SessionExpiredError();
   if (!call.response.ok) {
     throw new ApiError(call.response.status, await readMessage(call.response));
@@ -114,4 +135,11 @@ export async function readMessage(response: Response): Promise<string> {
     // Not JSON. The status is all there is to report.
   }
   return `The API answered ${response.status}`;
+}
+
+function apiUnavailable(): Response {
+  return Response.json(
+    { message: 'The service is unavailable. Try again shortly.' },
+    { status: 503 },
+  );
 }

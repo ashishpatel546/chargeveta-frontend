@@ -169,7 +169,11 @@ function Overview({ status }: { status: LoadStatus }) {
           <Figure
             label="Fallback per EVSE"
             value={kw(status.failsafePerEvseW)}
-            note="What each charger keeps if it loses us"
+            note={
+              status.silentStations > 0
+                ? `What each charger keeps if it loses us; ${status.silentStations} not heard from in ${status.silentAfterDays} days not counted`
+                : 'What each charger keeps if it loses us'
+            }
           />
         </div>
         <div className="space-y-1.5">
@@ -457,6 +461,15 @@ function Chargers({ status }: { status: LoadStatus }) {
                     {f.sentLimit !== null
                       ? `${f.sentLimit} ${f.sentUnit}`
                       : 'not set yet'}
+                    {f.belowMinimum ? (
+                      <span className="text-caution-ink">
+                        {' '}
+                        — its share of the lowest budget is under the{' '}
+                        {status.policy?.minCurrentA ?? 6} A a car will take, so it
+                        idles without us. Raise the budget, or take chargers off
+                        the site.
+                      </span>
+                    ) : null}
                     {f.outcome && f.outcome !== 'answered:Accepted' ? (
                       <span className="text-caution-ink" title={f.detail ?? undefined}>
                         {' '}

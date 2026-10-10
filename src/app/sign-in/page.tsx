@@ -8,11 +8,13 @@ import { AuthLayout } from '@/components/auth-layout';
 export const metadata: Metadata = { title: 'Sign in' };
 
 export default async function SignInPage({ searchParams }: PageProps<'/sign-in'>) {
-  // Already signed in and arriving here by hand: send them on rather than
-  // offering a form that would replace a working session.
-  if (await readSession()) redirect('/dashboard');
-
   const { expired } = await searchParams;
+
+  // Already signed in and arriving here by hand: send them on rather than
+  // offering a form that would replace a working session. Not when the console
+  // sent them here because the session failed — cookies can outlive a session
+  // the API has ended, and sending them back would only bounce them here again.
+  if (!expired && (await readSession())) redirect('/dashboard');
 
   return (
     <AuthLayout surface="console">

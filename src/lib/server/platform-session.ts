@@ -1,8 +1,15 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { config } from '../config';
 import { clientHeaders } from './client-address';
+import {
+  requestRefresh,
+  sessionCookies,
+  PLATFORM_SURFACE,
+  type RefreshResult,
+  type StoredSession,
+  type TokenPair,
+} from './session-surfaces';
 
 /**
  * Where a platform administrator's tokens live — `fleet-session.ts` again, in
@@ -15,56 +22,32 @@ import { clientHeaders } from './client-address';
  * more to the point, that nothing the staff console's proxy forwards could
  * ever carry a platform token.
  */
-const ACCESS_COOKIE = 'cvp_at';
-const REFRESH_COOKIE = 'cvp_rt';
+const SURFACE = PLATFORM_SURFACE;
 
-export const PLATFORM_SESSION_COOKIES = [ACCESS_COOKIE, REFRESH_COOKIE] as const;
+export const PLATFORM_SESSION_COOKIES = [
+  SURFACE.accessCookie,
+  SURFACE.refreshCookie,
+] as const;
 
-export interface PlatformTokenPair {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresInSeconds: number;
-}
-
-export interface PlatformSession {
-  accessToken: string;
-  refreshToken: string;
-}
-
-function cookieOptions(maxAgeSeconds: number) {
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: maxAgeSeconds,
-  };
-}
+export type PlatformTokenPair = TokenPair;
+export type PlatformSession = StoredSession;
 
 /**
- * How long the refresh cookie is kept. The API decides how long the refresh
- * token itself is good for; a cookie that outlives it only means the next
- * refresh is refused and the admin signs in again.
+ * The session the cookies hold, or null when nobody is signed in — decided by
+ * the refresh cookie, since the access cookie lapses with its short-lived
+ * token long before the session does (`session.ts`'s `readSession`).
  */
-const REFRESH_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
-
 export async function readPlatformSession(): Promise<PlatformSession | null> {
   const jar = await cookies();
-  const accessToken = jar.get(ACCESS_COOKIE)?.value;
-  const refreshToken = jar.get(REFRESH_COOKIE)?.value;
-  if (!accessToken || !refreshToken) return null;
-  return { accessToken, refreshToken };
+  const refreshToken = jar.get(SURFACE.refreshCookie)?.value;
+  if (!refreshToken) return null;
+  return { accessToken: jar.get(SURFACE.accessCookie)?.value, refreshToken };
 }
 
+/** Route Handlers and Server Actions only — see `session.ts`'s `writeSession`. */
 export async function writePlatformSession(pair: PlatformTokenPair): Promise<void> {
   const jar = await cookies();
-  jar.set(ACCESS_COOKIE, pair.accessToken, cookieOptions(pair.expiresInSeconds));
-  jar.set(
-    REFRESH_COOKIE,
-    pair.refreshToken,
-    cookieOptions(REFRESH_MAX_AGE_SECONDS),
-  );
+  for (const cookie of sessionCookies(SURFACE, pair)) jar.set(cookie);
 }
 
 export async function clearPlatformSession(): Promise<void> {
@@ -72,19 +55,9 @@ export async function clearPlatformSession(): Promise<void> {
   for (const name of PLATFORM_SESSION_COOKIES) jar.delete(name);
 }
 
-/** Exchanges a platform refresh token for a new pair; null on refusal. */
+/** Exchanges a refresh token for a new pair — single use, as for staff. */
 export async function refreshPlatformTokens(
   refreshToken: string,
-): Promise<PlatformTokenPair | null> {
-  const response = await fetch(`${config.apiBaseUrl}/platform/auth/refresh`, {
-    method: 'POST',
-    headers: {
-        'content-type': 'application/json',
-        ...(await clientHeaders()),
-      },
-    body: JSON.stringify({ refreshToken }),
-    cache: 'no-store',
-  });
-  if (!response.ok) return null;
-  return (await response.json()) as PlatformTokenPair;
+): Promise<RefreshResult> {
+  return requestRefresh(SURFACE, refreshToken, await clientHeaders());
 }

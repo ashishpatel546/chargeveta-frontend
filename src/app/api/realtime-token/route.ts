@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { readSession, refreshTokens, writeSession } from '@/lib/server/session';
+import {
+  clearSession,
+  readSession,
+  refreshTokens,
+  writeSession,
+} from '@/lib/server/session';
 
 /**
  * Hands the page an access token for the realtime socket, and only for that.
@@ -20,6 +25,9 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ message: 'Not signed in' }, { status: 401 });
   }
+  // The access cookie lapses before the session does; a page left alone past
+  // that still gets a socket, by refreshing first.
+  if (!session.accessToken) return refreshAndHandOver(session.refreshToken);
   return NextResponse.json({ token: session.accessToken });
 }
 
@@ -36,10 +44,21 @@ export async function POST() {
   if (!session) {
     return NextResponse.json({ message: 'Not signed in' }, { status: 401 });
   }
-  const refreshed = await refreshTokens(session.refreshToken);
-  if (!refreshed) {
+  return refreshAndHandOver(session.refreshToken);
+}
+
+async function refreshAndHandOver(refreshToken: string): Promise<Response> {
+  const refreshed = await refreshTokens(refreshToken);
+  if (refreshed.kind === 'refused') {
+    await clearSession();
     return NextResponse.json({ message: 'The session has ended' }, { status: 401 });
   }
-  await writeSession(refreshed);
-  return NextResponse.json({ token: refreshed.accessToken });
+  if (refreshed.kind === 'unavailable') {
+    return NextResponse.json(
+      { message: 'The service is unavailable. Try again shortly.' },
+      { status: 503 },
+    );
+  }
+  await writeSession(refreshed.pair);
+  return NextResponse.json({ token: refreshed.pair.accessToken });
 }

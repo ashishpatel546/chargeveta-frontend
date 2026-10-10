@@ -1,8 +1,15 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { config } from '../config';
 import { clientHeaders } from './client-address';
+import {
+  requestRefresh,
+  sessionCookies,
+  STAFF_SURFACE,
+  type RefreshResult,
+  type StoredSession,
+  type TokenPair,
+} from './session-surfaces';
 
 /**
  * Where the tokens live.
@@ -19,64 +26,42 @@ import { clientHeaders } from './client-address';
  *    origins anyway. Same-origin through this app is the only way in that does
  *    not mean loosening the API.
  */
-const ACCESS_COOKIE = 'cv_at';
-const REFRESH_COOKIE = 'cv_rt';
+const SURFACE = STAFF_SURFACE;
 
 /** The name the realtime socket and the proxy both use when the pair is gone. */
-export const SESSION_COOKIES = [ACCESS_COOKIE, REFRESH_COOKIE] as const;
+export const SESSION_COOKIES = [
+  SURFACE.accessCookie,
+  SURFACE.refreshCookie,
+] as const;
 
-export interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresInSeconds: number;
-}
-
-export interface Session {
-  accessToken: string;
-  refreshToken: string;
-}
+export type { TokenPair };
+export type Session = StoredSession;
 
 /**
- * A cookie's settings.
+ * The session the cookies hold, or null when nobody is signed in.
  *
- * `secure` follows the deployment rather than being hard-coded: a secure cookie
- * is never sent over plain http, so hard-coding it on would break every local
- * run, and hard-coding it off would ship a token over the wire in production.
+ * The refresh cookie decides that, not the access cookie: the access cookie
+ * expires with its fifteen-minute token, and a console left alone that long is
+ * still signed in — it just needs a refresh before its next call.
  */
-function cookieOptions(maxAgeSeconds: number) {
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: maxAgeSeconds,
-  };
-}
-
-/**
- * The refresh cookie outlives the access token by a long way — the API's
- * default idle window is fourteen days — because it is what lets a console
- * left open overnight come back without a sign-in.
- */
-const REFRESH_MAX_AGE_SECONDS = 14 * 24 * 60 * 60;
-
 export async function readSession(): Promise<Session | null> {
   const jar = await cookies();
-  const accessToken = jar.get(ACCESS_COOKIE)?.value;
-  const refreshToken = jar.get(REFRESH_COOKIE)?.value;
-  if (!accessToken || !refreshToken) return null;
-  return { accessToken, refreshToken };
+  const refreshToken = jar.get(SURFACE.refreshCookie)?.value;
+  if (!refreshToken) return null;
+  return { accessToken: jar.get(SURFACE.accessCookie)?.value, refreshToken };
 }
 
+/**
+ * Stores a token pair. The refresh cookie lasts as long as the API says the
+ * refresh token does, which is what lets a console left open overnight come
+ * back without a sign-in.
+ *
+ * Only a Route Handler or Server Action can do this; a Server Component
+ * cannot set a cookie, which is why pages are refreshed in `proxy.ts`.
+ */
 export async function writeSession(pair: TokenPair): Promise<void> {
   const jar = await cookies();
-  jar.set(ACCESS_COOKIE, pair.accessToken, cookieOptions(pair.expiresInSeconds));
-  jar.set(
-    REFRESH_COOKIE,
-    pair.refreshToken,
-    cookieOptions(REFRESH_MAX_AGE_SECONDS),
-  );
+  for (const cookie of sessionCookies(SURFACE, pair)) jar.set(cookie);
 }
 
 export async function clearSession(): Promise<void> {
@@ -87,23 +72,12 @@ export async function clearSession(): Promise<void> {
 /**
  * Exchanges the refresh token for a new pair.
  *
- * Returns null on any refusal, which the caller turns into a sign-in. The
- * refresh token is single use, so a refused refresh is not worth retrying: the
- * API revokes the whole session when a replaced token is presented again,
+ * The refresh token is single use, so a refused refresh is not worth retrying:
+ * the API revokes the whole session when a replaced token is presented again,
  * except inside its ten-second grace window.
  */
 export async function refreshTokens(
   refreshToken: string,
-): Promise<TokenPair | null> {
-  const response = await fetch(`${config.apiBaseUrl}/auth/refresh`, {
-    method: 'POST',
-    headers: {
-        'content-type': 'application/json',
-        ...(await clientHeaders()),
-      },
-    body: JSON.stringify({ refreshToken }),
-    cache: 'no-store',
-  });
-  if (!response.ok) return null;
-  return (await response.json()) as TokenPair;
+): Promise<RefreshResult> {
+  return requestRefresh(SURFACE, refreshToken, await clientHeaders());
 }
