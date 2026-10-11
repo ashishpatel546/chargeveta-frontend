@@ -305,6 +305,11 @@ function ChargerSettings({ station }: { station: Station }) {
       apiGet<ChargerPaymentSettings>(
         `/stations/${station.id}/payment-settings`,
       ),
+    // The sweep sends within seconds of a change; follow it until it answers.
+    refetchInterval: (query) =>
+      query.state.data?.paymentsEnabled && query.state.data.state === 'pending'
+        ? 5_000
+        : false,
   });
 
   const resend = useMutation({
@@ -421,11 +426,13 @@ function ChargerSettings({ station }: { station: Station }) {
               <p className="text-muted-foreground text-xs">{data.detail}</p>
             ) : null}
             <p className="text-muted-foreground text-xs">
-              {data.appliedAt
+              {data.state === 'applied' && data.appliedAt
                 ? `Confirmed ${dateTime(data.appliedAt)}.`
-                : data.sentAt
-                  ? `Last sent ${dateTime(data.sentAt)}${data.outcome ? ` (${data.outcome})` : ''}.`
-                  : 'Sent when the charger is next online.'}
+                : data.state === 'refused' && data.sentAt
+                  ? `Refused ${dateTime(data.sentAt)}; tried again ${data.nextAttemptAt ? dateTime(data.nextAttemptAt) : 'later'}.`
+                  : data.outcome && data.outcome !== 'applied' && data.sentAt
+                    ? `Not answered ${dateTime(data.sentAt)} (${data.outcome}); sent again when the charger is reachable.`
+                    : 'Waiting to be sent: within seconds while the charger is online.'}
             </p>
           </>
         ) : null}
