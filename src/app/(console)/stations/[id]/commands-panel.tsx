@@ -202,6 +202,14 @@ interface LocalListSyncResult {
   entries: number;
   updateType: 'full' | 'differential';
   command: CommandResult | null;
+  /** Each message sent; a list longer than the charger takes goes in parts. */
+  parts: {
+    version: number;
+    updateType: 'full' | 'differential';
+    entries: number;
+    outcome: string;
+    status?: string;
+  }[];
 }
 
 /**
@@ -227,15 +235,29 @@ function LocalListCard({ station }: { station: Station }) {
         answer.updateType === 'full'
           ? `the whole list (${answer.entries} cards)`
           : `${answer.entries} change${answer.entries === 1 ? '' : 's'}`;
-      if (
-        answer.command.outcome === 'answered' &&
-        answer.command.status === 'Accepted'
-      ) {
-        toast.success(`Sent ${what}; the charger holds version ${answer.version}.`);
+      const parts = answer.parts ?? [];
+      const accepted = parts.filter(
+        (part) => part.outcome === 'answered' && part.status === 'Accepted',
+      );
+      const inParts = parts.length > 1 ? ` in ${parts.length} parts` : '';
+      if (parts.length > 0 && accepted.length === parts.length) {
+        toast.success(
+          `Sent ${what}${inParts}; the charger holds version ${answer.version}.`,
+        );
       } else {
+        // The first part not accepted ends the sync; the charger keeps the
+        // version of the last part it did accept.
+        const refused = parts[accepted.length];
+        const said = refused
+          ? (refused.status ?? refused.outcome)
+          : (answer.command.status ?? answer.command.outcome);
+        const held = accepted.at(-1);
         toast.warning(
-          `Sent ${what}, but the charger answered ` +
-            `${answer.command.status ?? answer.command.outcome}; its version is unchanged.`,
+          `Sent ${what}${inParts}, but the charger answered ${said}` +
+            (parts.length > 1 ? ` to part ${accepted.length + 1}` : '') +
+            (held
+              ? `; it holds version ${held.version}, and the next sync sends the rest.`
+              : '; its version is unchanged.'),
         );
       }
     },
