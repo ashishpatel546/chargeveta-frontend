@@ -235,6 +235,7 @@ export function SitesBoard() {
           header: 'tariff',
           value: (site) => tariffNames.get(site.tariffId ?? ''),
         },
+        { header: 'gstApplicable', value: (site) => (site.gstApplicable ? 'yes' : 'no') },
         { header: 'gstRateBp', value: (site) => site.gstRateBp },
         { header: 'gstStateCode', value: (site) => site.gstStateCode },
         { header: 'latitude', value: (site) => site.latitude },
@@ -394,7 +395,9 @@ export function SitesBoard() {
                         : '—'}
                     </TableCell>
                     <TableCell className="text-sm whitespace-nowrap">
-                      {gstRate(site.gstRateBp)}
+                      {site.gstApplicable
+                        ? gstRate(site.gstRateBp)
+                        : 'Not applicable'}
                     </TableCell>
                     <TableCell className="text-sm">
                       {site.gstStateCode ?? '—'}

@@ -210,6 +210,8 @@ export interface Site {
   timeZone: string | null;
   tariffId: string | null;
   gstRateBp: number | null;
+  /** Off: receipts here carry no GST, and no rate or state is needed. */
+  gstApplicable: boolean;
   gstStateCode: string | null;
   createdAt: string;
   updatedAt: string;
@@ -850,6 +852,8 @@ export interface AvailabilityReport {
 export interface TenantSettings {
   concurrentTxPolicy: 'refuse' | 'allow';
   legalName: string | null;
+  /** Off: no receipt charges GST, and no GSTIN is needed (bills of supply). */
+  gstRegistered: boolean;
   gstin: string | null;
   billingAddress: string | null;
   sacCode: string | null;

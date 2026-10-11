@@ -64,6 +64,9 @@ export function ReceiptDetail({ id }: { id: string }) {
   const doc = receipt.data;
   const credited = doc.creditNotes ?? [];
   const settled = doc.remainingNetMinor === '0';
+  // Frozen at issue: an operator not registered for GST issues bills of supply.
+  const supplier = doc.snapshot.supplier as { gstRegistered?: boolean } | undefined;
+  const billOfSupply = supplier?.gstRegistered === false;
 
   return (
     <>
@@ -86,10 +89,16 @@ export function ReceiptDetail({ id }: { id: string }) {
           <CardHeader className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>Amounts</CardTitle>
             <div className="flex gap-1">
-              <Badge variant="outline">{doc.taxTreatment}</Badge>
-              <Badge variant="outline">
-                {percent(doc.taxRateBp / 10000)} GST
-              </Badge>
+              {billOfSupply ? (
+                <Badge variant="outline">bill of supply, no GST</Badge>
+              ) : (
+                <>
+                  <Badge variant="outline">{doc.taxTreatment}</Badge>
+                  <Badge variant="outline">
+                    {percent(doc.taxRateBp / 10000)} GST
+                  </Badge>
+                </>
+              )}
               {settled ? <Badge variant="secondary">credited in full</Badge> : null}
             </div>
           </CardHeader>

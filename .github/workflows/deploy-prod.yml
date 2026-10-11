@@ -75,7 +75,7 @@ jobs:
             set -e
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
             trap 'docker logout ghcr.io >/dev/null' EXIT
-            ~/chargeveta-prod/deploy.sh console "$IMAGE"
+            bash ~/chargeveta-prod/deploy.sh console "$IMAGE"
 
       - name: Public check
         run: |

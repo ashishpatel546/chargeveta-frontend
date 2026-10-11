@@ -39,6 +39,7 @@ interface Form {
   /** Held as a percentage, because that is what a rate is called out loud. */
   gstPercent: string;
   gstStateCode: string;
+  gstApplicable: boolean;
 }
 
 const NO_TARIFF = 'none';
@@ -64,6 +65,7 @@ function initialForm(site?: Site): Form {
         ? ''
         : String(site.gstRateBp / 100),
     gstStateCode: site?.gstStateCode ?? '',
+    gstApplicable: site?.gstApplicable ?? true,
   };
 }
 
@@ -109,7 +111,7 @@ function problems(form: Form): string[] {
     found.push('The country is a two-letter code, such as IN.');
   }
 
-  if (form.gstPercent.trim() !== '') {
+  if (form.gstApplicable && form.gstPercent.trim() !== '') {
     const percent = Number(form.gstPercent);
     if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
       found.push('The GST rate is a percentage between 0 and 100.');
@@ -121,6 +123,7 @@ function problems(form: Form): string[] {
   }
 
   if (
+    form.gstApplicable &&
     form.gstStateCode.trim() !== '' &&
     !/^[0-9]{2}$/.test(form.gstStateCode.trim())
   ) {
@@ -176,6 +179,7 @@ function body(form: Form, editing: boolean): Record<string, unknown> {
           : undefined
         : Math.round(Number(form.gstPercent) * 100),
     gstStateCode: text(form.gstStateCode),
+    gstApplicable: form.gstApplicable,
   };
 }
 
@@ -419,33 +423,52 @@ export function SiteDialog({
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="site-gst">GST rate</Label>
-              <Input
-                id="site-gst"
-                value={form.gstPercent}
-                onChange={(event) => set('gstPercent', event.target.value)}
-                placeholder="18"
-                inputMode="decimal"
+          <div className="space-y-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.gstApplicable}
+                onChange={(event) => set('gstApplicable', event.target.checked)}
+                className="size-4"
               />
-              <p className="text-muted-foreground text-xs">
-                A percentage. Tariffs exclude tax and the receipt adds it; with
-                no rate here, no receipt is issued.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="site-gst-state">GST state code</Label>
-              <Input
-                id="site-gst-state"
-                value={form.gstStateCode}
-                onChange={(event) => set('gstStateCode', event.target.value)}
-                placeholder="29"
-                maxLength={2}
-                inputMode="numeric"
-              />
-            </div>
+              GST applies at this site
+            </label>
+            <p className="text-muted-foreground text-xs">
+              {form.gstApplicable
+                ? 'Receipts here add GST at the rate below, when the operator is registered for GST.'
+                : 'Receipts here carry no GST, and need no rate or state.'}
+            </p>
           </div>
+
+          {form.gstApplicable ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="site-gst">GST rate</Label>
+                <Input
+                  id="site-gst"
+                  value={form.gstPercent}
+                  onChange={(event) => set('gstPercent', event.target.value)}
+                  placeholder="18"
+                  inputMode="decimal"
+                />
+                <p className="text-muted-foreground text-xs">
+                  A percentage. Tariffs exclude tax and the receipt adds it; with
+                  no rate here, no receipt is issued.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="site-gst-state">GST state code</Label>
+                <Input
+                  id="site-gst-state"
+                  value={form.gstStateCode}
+                  onChange={(event) => set('gstStateCode', event.target.value)}
+                  placeholder="29"
+                  maxLength={2}
+                  inputMode="numeric"
+                />
+              </div>
+            </div>
+          ) : null}
 
           {found.length > 0 ? (
             <ul className="text-destructive space-y-1 text-xs">

@@ -105,7 +105,7 @@ function SettingsForm({ settings }: { settings: TenantSettings }) {
 
   function submit() {
     const gstin = trimmed(draft.gstin);
-    if (gstin !== null && !GSTIN.test(gstin)) {
+    if (draft.gstRegistered && gstin !== null && !GSTIN.test(gstin)) {
       setProblem(
         'The GSTIN does not look right. It is 15 characters: two state digits, a PAN, an entity character, a Z, and a check character.',
       );
@@ -134,6 +134,7 @@ function SettingsForm({ settings }: { settings: TenantSettings }) {
       concurrentTxPolicy: draft.concurrentTxPolicy,
       unavailableCountsAs: draft.unavailableCountsAs,
       legalName,
+      gstRegistered: draft.gstRegistered,
       gstin,
       billingAddress,
       sacCode,
@@ -243,17 +244,37 @@ function SettingsForm({ settings }: { settings: TenantSettings }) {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="gstin">GSTIN</Label>
-          <Input
-            id="gstin"
-            value={draft.gstin ?? ''}
-            disabled={disabled}
-            spellCheck={false}
-            placeholder="27AAAAA0000A1Z5"
-            onChange={(event) => set('gstin', event.target.value.toUpperCase())}
-          />
+        <div className="space-y-1">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={draft.gstRegistered}
+              disabled={disabled}
+              onChange={(event) => set('gstRegistered', event.target.checked)}
+              className="size-4"
+            />
+            Registered for GST
+          </label>
+          <p className="text-muted-foreground text-xs">
+            {draft.gstRegistered
+              ? 'Receipts charge GST at each site’s rate, except at sites where GST does not apply. A legal name, and a GSTIN wherever a rate is above zero, are needed.'
+              : 'Not registered: no receipt charges GST, whatever a site says, and no GSTIN is needed. Receipts are bills of supply, under the operator name if no legal name is set.'}
+          </p>
         </div>
+
+        {draft.gstRegistered ? (
+          <div className="space-y-2">
+            <Label htmlFor="gstin">GSTIN</Label>
+            <Input
+              id="gstin"
+              value={draft.gstin ?? ''}
+              disabled={disabled}
+              spellCheck={false}
+              placeholder="27AAAAA0000A1Z5"
+              onChange={(event) => set('gstin', event.target.value.toUpperCase())}
+            />
+          </div>
+        ) : null}
 
         <div className="space-y-2">
           <Label htmlFor="billing-address">Billing address</Label>
