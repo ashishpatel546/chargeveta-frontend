@@ -6,6 +6,7 @@ import { CommandsPanel } from './commands-panel';
 import { ConnectorsPanel } from './connectors-panel';
 import { HistoryPanel } from './history-panel';
 import { MonitoringPanel } from './monitoring-panel';
+import { PaymentsPanel } from './payments-panel';
 import { StationSettingsPanel } from './station-settings-panel';
 import { PageHeader } from '@/components/page-header';
 import { Failed, Loading } from '@/components/query-state';
@@ -105,6 +106,7 @@ export function StationDetail({ stationId }: { stationId: string }) {
           <TabsTrigger value="connectors">Connectors</TabsTrigger>
           <TabsTrigger value="commands">Commands</TabsTrigger>
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -117,6 +119,9 @@ export function StationDetail({ stationId }: { stationId: string }) {
         </TabsContent>
         <TabsContent value="monitoring" className="pt-4">
           <MonitoringPanel station={station.data} />
+        </TabsContent>
+        <TabsContent value="payments" className="pt-4">
+          <PaymentsPanel station={station.data} />
         </TabsContent>
         <TabsContent value="history" className="pt-4">
           <HistoryPanel stationId={stationId} />

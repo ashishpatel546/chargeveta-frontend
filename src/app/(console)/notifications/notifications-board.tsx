@@ -42,6 +42,8 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   'payment.attention': 'Driver payment stuck',
   'session.stop_failed': 'Session could not be stopped',
   'receipt.blocked': 'Session not receipted',
+  'session.no_payer': 'Session with nobody to pay',
+  'station.payment_settings': 'Charger refused payment settings',
 };
 
 export function NotificationsBoard() {

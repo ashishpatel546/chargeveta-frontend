@@ -620,7 +620,9 @@ export type NotificationKind =
   | 'security.event'
   | 'payment.attention'
   | 'session.stop_failed'
-  | 'receipt.blocked';
+  | 'receipt.blocked'
+  | 'session.no_payer'
+  | 'station.payment_settings';
 
 export interface AppNotification {
   id: string;
@@ -727,11 +729,16 @@ export interface StaffRef {
 /**
  * Free charging on a card (`charveta` doc 6 §22.4, "Card taps and free
  * charging"): its sessions cost the driver nothing and are paid for by the
- * staff member who granted it, until an owner makes the company pay.
+ * staff member who granted it, until an owner makes the company pay. The same
+ * grant on a station makes it operator-paid: its start button may charge
+ * (§22.4, "Sessions with no card").
  */
 export interface FreeChargingGrant {
   id: string;
-  idTokenId: string;
+  /** The card a card grant is on; null on a station grant. */
+  idTokenId: string | null;
+  /** The station a station grant is on; null on a card grant. */
+  stationId: string | null;
   reason: string;
   expiresAt: string | null;
   grantedBy: StaffRef;
@@ -743,6 +750,23 @@ export interface FreeChargingGrant {
   revokedAt: string | null;
   active: boolean;
   payer: 'grantor' | 'company';
+}
+
+/**
+ * The charger settings that keep sessions nobody pays for off a charger
+ * (`charveta` doc 6 §22.4, "Sessions with no card").
+ */
+export interface ChargerPaymentSettings {
+  paymentsEnabled: boolean;
+  operatorPaid: boolean;
+  wanted: { name: string; value: string; required: boolean }[];
+  state: 'applied' | 'refused' | 'pending';
+  answers: { name: string; status: string; ok: boolean }[];
+  outcome: string | null;
+  detail: string | null;
+  appliedAt: string | null;
+  sentAt: string | null;
+  nextAttemptAt: string | null;
 }
 
 export interface FreeChargingReport {
@@ -759,8 +783,10 @@ export interface FreeChargingReport {
     startedAt: string;
     stationIdentity: string;
     siteName: string | null;
+    /** Empty for a start-button session on an operator-paid station. */
     card: string;
     cardLabel: string | null;
+    grantOn: 'card' | 'station';
     grantId: string;
     reason: string;
     payerKind: 'grantor' | 'company';

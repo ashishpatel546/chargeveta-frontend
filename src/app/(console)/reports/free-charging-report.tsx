@@ -154,7 +154,13 @@ export function FreeChargingReportPanel() {
                       ) : null}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
-                      {row.card}
+                      {row.grantOn === 'station' ? (
+                        <span className="text-muted-foreground font-sans">
+                          Start button (operator-paid station)
+                        </span>
+                      ) : (
+                        row.card
+                      )}
                       {row.cardLabel ? (
                         <span className="text-muted-foreground font-sans">
                           {' '}
