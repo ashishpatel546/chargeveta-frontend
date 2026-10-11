@@ -617,7 +617,8 @@ export type NotificationKind =
   | 'station.offline'
   | 'security.event'
   | 'payment.attention'
-  | 'session.stop_failed';
+  | 'session.stop_failed'
+  | 'receipt.blocked';
 
 export interface AppNotification {
   id: string;

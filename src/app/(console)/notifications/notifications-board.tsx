@@ -41,6 +41,7 @@ const KIND_LABEL: Record<NotificationKind, string> = {
   'security.event': 'Security event',
   'payment.attention': 'Driver payment stuck',
   'session.stop_failed': 'Session could not be stopped',
+  'receipt.blocked': 'Session not receipted',
 };
 
 export function NotificationsBoard() {

@@ -94,7 +94,7 @@ export function SessionDetail({ id }: { id: string }) {
                   running
                 </Badge>
               ) : (
-                <span>{doc.stoppedReason ?? 'Stopped'}</span>
+                <span>{stoppedText(doc.stoppedReason)}</span>
               )}
             </Row>
             {doc.vehicle ? (
@@ -203,4 +203,39 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       <span className="font-medium">{children}</span>
     </div>
   );
+}
+
+/**
+ * Why a session ended, in a driver's words. The charger reports an OCPP
+ * reason (`EVDisconnected`, `Remote`, …); a reason not listed here is spelt
+ * out from its own words rather than shown as an identifier.
+ */
+const STOPPED_TEXT: Record<string, string> = {
+  EVDisconnected: 'Car unplugged',
+  Local: 'Stopped at the charger',
+  Remote: 'Stopped from the app',
+  DeAuthorized: 'Card no longer accepted',
+  EmergencyStop: 'Emergency stop',
+  EnergyLimitReached: 'Energy limit reached',
+  CostLimitReached: 'Spending limit reached',
+  TimeLimitReached: 'Time limit reached',
+  SOCLimitReached: 'Battery limit reached',
+  PowerLoss: 'The charger lost power',
+  Reboot: 'The charger restarted',
+  HardReset: 'The charger restarted',
+  SoftReset: 'The charger restarted',
+  UnlockCommand: 'Connector unlocked',
+  StoppedByEV: 'Stopped by the car',
+  EVDeparted: 'Car left',
+  GroundFault: 'Electrical fault',
+  OvercurrentFault: 'Electrical fault',
+  Other: 'Stopped',
+};
+
+function stoppedText(reason: string | null | undefined): string {
+  if (!reason) return 'Stopped';
+  const known = STOPPED_TEXT[reason];
+  if (known) return known;
+  const words = reason.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }

@@ -10,6 +10,7 @@ export const NOTIFICATION_KINDS: NotificationKind[] = [
   'security.event',
   'payment.attention',
   'session.stop_failed',
+  'receipt.blocked',
 ];
 
 export const KIND_LABEL: Record<NotificationKind, string> = {
@@ -19,6 +20,7 @@ export const KIND_LABEL: Record<NotificationKind, string> = {
   'security.event': 'Security event',
   'payment.attention': 'Driver payment stuck',
   'session.stop_failed': 'Session could not be stopped',
+  'receipt.blocked': 'Session not receipted',
 };
 
 /**

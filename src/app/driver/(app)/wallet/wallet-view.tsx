@@ -178,6 +178,15 @@ export function TopUpDialog({ wallet }: { wallet: WalletDto }) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] });
+      // The credit lands when Razorpay's webhook does, usually seconds after
+      // this, so look again a few times rather than leave the old balance up
+      // until the driver reloads.
+      for (const ms of [2_000, 5_000, 10_000, 20_000, 30_000]) {
+        setTimeout(
+          () => void queryClient.invalidateQueries({ queryKey: ['driver', 'wallet'] }),
+          ms,
+        );
+      }
       setOpen(false);
       setAmount('');
       toast.success(
